@@ -1,0 +1,35 @@
+// Apply the java plugin to add support for Java
+apply plugin: 'java'
+
+version = '1.0'
+jar {
+    manifest {
+        attributes 'Main-Class': 'edu.colorado.plv.fixr.Main',
+                   'Implementation-Title': 'FixrGraphExtractor',
+                   'Implementation-Version': version
+    }
+}
+
+repositories {
+    mavenCentral()
+    jcenter()    
+}
+
+dependencies {
+    compile group: 'commons-collections', name: 'commons-collections', version: '3.2'
+    compile fileTree(dir: 'lib', include: '*.jar')
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+}
+
+test {
+    systemProperties 'property': 'value'
+}
+
+// Publish the jar to the repos directory
+uploadArchives {
+    repositories {
+       flatDir {
+           dirs 'repos'
+       }
+    }
+}
