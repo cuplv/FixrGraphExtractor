@@ -59,8 +59,9 @@ public class SootHelper {
 	}
 	
 	public static void dumpToDot(DirectedGraph g, Body b, String fileName) {
-		  	CFGToDotGraph gr = new CFGToDotGraph();
-  	DotGraph viewgraph = gr.drawCFG(g,b);
+		CFGToDotGraph gr = new CFGToDotGraph();
+  	DotGraph viewgraph = gr.drawCFG(g,b); 	   
+  	
   	viewgraph.plot(fileName);
 	}
 	

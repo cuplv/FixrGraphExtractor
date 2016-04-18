@@ -20,8 +20,8 @@ public class Main {
   	SootHelper.configure(classPath);
   	
   	Body b = SootHelper.getMethodBody(className, methodName);
-  	DirectedGraph g = new BriefUnitGraph(b);
-  	SootHelper.dumpToDot(g, b, "~/test.dot");  	
+  	DirectedGraph g = new BriefUnitGraph(b);  	
+  	SootHelper.dumpToDot(g, b, "test.dot");  	
   	
   	System.out.println("Done");
   }
