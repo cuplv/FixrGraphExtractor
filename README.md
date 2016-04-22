@@ -1,8 +1,20 @@
 # FixrGraphExtractor
 
-- Extract control data and flow graph from java source code
-- Implement slicing for Android APIs
-- Implement the isomorphism check among two annotated graphs
+Functionalities:
+- Slice the control flow graph only w.r.t. calls to Android APIs (or some other user-defined API)
+- Extract the control flow graph with data information from java source code (CFDG)
+Now the extraction is limited to a graph per procedure.
+- Check the approximate isomorphism between two CDFG
+
+# Implementation plan
+List of tasks:
+- Slicing:
+  - Find relevant variable (DONE)
+  - Slice the CFG accordingly
+- CDFG:
+  - Define CDFG structure
+  - Extract the CDFG from a CFG and dataflow information
+- Isomorphism
 
 # Compile
 gradle build
@@ -23,4 +35,6 @@ java -cp lib/soot-2.5.0.jar:repos/FixrGraphExtractor-1.0.jar edu.colorado.plv.fi
 
 rt.jar: jar file of the runtime environment for java
 android.jar: jar file of the android framework.
+
 You can obtain a version of the jar here http://repository.grepcode.com/java/ext/com/google/android/android/4.4.2_r1/android-4.4.2_r1.jar or downloading the Android SDK
+

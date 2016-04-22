@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Before;
 
-public class DummyTest {
+public class SlicingTest {
 	static final String CLASS_NAME = "slice.TestSlice";	
 	
 	@Before
@@ -33,7 +33,7 @@ public class DummyTest {
   	/* get the method body (in jimple) */
   	Body body = SootHelper.getMethodBody(CLASS_NAME, "m1");		
   	SlicingCriterion sc = new MethodPackageSeed("java.lang.Math");  	  	
-  	RelevantVariablesAnalysis rv = new RelevantVariablesAnalysis(new EnhancedUnitGraph(body), sc);
+  	RelevantVariablesAnalysis rv = new RelevantVariablesAnalysis(new EnhancedUnitGraph(body), sc);  	  
   	
 		assertEquals(0, 0);
 	}
