@@ -1,26 +1,21 @@
 package edu.colorado.plv.fixr;
 
-import java.util.Iterator;
-import java.util.Map;
-
 import soot.Body;
-import soot.BodyTransformer;
-import soot.PackManager;
-import soot.PhaseOptions;
 import soot.Scene;
 import soot.SootClass;
-import soot.Transform;
-import soot.Unit;
-import soot.jimple.JimpleBody;
-import soot.options.Options;
-import soot.toolkits.graph.BriefUnitGraph;
-import soot.toolkits.graph.DirectedGraph;
-import soot.toolkits.graph.ExceptionalBlockGraph;
-import soot.toolkits.graph.Block;
-import soot.toolkits.graph.BriefBlockGraph;;
+import soot.toolkits.graph.BlockGraph;
+import soot.toolkits.graph.pdg.EnhancedBlockGraph;
+import soot.toolkits.graph.pdg.EnhancedUnitGraph;
+import edu.colorado.plv.fixr.slicing.APISlicer;
+import edu.colorado.plv.fixr.slicing.RelevantVariablesAnalysis;
 
 public class Main {
 	
+	/**
+	 * Now the program takes as input the classpath, the class name and the method name for which we have to build the graph
+	 * 
+	 * @param args classpath, class name (e.g. package.ClassName), method name
+	 */
   public static void main(String[] args) {  
   	if (args.length != 3) {
   		System.err.println("Missing classpath, class name and method name");
@@ -31,27 +26,30 @@ public class Main {
   	String className = args[1];
   	String methodName = args[2];
   	
-  	System.out.println(classPath);
+  	/* Configure soot */
   	SootHelper.configure(classPath);
-
+  	/* trick to make soot happy */
   	Scene.v().addBasicClass(className, SootClass.HIERARCHY);
+  	/* load dependencies */
   	Scene.v().loadNecessaryClasses();
 
-  	Body b = SootHelper.getMethodBody(className, methodName);
+  	/* get the method body (in jimple) */
+  	Body body = SootHelper.getMethodBody(className, methodName);
 
-  	if (b instanceof JimpleBody) {
-  		System.out.println(b.toString());
-  	}
+  	EnhancedUnitGraph jimpleUnitGraph= new EnhancedUnitGraph(body);
   	
-  	BriefUnitGraph g = new BriefUnitGraph(b);  	
-  	SootHelper.dumpToDot(g, b, "brief_unit_graph.dot");
   	
-  	BriefBlockGraph g2 = new BriefBlockGraph(b);  	
-  	SootHelper.dumpToDot(g2, b, "brief_block_graph.dot");
+  	/* Perform the slicing */
+  	APISlicer slicer = new APISlicer(jimpleUnitGraph, body);
+  	BlockGraph slicedCFG = slicer.slice();
   	
-  	ExceptionalBlockGraph g3 = new ExceptionalBlockGraph(b);   	
-  	SootHelper.dumpToDot(g3, b, "exceptional_block_graph.dot");  	  	 	 
-
+  	/* Dump the CFG to dot */
+  	//EnhancedBlockGraph ebg = new EnhancedBlockGraph(body);
+  	//SootHelper.dumpToDot(ebg, body, "enanched_block_graph.dot");	
+  	
+  	SootHelper.dumpToDot(jimpleUnitGraph, body, "enanched_unit_graph.dot");
+  	//RelevantVariablesAnalysis rv = new RelevantVariablesAnalysis(jimpleUnitGraph);
+  	
   	System.out.println("Done");
   }
 }
