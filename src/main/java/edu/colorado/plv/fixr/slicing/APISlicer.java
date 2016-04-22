@@ -1,32 +1,14 @@
 package edu.colorado.plv.fixr.slicing;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
+import java.util.LinkedList;
 
-import edu.colorado.plv.fixr.SootHelper;
 import soot.Body;
-import soot.Immediate;
 import soot.Local;
-import soot.PatchingChain;
-import soot.Type;
 import soot.Unit;
-import soot.Value;
-import soot.ValueBox;
-import soot.jimple.AssignStmt;
-import soot.jimple.Stmt;
-import soot.toolkits.graph.Block;
 import soot.toolkits.graph.BlockGraph;
 import soot.toolkits.graph.UnitGraph;
-import soot.toolkits.graph.pdg.EnhancedBlockGraph;
-import soot.toolkits.graph.pdg.HashMutablePDG;
-import soot.toolkits.graph.pdg.PDGNode;
 import soot.toolkits.graph.pdg.ProgramDependenceGraph;
-import soot.toolkits.scalar.SimpleLocalDefs;
 
 /**
  * Slice a CFG of a method using as seeds the nodes of the API calls
@@ -56,8 +38,8 @@ public class APISlicer {
 	public BlockGraph slice() {
 		/**
 		 * 1. Computes the set of relevant variables for each CFG node. 
-		 */		
-		SlicingCriterion sc = new AndroidMethodsCriterion();
+		 */				
+		SlicingCriterion sc = MethodPackageSeed.createAndroidSeed();
 		RelevantVariablesAnalysis rv = new RelevantVariablesAnalysis(this.cfg, sc);
 		
 		for (Iterator<Unit> iter = this.cfg.iterator(); iter.hasNext();) {

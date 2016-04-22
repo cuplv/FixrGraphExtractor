@@ -23,6 +23,9 @@ dependencies {
 
 test {
     systemProperties 'property': 'value'
+    testLogging {
+        events "passed", "skipped", "failed", "standardOut", "standardError"
+    }    
 }
 
 // Publish the jar to the repos directory

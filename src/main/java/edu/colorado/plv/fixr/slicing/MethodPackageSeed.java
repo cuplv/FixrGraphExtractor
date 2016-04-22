@@ -1,19 +1,37 @@
 package edu.colorado.plv.fixr.slicing;
 
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+
 import soot.Unit;
 import soot.Value;
 import soot.ValueBox;
 import soot.jimple.InvokeExpr;
-import soot.jimple.SpecialInvokeExpr;
-import soot.jimple.internal.InvokeExprBox;
-import soot.jimple.internal.RValueBox;
 
-public class AndroidMethodsCriterion implements SlicingCriterion {
-
-	public AndroidMethodsCriterion() {
-		// TODO Auto-generated constructor stub
+public class MethodPackageSeed implements SlicingCriterion {
+	private List<String> packagePrefixes;
+	
+	public MethodPackageSeed(Collection<String> packagePrefixex) {
+		//TODO extend package prefix to a collection of regexp, 
+		this.packagePrefixes = new LinkedList<String>(packagePrefixes); 
 	}
 
+	public MethodPackageSeed(String packagePrefix) {			
+		Collection<String> packageList = new LinkedList<String>();
+		packageList.add(packagePrefix);
+ 
+		this.packagePrefixes = new LinkedList<String>(packageList); 
+	}
+	
+	public static MethodPackageSeed createAndroidSeed() {
+		Collection<String> packageList = new LinkedList<String>();
+		packageList.add("android.");
+		MethodPackageSeed s = new MethodPackageSeed(packageList);
+		return s;
+	}
+
+	
 	@Override
 	public Boolean is_seed(Unit unit) {
 		
@@ -25,8 +43,11 @@ public class AndroidMethodsCriterion implements SlicingCriterion {
 			Value v = valBox.getValue();			
 			if (v instanceof InvokeExpr) {
 				String declaringClassName = ((InvokeExpr) v).getMethod().getDeclaringClass().getName();
-				if (declaringClassName.startsWith("android.")) {
-					return true;
+				
+				for (String prefix : this.packagePrefixes) {
+					if (declaringClassName.startsWith(prefix)) {
+						return true;
+					}
 				}
 				
 				// DEBUG

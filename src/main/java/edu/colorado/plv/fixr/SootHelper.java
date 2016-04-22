@@ -1,6 +1,7 @@
 package edu.colorado.plv.fixr;
 
 import soot.Body;
+import soot.G;
 import soot.PhaseOptions;
 import soot.Scene;
 import soot.SootClass;
@@ -13,6 +14,11 @@ import soot.util.cfgcmd.CFGToDotGraph;
 import soot.util.dot.DotGraph;
 
 public class SootHelper {
+	
+	public static void reset() {
+		G.reset();
+	}
+	
 	public static void configure(String classpath) {
 		Options.v().set_verbose(false);
 		Options.v().set_keep_line_number(true);
