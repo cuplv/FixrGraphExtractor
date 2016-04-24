@@ -58,7 +58,17 @@ public class RVDomain implements FlowSet {
 	public void add(Object arg0, FlowSet dest) {
 		//TODO implement add
 		assert false;		
+	}		 
+
+	/**
+	 * @param reachSeed the reachSeed to set
+	 */
+	public void setReachSeed(boolean reachSeed) {
+		/* if reachSeed is false, then the relevant var set is empty */
+		assert reachSeed || (this.relevantVariables.isEmpty()); 
+		this.reachSeed = reachSeed;
 	}
+
 
 	@Override
 	public void clear() {
@@ -75,12 +85,28 @@ public class RVDomain implements FlowSet {
 	}
 
 	@Override
-	public boolean contains(Object arg0) {		
-		// See add
-		assert false;
+	public boolean contains(Object arg0) {
+		assert arg0 instanceof Local;
+		
+		return this.relevantVariables.contains((Local) arg0);	
+	}
+		
+	public boolean hasVar(Object arg0) {
+		assert arg0 instanceof Local;
+		Local other = (Local) arg0;
+		
+		for (Local v : this.relevantVariables) {
+			if (v.getName() == other.getName() &&
+					v.getType().equals(other.getType())) {
+				return true;
+			}				
+		}
+		
 		return false;
 	}
 
+	
+	
 	@Override
 	public void copy(FlowSet dest) {
 		RVDomain rv = (RVDomain) dest;

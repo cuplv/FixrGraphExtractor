@@ -42,17 +42,6 @@ public class APISlicer {
 		SlicingCriterion sc = MethodPackageSeed.createAndroidSeed();
 		RelevantVariablesAnalysis rv = new RelevantVariablesAnalysis(this.cfg, sc);
 		
-		for (Iterator<Unit> iter = this.cfg.iterator(); iter.hasNext();) {
-			Unit u = iter.next();
-			RVDomain d = rv.getFlowAfter(u);
-			
-			System.out.println("Rel var for " + u + ":");
-			for (Iterator<Local> rvIter = d.iterator(); rvIter.hasNext();) {
-				Local l = rvIter.next();
-				System.out.print(" " + l);			
-			}
-			System.out.println("\n---");
-		}
 		
 		
 		/**

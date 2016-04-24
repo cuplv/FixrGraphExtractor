@@ -2,7 +2,10 @@ package edu.colorado.plv.fixr.slicing;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 import soot.Local;
 import soot.Unit;
@@ -22,8 +25,11 @@ public class RelevantVariablesAnalysis extends BackwardFlowAnalysis<Unit, RVDoma
 	
 	/* definitions of node */
 	private Map<Unit, RVDomain> defs;
-	/* ref of nodes */
+	/* uses of nodes */
 	private Map<Unit, RVDomain> uses;
+	
+	/* set of seeds */
+	private Set<Unit> seeds;
 	
 	public RelevantVariablesAnalysis(DirectedGraph<Unit> graph, SlicingCriterion criterion) {
 		super(graph);
@@ -31,14 +37,23 @@ public class RelevantVariablesAnalysis extends BackwardFlowAnalysis<Unit, RVDoma
 		
 		this.defs = new HashMap<Unit, RVDomain>();
 		this.uses = new HashMap<Unit, RVDomain>();		
+		this.seeds = new HashSet<Unit>();
 		
 		this.doAnalysis();
 	}
 
+	public Set<Unit> 
+	
+	
+	
+	getSeeds() {
+		return this.seeds;
+	}
+	
 	@Override
 	protected void flowThrough(RVDomain in, Unit unit, RVDomain out) {
 		RVDomain def_unit = this.get_defs(unit);
-		RVDomain ref_unit = this.get_uses(unit);
+		RVDomain use_unit = this.get_uses(unit);
 		
 		/*  
 		 * In changes either if: 
@@ -49,17 +64,11 @@ public class RelevantVariablesAnalysis extends BackwardFlowAnalysis<Unit, RVDoma
 		assert this.sc != null;
 		boolean is_seed = this.sc.is_seed(unit);
 		if (! toProcess && is_seed) {
-			
-			/* get DEF and REF of unit */
-			
-			if (! out.isReachSeed()) {
-				/* first visit */
-				def_unit.copy(out);
-				out.union(ref_unit);
-			}
-			else {
-				toProcess = true;
-			}
+			/* first visit of the seed */
+			use_unit.copy(out);
+		  out.setReachSeed(true);
+					
+			this.seeds.add(unit);
 		}
 		
 		if (toProcess) {
@@ -70,14 +79,11 @@ public class RelevantVariablesAnalysis extends BackwardFlowAnalysis<Unit, RVDoma
 			 * 
 			 * We define out as follows:
 			 * 
-			 * out = (in \ DEF(unit)) U (REF(unit) if intersection(in, DEF(unit)) is not empty ) 
-			 * 
-			 * DEF(unit)
-			 * REF(unit)  
+ 			 * out = (in \ DEF(unit)) U (USE(unit) if intersection(in, DEF(unit)) is not empty )    
 			 */
 			in.difference(def_unit, out);
 			if (in.intersect(def_unit)) {
-				out.union(def_unit);
+				out.union(use_unit);
 			}
 		}						
 	}
@@ -150,4 +156,27 @@ public class RelevantVariablesAnalysis extends BackwardFlowAnalysis<Unit, RVDoma
 		
 		return d;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		String res = "";
+		for (Iterator<Unit> iter = this.graph.iterator(); iter.hasNext();) {
+			Unit u = iter.next();
+			RVDomain d = getFlowBefore(u);
+			
+			res = res + "Rel var for " + u + ":";
+			for (Iterator<Local> rvIter = d.iterator(); rvIter.hasNext();) {
+				Local l = rvIter.next();
+				res = res + " " + l;			
+			}
+			res = res + "\n---\n";			
+		}		 
+		
+		return res;
+	}
+	
+	
 }

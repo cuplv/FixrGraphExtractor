@@ -27,7 +27,7 @@ public class Main {
   	String methodName = args[2];
   	
   	/* Configure soot */
-  	SootHelper.configure(classPath);
+  	SootHelper.configure(classPath, false);
   	/* trick to make soot happy */
   	Scene.v().addBasicClass(className, SootClass.HIERARCHY);
   	/* load dependencies */
