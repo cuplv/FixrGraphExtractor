@@ -75,6 +75,40 @@ public class slice.TestSlice extends java.lang.Object
         return;
     }
 
+    public void m5()
+    {
+        slice.TestSlice this;
+        int a, b, c, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5;
+
+        this := @this: slice.TestSlice;
+        temp$0 = 0;
+        a = temp$0;
+        temp$1 = 0;
+        b = temp$1;
+        temp$2 = 0;
+        c = temp$2;
+        if b == 0 goto label0;
+
+        goto label1;
+
+     label0:
+        nop;
+        temp$3 = a;
+        temp$4 = temp$3 + b;
+        a = temp$4;
+        goto label2;
+
+     label1:
+        nop;
+        b = a;
+
+     label2:
+        nop;
+        a = b;
+        temp$5 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        return;
+    }
+
     public void <init>()
     {
         slice.TestSlice this;

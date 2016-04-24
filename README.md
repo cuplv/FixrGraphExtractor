@@ -38,3 +38,9 @@ android.jar: jar file of the android framework.
 
 You can obtain a version of the jar here http://repository.grepcode.com/java/ext/com/google/android/android/4.4.2_r1/android-4.4.2_r1.jar or downloading the Android SDK
 
+
+# Test
+Run the test cases: `gradle test`
+
+The test uses the jimple representation that can be generated calling soot:
+`java -jar ./lib/soot-2.5.0.jar -pl --f J -src-prec java -cp <rt.jar>:<full path to FixrGraphExtractor/src/test/resources> slice.TestSlice`

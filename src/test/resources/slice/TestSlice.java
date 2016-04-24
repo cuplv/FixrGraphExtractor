@@ -10,15 +10,12 @@ public class TestSlice {
   }
   
   public void m2() {
-    // Slice a sequence - get rid of b blocks
-
+    // Slice a sequence
     int a;
     int b;
-
-    a = 0; // {a}
-    b = 0; // {}
-    
-    java.lang.Math.abs(a); // {a}
+    a = 0;
+    b = 0;    
+    java.lang.Math.abs(a);
   }
 
   public void m3() {
@@ -28,13 +25,11 @@ public class TestSlice {
     int b;
     a = 0;
     b = 0;
-    a = b;    
-    java.lang.Math.abs(a); // {a,b}
+    a = b;
+    java.lang.Math.abs(a);
   }
 
-    public void m4() {
-    // Slice a sequence - get rid of b blocks
-
+  public void m4() {
     int a;
     int b;
     int c;
@@ -51,7 +46,27 @@ public class TestSlice {
     }
 
     a = b;
-    java.lang.Math.abs(a); // {a}
+    java.lang.Math.abs(a);
   }
 
+  public void m5() {
+    int a;
+    int b;
+    int c;
+
+    a = 0;
+    b = 0;
+    c = 0;
+
+    if (b == 0) {
+      a = a + b;
+    }
+    else {
+      b = a;
+    }
+
+    a = b;
+    java.lang.Math.abs(a);
+  }
+  
 }
