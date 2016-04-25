@@ -12,9 +12,9 @@ import soot.jimple.InvokeExpr;
 public class MethodPackageSeed implements SlicingCriterion {
 	private List<String> packagePrefixes;
 	
-	public MethodPackageSeed(Collection<String> packagePrefixex) {
+	public MethodPackageSeed(Collection<String> packages) {
 		//TODO extend package prefix to a collection of regexp, 
-		this.packagePrefixes = new LinkedList<String>(packagePrefixes); 
+		this.packagePrefixes = new LinkedList<String>(packages); 
 	}
 
 	public MethodPackageSeed(String packagePrefix) {			

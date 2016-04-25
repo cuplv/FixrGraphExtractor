@@ -68,5 +68,37 @@ public class TestSlice {
     a = b;
     java.lang.Math.abs(a);
   }
+
+  public void m6() {
+    int a;
+    int b;    
+
+    a = 0;
+    b = 0;
+    
+    if (b == 0) {
+      a = a + b;
+    }
+    else {
+      b = a;
+    }
+
+    a = b;
+    java.lang.Math.abs(a);
+  }
+  
+  public void m7() {
+    int i;
+    int a;
+    int b;
+
+    a = 0;
+    b = 0;
+
+    for (i = 0; i <= 10; i++) {
+      java.lang.Math.abs(a);
+      a = b + 1;
+    }
+  }
   
 }

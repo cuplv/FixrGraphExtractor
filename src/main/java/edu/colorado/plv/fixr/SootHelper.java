@@ -178,7 +178,7 @@ public class SootHelper {
   	return b;
 	}
 	
-	public static void dumpToDot(DirectedGraph g, Body b, String fileName) {
+	public static void dumpToDot(DirectedGraph<?> g, Body b, String fileName) {
 		CFGToDotGraph gr = new CFGToDotGraph();
   	DotGraph viewgraph = gr.drawCFG(g,b); 	   
   	

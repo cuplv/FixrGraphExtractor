@@ -1,28 +1,24 @@
 package edu.colorado.plv.fixr;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import org.junit.Before;
 import org.junit.Test;
 
+import edu.colorado.plv.fixr.slicing.APISlicer;
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed;
 import edu.colorado.plv.fixr.slicing.RVDomain;
 import edu.colorado.plv.fixr.slicing.RelevantVariablesAnalysis;
-import edu.colorado.plv.fixr.slicing.SlicingCriterion;
 import soot.Body;
 import soot.IntType;
 import soot.Local;
 import soot.PatchingChain;
-import soot.RefType;
 import soot.Scene;
 import soot.SootClass;
 import soot.Unit;
 import soot.jimple.Jimple;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
-
-import static org.junit.Assert.*;
-
-import java.util.Collection;
-import java.util.Set;
-
-import org.junit.Before;
 
 public class SlicingTest {
 	static final String CLASS_NAME = "slice.TestSlice";	
@@ -61,14 +57,7 @@ public class SlicingTest {
   			}
   		}
 	}
-	
-	private void assertVarAtSeed(RelevantVariablesAnalysis rv,
-				Local[] vars_in, Local[] vars_out)
-	{
-  	assertEquals(rv.getSeeds().size(), 1);
-  	for (Unit unit : rv.getSeeds()) assertVarAtUnit(rv, unit, vars_in, vars_out);  	
-	}
-		
+			
 	private void assertVarAtBody(RelevantVariablesAnalysis rv, Body body,
 				Local[][] vars_in, Local[][] vars_out) 
 	{
@@ -85,12 +74,6 @@ public class SlicingTest {
 		}
 	}		
 	
-	private void printGraph(Body body)
-	{
-		EnhancedUnitGraph jimpleUnitGraph= new EnhancedUnitGraph(body);
-  	SootHelper.dumpToDot(jimpleUnitGraph, body, "test_graph.dot");
-	}
-	
 	private void testRV(String className, String methodName,
 			Local[][] vars_in, Local[][] vars_out)
 	{
@@ -98,11 +81,26 @@ public class SlicingTest {
   	RelevantVariablesAnalysis rv = new RelevantVariablesAnalysis(new EnhancedUnitGraph(body),
   				new MethodPackageSeed("java.lang.Math"));
 
+//  	// DEBUG
 //  	printGraph(body);
+//    EnhancedUnitGraph jimpleUnitGraph= new EnhancedUnitGraph(body);
+//    SootHelper.dumpToDot(jimpleUnitGraph, body, "test_graph.dot");
 //  	System.out.println(body.getUnits());
 //  	System.out.println(rv.toString());
+//  	
+//  	// DEBUG
+//  	DominatorTreeAdapter dominatorTree = new DominatorTreeAdapter(new DominatorTree(new MHGDominatorsFinder<Unit>(new EnhancedUnitGraph(body))));  	
+//  	SootHelper.dumpToDot(dominatorTree, body, "dom_tree.dot");
   	
   	assertVarAtBody(rv, body, vars_in, vars_out);				 
+	}
+
+	private void testSlice(String className, String methodName)
+	{
+		Body body = getBody(CLASS_NAME, methodName);
+  	EnhancedUnitGraph jimpleUnitGraph= new EnhancedUnitGraph(body);		
+  	APISlicer slicer = new APISlicer(jimpleUnitGraph, body);
+  	slicer.slice(new MethodPackageSeed("java.lang.Math"));  	
 	}
 	
 	@Test
@@ -152,8 +150,7 @@ public class SlicingTest {
 	public void rvTest4()
 	{
 		Local a = Jimple.v().newLocal("a", IntType.v());
-		Local b = Jimple.v().newLocal("b", IntType.v());
-		Local c = Jimple.v().newLocal("b", IntType.v());		
+		Local b = Jimple.v().newLocal("b", IntType.v());				
 		Local temp0 = Jimple.v().newLocal("temp$0", IntType.v());
 		Local temp1 = Jimple.v().newLocal("temp$1", IntType.v());
 		Local temp2 = Jimple.v().newLocal("temp$2", IntType.v());
@@ -180,8 +177,7 @@ public class SlicingTest {
 	public void rvTest5()
 	{
 		Local a = Jimple.v().newLocal("a", IntType.v());
-		Local b = Jimple.v().newLocal("b", IntType.v());
-		Local c = Jimple.v().newLocal("b", IntType.v());		
+		Local b = Jimple.v().newLocal("b", IntType.v());			
 		Local temp0 = Jimple.v().newLocal("temp$0", IntType.v());
 		Local temp1 = Jimple.v().newLocal("temp$1", IntType.v());
 		Local temp2 = Jimple.v().newLocal("temp$2", IntType.v());
@@ -209,7 +205,7 @@ public class SlicingTest {
 	{
 		Local a = Jimple.v().newLocal("a", IntType.v());
 		Local b = Jimple.v().newLocal("b", IntType.v());
-		Local c = Jimple.v().newLocal("b", IntType.v());		
+		Local c = Jimple.v().newLocal("c", IntType.v());		
 		Local temp0 = Jimple.v().newLocal("temp$0", IntType.v());
 		Local temp1 = Jimple.v().newLocal("temp$1", IntType.v());
 		Local temp2 = Jimple.v().newLocal("temp$2", IntType.v());
@@ -217,21 +213,26 @@ public class SlicingTest {
 		Local temp4 = Jimple.v().newLocal("temp$4", IntType.v());
 		Local temp5 = Jimple.v().newLocal("temp$5", IntType.v());
 
-		Local[] all_vars = {a,b,temp0,temp1,temp2,temp3,temp4,temp5};
-		Local[] no_b = {a,temp0,temp1,temp2,temp3,temp4,temp5};
-		Local[] no_a = {b,temp0,temp1,temp2,temp3,temp4,temp5};		
+		Local[] all_vars = {a,b,c,temp0,temp1,temp2,temp3,temp4,temp5};
+		Local[] no_b = {a,c,temp0,temp1,temp2,temp3,temp4,temp5};
+		Local[] no_a = {b,c,temp0,temp1,temp2,temp3,temp4,temp5};
+		Local[] no_a_b = {c,temp0,temp1,temp2,temp3,temp4,temp5};		
 		Local[][] in_vars = {{},{},{temp0},{a},{a,temp1},
 				{a,b},{a,b},{a,b},{a},{b},
 				{b},{b},{b},{b},{a},
 				{a},{b},{b},{a},{}};
-		Local[][] out_vars = null;
-//		all_vars,all_vars,all_vars,all_vars,{a,b,temp0,temp2,temp3,temp4,temp5},
-//				no_b,no_b,no_b,no_b,no_b,
-//				no_b,no_b,no_b,no_b,no_b,
-//				no_b,no_b,no_b,no_a,{}};
+		Local[][] out_vars = {all_vars, all_vars, {a,b,c,temp1,temp2,temp3,temp4,temp5},no_a, {b,c,temp0,temp2,temp3,temp4,temp5},
+				no_a_b,no_a_b,no_a_b,no_a,no_b,
+				no_b,no_b,no_b,no_b,no_a,
+				no_a,no_b,no_b,no_a,all_vars};
 		
-		testRV(CLASS_NAME, "m5", in_vars, null);	
+		testRV(CLASS_NAME, "m5", in_vars, out_vars);	
 	}
 
+	@Test
+	public void sliceT1()	
+	{
+		testSlice(CLASS_NAME,"m1");		
+	}
 	
 }

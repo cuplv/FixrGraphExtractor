@@ -38,7 +38,7 @@ public class RVDomain implements FlowSet {
 	
 	public RVDomain() {
 		this.reachSeed = false;
-		this.relevantVariables = new HashSet<Local>();
+		this.relevantVariables = new HashSet<Local>();		
 	}
 		
 	@Override
@@ -245,7 +245,7 @@ public class RVDomain implements FlowSet {
 	}
 
 	@Override
-	public List toList() { 
+	public List<?> toList() { 
 		return null;
 	}
 

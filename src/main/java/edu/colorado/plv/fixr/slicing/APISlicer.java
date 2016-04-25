@@ -1,13 +1,15 @@
 package edu.colorado.plv.fixr.slicing;
 
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import soot.Body;
-import soot.Local;
+import soot.PatchingChain;
 import soot.Unit;
 import soot.toolkits.graph.BlockGraph;
 import soot.toolkits.graph.UnitGraph;
+import soot.toolkits.graph.pdg.EnhancedUnitGraph;
 import soot.toolkits.graph.pdg.ProgramDependenceGraph;
 
 /**
@@ -35,21 +37,18 @@ public class APISlicer {
 	 * Computes the slice of this.cfg according to the android API method calls.
 	 * @return
 	 */
-	public BlockGraph slice() {
+	public UnitGraph slice(SlicingCriterion sc) {
 		/**
 		 * 1. Computes the set of relevant variables for each CFG node. 
-		 */				
-		SlicingCriterion sc = MethodPackageSeed.createAndroidSeed();
-		RelevantVariablesAnalysis rv = new RelevantVariablesAnalysis(this.cfg, sc);
-		
-		
+		 */		
+		SliceStmtAnalysis sa = new SliceStmtAnalysis(this.cfg, sc); 
 		
 		/**
 		 * 2. Construct the new CFG 
 		 */
-		BlockGraph slice = buildSlice(rv);
+		UnitGraph slice = buildSlice(sa);
 		
-		return null;
+		return slice;
 	}
 	
 	/**
@@ -60,9 +59,22 @@ public class APISlicer {
 	 *  
 	 * @return a sliced block graph
 	 */
-	private BlockGraph buildSlice(RelevantVariablesAnalysis rv) {
-		//EnhancedBlockGraph ebg = new EnhancedBlockGraph();
+	private UnitGraph buildSlice(SliceStmtAnalysis sa) {		
+		PatchingChain<Unit> pc = this.cfg.getBody().getUnits();
+
+		Set<Unit> toRemove = new HashSet<Unit>();
+		for (Unit u : pc) {
+			if (! sa.isInSlice(u)) {
+				toRemove.add(u);
+			}
+		}
 		
-		return null;
+		for (Unit u : toRemove) {
+			pc.remove(u);
+		}
+		
+		System.out.println(pc);
+		
+		return null;		
 	}	
 }

@@ -7,7 +7,9 @@ import soot.toolkits.graph.BlockGraph;
 import soot.toolkits.graph.pdg.EnhancedBlockGraph;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
 import edu.colorado.plv.fixr.slicing.APISlicer;
+import edu.colorado.plv.fixr.slicing.MethodPackageSeed;
 import edu.colorado.plv.fixr.slicing.RelevantVariablesAnalysis;
+import edu.colorado.plv.fixr.slicing.SlicingCriterion;
 
 public class Main {
 	
@@ -41,7 +43,8 @@ public class Main {
   	
   	/* Perform the slicing */
   	APISlicer slicer = new APISlicer(jimpleUnitGraph, body);
-  	BlockGraph slicedCFG = slicer.slice();
+  	SlicingCriterion sc = MethodPackageSeed.createAndroidSeed();
+  	slicer.slice(sc);
   	
   	/* Dump the CFG to dot */
   	//EnhancedBlockGraph ebg = new EnhancedBlockGraph(body);
