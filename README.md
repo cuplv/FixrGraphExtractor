@@ -43,4 +43,4 @@ You can obtain a version of the jar here http://repository.grepcode.com/java/ext
 Run the test cases: `gradle test`
 
 The test uses the jimple representation that can be generated calling soot:
-`java -jar ./lib/soot-2.5.0.jar -pl --f J -src-prec java -cp <rt.jar>:<full path to FixrGraphExtractor/src/test/resources> slice.TestSlice`
+`java -jar ./lib/soot-2.5.0.jar --f J -src-prec java -cp <rt.jar>:<full path to FixrGraphExtractor/src/test/resources> slice.TestSlice`

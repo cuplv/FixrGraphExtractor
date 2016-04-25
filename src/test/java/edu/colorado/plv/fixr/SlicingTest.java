@@ -18,6 +18,7 @@ import soot.Scene;
 import soot.SootClass;
 import soot.Unit;
 import soot.jimple.Jimple;
+import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
 
 public class SlicingTest {
@@ -98,9 +99,12 @@ public class SlicingTest {
 	private void testSlice(String className, String methodName)
 	{
 		Body body = getBody(CLASS_NAME, methodName);
-  	EnhancedUnitGraph jimpleUnitGraph= new EnhancedUnitGraph(body);		
+  	EnhancedUnitGraph jimpleUnitGraph= new EnhancedUnitGraph(body);
+  	SootHelper.dumpToDot(jimpleUnitGraph, jimpleUnitGraph.getBody(), methodName + ".dot");
+  	
   	APISlicer slicer = new APISlicer(jimpleUnitGraph, body);
-  	slicer.slice(new MethodPackageSeed("java.lang.Math"));  	
+  	UnitGraph g = slicer.slice(new MethodPackageSeed("java.lang.Math"));  	  	
+  	SootHelper.dumpToDot(g, g.getBody(), methodName + "_sliced.dot");
 	}
 	
 	@Test
@@ -234,5 +238,28 @@ public class SlicingTest {
 	{
 		testSlice(CLASS_NAME,"m1");		
 	}
-	
+
+	@Test
+	public void sliceT2()	
+	{
+		testSlice(CLASS_NAME,"m2");		
+	}
+
+	@Test
+	public void sliceT3()	
+	{
+		testSlice(CLASS_NAME,"m3");		
+	}
+
+	@Test
+	public void sliceT4()	
+	{
+		testSlice(CLASS_NAME,"m4");		
+	}
+
+	@Test
+	public void sliceT6()	
+	{
+		testSlice(CLASS_NAME,"m6");		
+	}	
 }

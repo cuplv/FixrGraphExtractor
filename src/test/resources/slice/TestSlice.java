@@ -71,19 +71,20 @@ public class TestSlice {
 
   public void m6() {
     int a;
-    int b;    
-
+    int b;
+    int c;
+    
     a = 0;
     b = 0;
+    c = 3;
     
     if (b == 0) {
-      a = a + b;
+      a = c;
     }
     else {
       b = a;
     }
 
-    a = b;
     java.lang.Math.abs(a);
   }
   

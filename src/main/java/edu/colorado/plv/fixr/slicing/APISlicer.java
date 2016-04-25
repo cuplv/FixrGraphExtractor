@@ -2,11 +2,18 @@ package edu.colorado.plv.fixr.slicing;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 import soot.Body;
+import soot.Local;
 import soot.PatchingChain;
+import soot.SootClass;
+import soot.SootMethod;
 import soot.Unit;
+import soot.jimple.Jimple;
+import soot.jimple.JimpleBody;
 import soot.toolkits.graph.BlockGraph;
 import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
@@ -59,22 +66,60 @@ public class APISlicer {
 	 *  
 	 * @return a sliced block graph
 	 */
-	private UnitGraph buildSlice(SliceStmtAnalysis sa) {		
-		PatchingChain<Unit> pc = this.cfg.getBody().getUnits();
+	private UnitGraph buildSlice(SliceStmtAnalysis sa) {
+		Body srcBody = this.cfg.getBody();
+		SootMethod srcMethod = srcBody.getMethod();
+		SootClass srcClass = srcMethod.getDeclaringClass();
+		assert (null != srcMethod);
+		String methodName = srcMethod.getName();
+		methodName = methodName + "__sliced__";
+		
+		SootMethod dstMethod = new SootMethod(methodName, srcMethod.getParameterTypes(),
+				srcMethod.getReturnType(), srcMethod.getModifiers());
+		JimpleBody dstBody = Jimple.v().newBody(dstMethod);
+		dstMethod.setActiveBody(dstBody);
+		srcClass.addMethod(dstMethod);
 
-		Set<Unit> toRemove = new HashSet<Unit>();
+		dstBody.importBodyContentsFrom(srcBody);
+		
+		/* copy local variables - to narrow down */
+		for (Local l : srcBody.getLocals()) {
+			dstBody.getLocals().add(l);
+		}
+		
+		PatchingChain<Unit> pc = srcBody.getUnits();		
+//		for (Unit u : pc) {
+//			if (pc.getFirst() != u && pc.getLast() != u &&
+//					!sa.isInSlice(u)) {					 
+//				srcBody.getUnits().remove((Unit) u);
+//			}
+//			
+//			// TODO fix temporary workaround for first and last  
+////			if (pc.getFirst() == u || pc.getLast() == u ||
+////					sa.isInSlice(u)) {
+////				dstBody.getUnits().add((Unit) u.clone());				
+////			}
+//		}		
+
+		List<Unit> toRemove = new LinkedList<Unit>();
 		for (Unit u : pc) {
-			if (! sa.isInSlice(u)) {
+			if (pc.getFirst() != u && pc.getLast() != u &&
+					!sa.isInSlice(u)) {
 				toRemove.add(u);
+				
 			}
 		}
-		
 		for (Unit u : toRemove) {
-			pc.remove(u);
+			// REMOVE does the magic for us
+			srcBody.getUnits().remove((Unit) u);
 		}
+
+		//System.out.println(dstBody.getUnits());
+		System.out.println(srcBody.getUnits());		
 		
-		System.out.println(pc);
+		EnhancedUnitGraph ug = new EnhancedUnitGraph(srcBody);
+		assert(null != ug);
 		
-		return null;		
+		return ug;		
 	}	
 }
