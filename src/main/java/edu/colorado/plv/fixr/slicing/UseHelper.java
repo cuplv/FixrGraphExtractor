@@ -33,7 +33,13 @@ public class UseHelper {
 		return helper;
 	}
 	
-	public RVDomain get_defs(Unit unit) {
+	/**
+	 * Get all the locals defined by unit.
+	 *  
+	 * @param unit
+	 * @return
+	 */
+	public RVDomain getRVDomainDefs(Unit unit) {
 		RVDomain unit_defs = this.defs.get(unit);
 		if (null == unit_defs) {
 			/* compute the definition for the unit */
@@ -43,7 +49,13 @@ public class UseHelper {
 		return unit_defs;
 	}
 
-	public RVDomain get_uses(Unit unit) {
+	/**
+	 * Get all the locals used by unit.
+	 *  
+	 * @param unit
+	 * @return
+	 */	
+	public RVDomain getRVDomainUses(Unit unit) {
 		RVDomain unit_uses= this.uses.get(unit);
 		if (null == unit_uses) {			 
 			unit_uses = filterToLocal(unit.getUseBoxes());			

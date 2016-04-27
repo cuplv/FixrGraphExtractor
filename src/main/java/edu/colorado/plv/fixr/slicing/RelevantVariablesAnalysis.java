@@ -48,8 +48,8 @@ public class RelevantVariablesAnalysis extends BackwardFlowAnalysis<Unit, RVDoma
 	
 	@Override
 	protected void flowThrough(RVDomain in, Unit unit, RVDomain out) {
-		RVDomain def_unit = this.helper.get_defs(unit);
-		RVDomain use_unit = this.helper.get_uses(unit);
+		RVDomain def_unit = this.helper.getRVDomainDefs(unit);
+		RVDomain use_unit = this.helper.getRVDomainUses(unit);
 		
 		/*  
 		 * In changes either if: 

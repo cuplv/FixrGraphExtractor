@@ -6,6 +6,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import edu.colorado.plv.fixr.SootHelper;
+import edu.colorado.plv.fixr.graphs.DataDependencyGraph;
 import soot.Body;
 import soot.Local;
 import soot.PatchingChain;
@@ -47,17 +49,20 @@ public class APISlicer {
 	 * @return
 	 */
 	public UnitGraph slice(SlicingCriterion sc) {
-		/**
-		 * 1. Computes the set of relevant variables for each CFG node. 
-		 */		
-		SliceStmtAnalysis sa = new SliceStmtAnalysis(this.cfg, sc); 	
+		DataDependencyGraph g = new DataDependencyGraph(this.cfg);
+		SootHelper.dumpToDot(g, this.cfg.getBody(), "/home/sergio/test_dg.dot");
 		
-		/**
-		 * 2. Construct the new CFG 
-		 */
-		UnitGraph slice = buildSlice(sa);				
+//		/**
+//		 * 1. Computes the set of relevant variables for each CFG node. 
+//		 */		
+//		SliceStmtAnalysis sa = new SliceStmtAnalysis(this.cfg, sc); 	
+//		
+//		/**
+//		 * 2. Construct the new CFG 
+//		 */
+//		UnitGraph slice = buildSlice(sa);				
 		
-		return slice;
+		return null;
 	}
 	
 	/**

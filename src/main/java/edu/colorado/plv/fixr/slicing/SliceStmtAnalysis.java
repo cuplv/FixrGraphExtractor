@@ -143,7 +143,7 @@ public class SliceStmtAnalysis {
 			/* get the DEF of all the predecessors */
 			for (Unit changed : changed_r) {
 				for (Unit pred : this.graph.getPredsOf(changed)) {
-					RVDomain pred_use = this.helper.get_defs(pred);
+					RVDomain pred_use = this.helper.getRVDomainDefs(pred);
 
 					if (pred_use.intersect(this.rel_var.get(changed))) {
 						this.stmts.add(pred);
