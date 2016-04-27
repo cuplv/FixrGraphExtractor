@@ -89,6 +89,28 @@ public class TestSlice {
   }
   
   public void m7() {
+    int i;    
+
+    for (i = 0; i <= 10; i++) {
+      java.lang.Math.abs(i);
+    }
+  }
+
+  public void m8() {
+    int i;
+    int a;
+
+    i = 0;
+    
+    for (a = 0; a <= 10; a++) {
+      a = a + 1;
+    }
+    
+    java.lang.Math.abs(i);
+  }
+
+  
+  public void m9() {
     int i;
     int a;
     int b;

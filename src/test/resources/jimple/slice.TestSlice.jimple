@@ -1,6 +1,5 @@
 public class slice.TestSlice extends java.lang.Object
 {
-
     public void m1()
     {
         slice.TestSlice this;
@@ -141,6 +140,69 @@ public class slice.TestSlice extends java.lang.Object
     }
 
     public void m7()
+    {
+        slice.TestSlice this;
+        int i, temp$0, temp$1, temp$2, temp$3;
+
+        this := @this: slice.TestSlice;
+        temp$0 = 0;
+        i = temp$0;
+
+     label0:
+        nop;
+        if i <= 10 goto label1;
+
+        goto label2;
+
+     label1:
+        nop;
+        temp$1 = staticinvoke <java.lang.Math: int abs(int)>(i);
+        nop;
+        temp$2 = i;
+        temp$3 = temp$2 + 1;
+        i = temp$3;
+        goto label0;
+
+     label2:
+        nop;
+        return;
+    }
+
+    public void m8()
+    {
+        slice.TestSlice this;
+        int i, a, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5, temp$6;
+
+        this := @this: slice.TestSlice;
+        temp$0 = 0;
+        i = temp$0;
+        temp$1 = 0;
+        a = temp$1;
+
+     label0:
+        nop;
+        if a <= 10 goto label1;
+
+        goto label2;
+
+     label1:
+        nop;
+        temp$2 = a;
+        temp$3 = temp$2 + 1;
+        a = temp$3;
+        nop;
+        temp$4 = a;
+        temp$5 = temp$4 + 1;
+        a = temp$5;
+        goto label0;
+
+     label2:
+        nop;
+        temp$6 = staticinvoke <java.lang.Math: int abs(int)>(i);
+        return;
+    }
+
+    public void m9()
     {
         slice.TestSlice this;
         int i, a, b, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5, temp$6, temp$7;

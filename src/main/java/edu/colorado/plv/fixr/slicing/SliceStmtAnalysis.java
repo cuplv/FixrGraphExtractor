@@ -10,11 +10,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.colorado.plv.fixr.SootHelper;
 import soot.Unit;
 import soot.toolkits.graph.DirectedGraph;
 import soot.toolkits.graph.DominatorNode;
 import soot.toolkits.graph.DominatorTree;
+import soot.toolkits.graph.DominatorTreeAdapter;
 import soot.toolkits.graph.MHGDominatorsFinder;
+import soot.toolkits.graph.UnitGraph;
+import soot.toolkits.graph.pdg.HashMutablePDG;
+import soot.toolkits.graph.pdg.ProgramDependenceGraph;
 
 /**
  * Analysis used to computes the statements of a cfg contained in a slice.
@@ -40,14 +45,14 @@ public class SliceStmtAnalysis {
 		this.graph = graph;		
 		this.sc = criterion;
 		
-		buildControlPoint();		
+		buildControlPoint();
 		this.stmts = new HashSet<Unit>();
 		this.branches = new HashSet<Unit>();
 		this.rel_var = new HashMap<Unit,RVDomain>();
 		this.rel_var_branch = new HashMap<Unit,RelevantVariablesAnalysis>();
 		this.helper = UseHelper.getHelper();
 		
-		// Initial value for sets
+		/* Initial value for sets */
   	RelevantVariablesAnalysis rv = new RelevantVariablesAnalysis(graph, this.sc);
 		for (Unit u : this.graph) {
 			RVDomain dom = rv.getFlowBefore(u);
@@ -66,6 +71,15 @@ public class SliceStmtAnalysis {
 		DominatorTree dominatorTree;		
 		
 		dominatorTree = new DominatorTree(new MHGDominatorsFinder<Unit>(this.graph));
+
+//		// DEBUG
+//		ProgramDependenceGraph pdg = new HashMutablePDG((UnitGraph) this.graph);
+//		SootHelper.dumpToDot(pdg, ((UnitGraph) this.graph).getBody(), "/home/sergio/pdf.dot");
+//		System.out.println(pdg.toString());
+//		
+//		// DEBUG
+//		DominatorTreeAdapter da = new DominatorTreeAdapter(dominatorTree);  	
+//		SootHelper.dumpToDot(da, ((UnitGraph) this.graph).getBody() , "/home/sergio/test.dot");		
 		
 		/* visits the tree and build the control relationship */
 		this.closerControlPoint = new HashMap<Unit, Unit>(); 

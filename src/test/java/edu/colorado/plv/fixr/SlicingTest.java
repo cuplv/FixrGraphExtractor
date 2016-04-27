@@ -261,5 +261,17 @@ public class SlicingTest {
 	public void sliceT6()	
 	{
 		testSlice(CLASS_NAME,"m6");		
-	}	
+	}
+	
+	@Test
+	public void sliceT7()	
+	{
+		testSlice(CLASS_NAME,"m7");		
+	}
+	
+	@Test
+	public void sliceT8()	
+	{
+		testSlice(CLASS_NAME,"m8");		
+	}			
 }

@@ -12,8 +12,10 @@ import soot.PatchingChain;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Unit;
+import soot.jimple.GotoStmt;
 import soot.jimple.Jimple;
 import soot.jimple.JimpleBody;
+import soot.jimple.NopStmt;
 import soot.toolkits.graph.BlockGraph;
 import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
@@ -48,12 +50,12 @@ public class APISlicer {
 		/**
 		 * 1. Computes the set of relevant variables for each CFG node. 
 		 */		
-		SliceStmtAnalysis sa = new SliceStmtAnalysis(this.cfg, sc); 
+		SliceStmtAnalysis sa = new SliceStmtAnalysis(this.cfg, sc); 	
 		
 		/**
 		 * 2. Construct the new CFG 
 		 */
-		UnitGraph slice = buildSlice(sa);
+		UnitGraph slice = buildSlice(sa);				
 		
 		return slice;
 	}
@@ -103,11 +105,11 @@ public class APISlicer {
 
 		List<Unit> toRemove = new LinkedList<Unit>();
 		for (Unit u : pc) {
-			if (pc.getFirst() != u && pc.getLast() != u &&
-					!sa.isInSlice(u)) {
-				toRemove.add(u);
-				
-			}
+			if (pc.getFirst() == u) continue;
+			if (pc.getLast() == u) continue;
+			if (sa.isInSlice(u)) continue;
+			if (is_label(u)) continue;
+			toRemove.add(u);
 		}
 		for (Unit u : toRemove) {
 			// REMOVE does the magic for us
@@ -122,4 +124,13 @@ public class APISlicer {
 		
 		return ug;		
 	}	
+	
+	private boolean is_label(Unit u) {
+		if (u instanceof NopStmt || 
+				u instanceof GotoStmt) {
+			return true;
+		}		
+		
+		return false;
+	}
 }
