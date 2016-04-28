@@ -103,7 +103,8 @@ public class SlicingTest {
   	SootHelper.dumpToDot(jimpleUnitGraph, jimpleUnitGraph.getBody(), "/tmp/" + methodName + ".dot");
   	
   	APISlicer slicer = new APISlicer(jimpleUnitGraph, body);
-  	UnitGraph g = slicer.slice(new MethodPackageSeed("java.lang.Math"));  	  	
+  	Body slicedBody = slicer.slice(new MethodPackageSeed("java.lang.Math"));
+  	UnitGraph g = new EnhancedUnitGraph(slicedBody);  	  	
   	SootHelper.dumpToDot(g, g.getBody(), "/tmp/" + methodName + "_sliced.dot");
 	}
 	

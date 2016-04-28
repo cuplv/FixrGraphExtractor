@@ -21,7 +21,13 @@ import soot.toolkits.scalar.SimpleLocalDefs;
  * Data dependency graph
  * 
  * Nodes of the graph are of Unit  type (i.e. statements)
- * There is an edge e from a unit u1 to a unit u2 if a variable defined in u1 is used in u2.
+ * There is an edge e from a unit u1 to a unit u2 if a variable defined in u1 
+ * is used in u2.
+ * 
+ * Note: the data dependency graph is not complete. It does not compute the 
+ * edges of type antidependence, output dependence and input dependence (we 
+ * don't need them for slicing).
+ * They are useful to parallelize the execution of instructions. 
  * 
  * @author Sergio Mover
  *
@@ -96,18 +102,31 @@ public class DataDependencyGraph implements DirectedGraph<Unit> {
 	}
 	
 	/**
-	 * Returns all the dependencies of the variables in unit 
+	 * Returns all the units that define a variable used in srcUnit. 
 	 * 
 	 * @param unit
 	 * @return
 	 */
 	protected Set<Unit> getDefsOf(Unit srcUnit) {
+		return DataDependencyGraph.getDefsOf(srcUnit, this.ld);		
+	}
+
+	/**
+	 * Returns all the units that define a variable used in srcUnit. 
+	 * 
+	 * @param unit
+	 * @return
+	 */
+	public static Set<Unit> getDefsOf(Unit srcUnit, LocalDefs ld) {
 		Set<Unit> res = new HashSet<Unit>();
+		
+		/* get variables used by srcUnit */
 		for (ValueBox b : srcUnit.getUseBoxes()) {
 			Value v = b.getValue();
 			// TODO Consider other interesting cases (e.g. access to arrays...)
-			if (v instanceof Local) { 
-				for (Unit dstUnit : this.ld.getDefsOfAt((Local) v, srcUnit)) {
+			if (v instanceof Local) {				
+				for (Unit dstUnit : ld.getDefsOfAt((Local) v, srcUnit)) {
+					/* Add a unit to the result if it defines v */					
 					res.add(dstUnit);	
 				}
 			}

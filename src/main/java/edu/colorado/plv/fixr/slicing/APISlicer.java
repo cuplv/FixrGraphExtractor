@@ -1,11 +1,7 @@
 package edu.colorado.plv.fixr.slicing;
 
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
@@ -13,7 +9,6 @@ import java.util.Stack;
 import edu.colorado.plv.fixr.SootHelper;
 import edu.colorado.plv.fixr.graphs.DataDependencyGraph;
 import soot.Body;
-import soot.Local;
 import soot.PatchingChain;
 import soot.SootClass;
 import soot.SootMethod;
@@ -23,15 +18,11 @@ import soot.jimple.IfStmt;
 import soot.jimple.Jimple;
 import soot.jimple.JimpleBody;
 import soot.jimple.LookupSwitchStmt;
-import soot.jimple.NopStmt;
 import soot.jimple.TableSwitchStmt;
 import soot.toolkits.graph.Block;
-import soot.toolkits.graph.BlockGraph;
 import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
-import soot.toolkits.graph.pdg.HashMutablePDG;
 import soot.toolkits.graph.pdg.PDGNode;
-import soot.toolkits.graph.pdg.ProgramDependenceGraph;
 
 /**
  * Slice a CFG of a method using as seeds the nodes of the API calls
@@ -46,14 +37,12 @@ import soot.toolkits.graph.pdg.ProgramDependenceGraph;
  */
 public class APISlicer {
 	private UnitGraph cfg;
-	private Body body;
 	private PDGSlicer pdg; 
 	private DataDependencyGraph ddg;
 	
 	public APISlicer(UnitGraph cfg, Body body) {
 		super();
 		this.cfg = cfg;
-		this.body = body;
 		
 		/* Computes the program dependency graph */
 		this.pdg= new PDGSlicer((UnitGraph) this.cfg);
@@ -63,8 +52,8 @@ public class APISlicer {
 	/**
 	 * Computes the slice of this.cfg according to the android API method calls.
 	 * @return
-	 */
-	public UnitGraph slice(SlicingCriterion sc) {				
+	 */	
+	public Body slice(SlicingCriterion sc) {				
 		SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");		
 		SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
 				
@@ -75,7 +64,7 @@ public class APISlicer {
 		Set<Unit> unitsInSlice = findReachableUnits(seeds);
 				
 		/* 3. Construct the sliced CFG */			
-		UnitGraph slice = buildSlice(unitsInSlice);				
+		Body slice = buildSlice(unitsInSlice);				
 		
 		return slice;
 	}
@@ -203,7 +192,7 @@ public class APISlicer {
 	 *  
 	 * @return a sliced block graph
 	 */
-	private UnitGraph buildSlice(Set<Unit> unitsInSlice) {
+	private Body buildSlice(Set<Unit> unitsInSlice) {
 		Body srcBody = this.cfg.getBody();
 		SootMethod srcMethod = srcBody.getMethod();
 		SootClass srcClass = srcMethod.getDeclaringClass();
@@ -232,10 +221,7 @@ public class APISlicer {
 			}
 		}
 
-		EnhancedUnitGraph ug = new EnhancedUnitGraph(dstBody);
-		assert(null != ug);
-		
-		return ug;		
+		return dstBody;		
 	}			
 	
 	private boolean isControlFlow(Unit u) {

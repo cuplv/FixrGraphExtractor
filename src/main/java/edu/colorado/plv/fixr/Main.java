@@ -1,15 +1,13 @@
 package edu.colorado.plv.fixr;
 
+import edu.colorado.plv.fixr.graphs.UnitCdfgGraph;
+import edu.colorado.plv.fixr.slicing.APISlicer;
+import edu.colorado.plv.fixr.slicing.MethodPackageSeed;
+import edu.colorado.plv.fixr.slicing.SlicingCriterion;
 import soot.Body;
 import soot.Scene;
 import soot.SootClass;
-import soot.toolkits.graph.BlockGraph;
-import soot.toolkits.graph.pdg.EnhancedBlockGraph;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
-import edu.colorado.plv.fixr.slicing.APISlicer;
-import edu.colorado.plv.fixr.slicing.MethodPackageSeed;
-import edu.colorado.plv.fixr.slicing.RelevantVariablesAnalysis;
-import edu.colorado.plv.fixr.slicing.SlicingCriterion;
 
 public class Main {
 	
@@ -35,23 +33,18 @@ public class Main {
   	/* load dependencies */
   	Scene.v().loadNecessaryClasses();
 
-  	/* get the method body (in jimple) */
+  	/* Get the method body (in jimple)  and perform the slicing */
   	Body body = SootHelper.getMethodBody(className, methodName);
-
   	EnhancedUnitGraph jimpleUnitGraph= new EnhancedUnitGraph(body);
-  	
-  	
-  	/* Perform the slicing */
   	APISlicer slicer = new APISlicer(jimpleUnitGraph, body);
   	SlicingCriterion sc = MethodPackageSeed.createAndroidSeed();
-  	slicer.slice(sc);
+   	Body slicedJimple = slicer.slice(sc);
   	
-  	/* Dump the CFG to dot */
-  	//EnhancedBlockGraph ebg = new EnhancedBlockGraph(body);
-  	//SootHelper.dumpToDot(ebg, body, "enanched_block_graph.dot");	
+  	/* build the CdFG graph */
+  	UnitCdfgGraph cdfg = new UnitCdfgGraph(slicedJimple); 
   	
-  	SootHelper.dumpToDot(jimpleUnitGraph, body, "enanched_unit_graph.dot");
-  	//RelevantVariablesAnalysis rv = new RelevantVariablesAnalysis(jimpleUnitGraph);
+  	/* Dump the sliced graph */
+  	SootHelper.dumpToDot(cdfg, cdfg.getBody(), "sliced_graph.dot");	  	 
   	
   	System.out.println("Done");
   }
