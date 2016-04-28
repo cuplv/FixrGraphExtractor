@@ -12,7 +12,9 @@ public class HelloWorldActivity extends Activity {
       super.onCreate(savedInstanceState);
       //setContentView(R.layout.activity_main);
 
-      float f = savedInstanceState.getFloat("");
+      String s = "test string";
+      
+      float f = savedInstanceState.getFloat(s);
    }
    
    @Override

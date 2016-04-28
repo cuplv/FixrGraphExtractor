@@ -191,10 +191,7 @@ public class APISlicer {
 	}	 
 	
 	/**
-	 * Return a slice (as a block graph) of the cfg that just contains 
-	 * the CFG nodes that have a non-empty set of relevant variables
-	 *  
-	 * TODO probably this has to be implemented in the SlicedEnhancedBlockGraph
+	 * Return a slice (as a block graph) of the cfg nodes in unitsInSlice 
 	 *  
 	 * @return a sliced block graph
 	 */

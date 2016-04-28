@@ -44,7 +44,7 @@ public class Main {
   	UnitCdfgGraph cdfg = new UnitCdfgGraph(slicedJimple); 
   	
   	/* Dump the sliced graph */
-  	SootHelper.dumpToDot(cdfg, cdfg.getBody(), "sliced_graph.dot");	  	 
+  	SootHelper.dumpToDot(cdfg, cdfg.getBody(), cdfg.getBody().getMethod().getName() + ".dot");	  	 
   	
   	System.out.println("Done");
   }
