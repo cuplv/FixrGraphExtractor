@@ -20,6 +20,9 @@ import soot.toolkits.scalar.SimpleLocalDefs;
 /**
  * Data dependency graph
  * 
+ * Nodes of the graph are of Unit  type (i.e. statements)
+ * There is an edge e from a unit u1 to a unit u2 if a variable defined in u1 is used in u2.
+ * 
  * @author Sergio Mover
  *
  */
@@ -61,14 +64,14 @@ public class DataDependencyGraph implements DirectedGraph<Unit> {
 		/* compute graph */
 		for (Unit u : this.srcGraph) {			
 			Set<Unit> defsOfUnit = getDefsOf(u);
-			List<Unit> succList = getSuccsOf(u);
+			List<Unit> predList = getPredsOf(u);
 			
 			graphNodes.add(u);
 			
 			for (Unit reachedUnits : defsOfUnit) {
-				List<Unit> predList = getPredsOf(reachedUnits);
-				succList.add(reachedUnits);
-				predList.add(u);				  
+				List<Unit> succList = getSuccsOf(reachedUnits);
+				succList.add(u);
+				predList.add(reachedUnits);				  
 			}								
 		}
 		

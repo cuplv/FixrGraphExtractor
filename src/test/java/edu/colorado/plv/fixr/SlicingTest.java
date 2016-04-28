@@ -100,11 +100,11 @@ public class SlicingTest {
 	{
 		Body body = getBody(CLASS_NAME, methodName);
   	EnhancedUnitGraph jimpleUnitGraph= new EnhancedUnitGraph(body);
-  	SootHelper.dumpToDot(jimpleUnitGraph, jimpleUnitGraph.getBody(), methodName + ".dot");
+  	SootHelper.dumpToDot(jimpleUnitGraph, jimpleUnitGraph.getBody(), "/tmp/" + methodName + ".dot");
   	
   	APISlicer slicer = new APISlicer(jimpleUnitGraph, body);
   	UnitGraph g = slicer.slice(new MethodPackageSeed("java.lang.Math"));  	  	
-  	//SootHelper.dumpToDot(g, g.getBody(), methodName + "_sliced.dot");
+  	SootHelper.dumpToDot(g, g.getBody(), "/tmp/" + methodName + "_sliced.dot");
 	}
 	
 	@Test
@@ -256,7 +256,13 @@ public class SlicingTest {
 	{
 		testSlice(CLASS_NAME,"m4");		
 	}
-
+	
+	@Test
+	public void sliceT5()	
+	{
+		testSlice(CLASS_NAME,"m5");		
+	}
+	
 	@Test
 	public void sliceT6()	
 	{
