@@ -50,23 +50,29 @@ public class APISlicer {
 	}	 
  
 	/**
-	 * Computes the slice of this.cfg according to the android API method calls.
-	 * @return
+	 * Computes the slice of this.cfg according to the android API method calls. 
+	 * 
+	 * @return a slice for the sc criterion or null if there are no seeds.
 	 */	
 	public Body slice(SlicingCriterion sc) {				
-		SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");		
-		SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
-				
+		// DEBUG
+//		SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");		
+//		SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
+//				
 		/* 2.1 Find the slice units */
 		Set<Unit> seeds = getSeeds(sc);		
 		
-		/* 2.2 Get the CFG units that are relevant for the slice */
-		Set<Unit> unitsInSlice = findReachableUnits(seeds);
+		if (seeds.size() > 0) {		
+			/* 2.2 Get the CFG units that are relevant for the slice */
+			Set<Unit> unitsInSlice = findReachableUnits(seeds);
 				
-		/* 3. Construct the sliced CFG */			
-		Body slice = buildSlice(unitsInSlice);				
-		
-		return slice;
+			/* 3. Construct the sliced CFG */			
+			Body slice = buildSlice(unitsInSlice);						
+			return slice;
+		}
+		else {
+			return null;
+		}
 	}
 
 	/**

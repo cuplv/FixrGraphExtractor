@@ -246,4 +246,27 @@ public class slice.TestSlice extends java.lang.Object
         specialinvoke this.<java.lang.Object: void <init>()>();
         return;
     }
+
+    public void m7__sliced__2()
+    {
+        slice.TestSlice this;
+        int i, temp$0, temp$1, temp$2, temp$3;
+
+        temp$0 = 0;
+        i = temp$0;
+
+     label0:
+        if i <= 10 goto label1;
+        goto endlabel;
+
+     label1:
+        temp$1 = staticinvoke <java.lang.Math: int abs(int)>(i);
+        temp$2 = i;
+        temp$3 = temp$2 + 1;
+        i = temp$3;
+        goto label0;
+
+     endlabel:
+        return;
+    }
 }
