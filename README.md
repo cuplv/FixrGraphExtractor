@@ -21,7 +21,8 @@ gradle build
 gradle uploadArchives
 
 # Run (java example)
-Now the program just print a dot file of a CFG (in ~/test.dot)
+Now the program takes as input a java file and a method name and builds the sliced CDFG graph using the android APIs as seeds.
+It then creates a dot file named <method_name>_<sliced>.dot that represents the CDFG.
 
 java -cp lib/soot-2.5.0.jar:repos/FixrGraphExtractor-1.0.jar edu.colorado.plv.fixr.Main <path_to_rt.jar>:./src/test/resources simple.Simple main
 
