@@ -17,9 +17,14 @@ public class Main {
 	 * @param args classpath, class name (e.g. package.ClassName), method name
 	 */
   public static void main(String[] args) {  
-  	if (args.length != 3) {
+  	if (args.length < 3) {
   		System.err.println("Missing classpath, class name and method name");
   		return;
+  	}
+  	
+  	String filter = null;
+  	if (args.length == 4) {
+  		filter = args[3];
   	}
   	
   	String classPath = args[0];
@@ -37,14 +42,26 @@ public class Main {
   	Body body = SootHelper.getMethodBody(className, methodName);
   	EnhancedUnitGraph jimpleUnitGraph= new EnhancedUnitGraph(body);
   	APISlicer slicer = new APISlicer(jimpleUnitGraph, body);
-  	SlicingCriterion sc = MethodPackageSeed.createAndroidSeed();
+  	
+  	SlicingCriterion sc;
+  	if (filter == null) {
+  		sc = MethodPackageSeed.createAndroidSeed();
+  	} else {
+  		sc = new MethodPackageSeed(filter);
+  	}
+  	
    	Body slicedJimple = slicer.slice(sc);
   	
-  	/* build the CdFG graph */
-  	UnitCdfgGraph cdfg = new UnitCdfgGraph(slicedJimple); 
+   	if (null == slicedJimple) {
+   		System.out.println("Cannot find a relevant method call for slicing");
+   	}
+   	else {   	
+   		/* build the CdFG graph */
+   		UnitCdfgGraph cdfg = new UnitCdfgGraph(slicedJimple); 
   	
-  	/* Dump the sliced graph */
-  	SootHelper.dumpToDot(cdfg, cdfg.getBody(), cdfg.getBody().getMethod().getName() + ".dot");	  	 
+   		/* Dump the sliced graph */
+   		SootHelper.dumpToDot(cdfg, cdfg.getBody(), cdfg.getBody().getMethod().getName() + ".dot");	  	 
+   	}
   	
   	System.out.println("Done");
   }

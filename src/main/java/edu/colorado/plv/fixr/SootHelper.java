@@ -1,5 +1,7 @@
 package edu.colorado.plv.fixr;
 
+import edu.colorado.plv.fixr.graphs.CDFGToDotGraph;
+import edu.colorado.plv.fixr.graphs.UnitCdfgGraph;
 import soot.Body;
 import soot.G;
 import soot.PhaseOptions;
@@ -104,9 +106,18 @@ public class SootHelper {
 	}
 	
 	public static void dumpToDot(DirectedGraph<?> g, Body b, String fileName) {
-		CFGToDotGraph gr = new CFGToDotGraph();
-  	DotGraph viewgraph = gr.drawCFG(g,b); 	   
+		
+		if (g instanceof UnitCdfgGraph) {
+			CDFGToDotGraph toDot = new CDFGToDotGraph(); 
+			DotGraph viewgraph = toDot.drawCFG(g, b); 	     	
+			viewgraph.plot(fileName);			
+			System.out.println("ciao");
+		}
+		else {		
+			CFGToDotGraph gr = new CFGToDotGraph();
+			DotGraph viewgraph = gr.drawCFG(g,b); 	   
   	
-  	viewgraph.plot(fileName);
+			viewgraph.plot(fileName);
+		}
 	}	
 }

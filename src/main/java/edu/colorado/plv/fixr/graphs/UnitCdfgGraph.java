@@ -12,6 +12,7 @@ import soot.Unit;
 import soot.Value;
 import soot.ValueBox;
 import soot.toolkits.exceptions.ThrowAnalysis;
+import soot.toolkits.graph.BriefUnitGraph;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
 import soot.toolkits.scalar.SimpleLocalDefs;
@@ -26,7 +27,7 @@ import soot.toolkits.scalar.SimpleLocalDefs;
  * @author Sergio Mover
  *
  */
-public class UnitCdfgGraph extends EnhancedUnitGraph {
+public class UnitCdfgGraph extends BriefUnitGraph {
 	
 	protected ExceptionalUnitGraph unitGraph;
 	
