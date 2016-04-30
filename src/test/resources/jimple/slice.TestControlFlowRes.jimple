@@ -1,0 +1,20 @@
+public class slice.TestControlFlow extends java.lang.Object
+{
+    public int testSequenceSliced01()
+    {
+        slice.TestControlFlow this;
+        int a, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5;
+
+        this := @this: slice.TestControlFlow;
+        temp$0 = 0;
+        a = temp$0;
+        temp$1 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        temp$2 = 3;
+        a = temp$2;
+        temp$3 = a;
+        temp$4 = temp$3 + 2;
+        a = temp$4;
+        temp$5 = 0;
+        return temp$5;
+    }
+}
