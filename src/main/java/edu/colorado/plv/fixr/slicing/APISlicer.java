@@ -42,12 +42,20 @@ public class APISlicer {
 	
 	public APISlicer(UnitGraph cfg, Body body) {
 		super();
+		
+		if (null == cfg) {
+			cfg= new EnhancedUnitGraph(body);
+		}
 		this.cfg = cfg;
 		
 		/* Computes the program dependency graph */
 		this.pdg= new PDGSlicer((UnitGraph) this.cfg);
 		this.ddg = new DataDependencyGraph(this.cfg);		
-	}	 
+	}
+	
+	public APISlicer(Body body) {		
+		this(null, body);
+	}	 	
  
 	/**
 	 * Computes the slice of this.cfg according to the android API method calls. 
@@ -60,7 +68,7 @@ public class APISlicer {
 //		SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
 //				
 		/* 2.1 Find the slice units */
-		Set<Unit> seeds = getSeeds(sc);		
+		Set<Unit> seeds = getSeeds(sc);
 		
 		if (seeds.size() > 0) {		
 			/* 2.2 Get the CFG units that are relevant for the slice */
@@ -75,6 +83,10 @@ public class APISlicer {
 		}
 	}
 
+	public static String getSlicedMethodName(String methodName) {
+		return methodName + "__sliced__";
+	}
+	
 	/**
 	 * Finds all the seeds (units) in the PDG according to the slicing criterion
 	 * 
@@ -201,7 +213,7 @@ public class APISlicer {
 		SootClass srcClass = srcMethod.getDeclaringClass();
 		assert (null != srcMethod);
 		String methodName = srcMethod.getName();
-		methodName = methodName + "__sliced__";
+		methodName = getSlicedMethodName(methodName);
 		
 		SootMethod dstMethod = new SootMethod(methodName,
 				srcMethod.getParameterTypes(), srcMethod.getReturnType(),
