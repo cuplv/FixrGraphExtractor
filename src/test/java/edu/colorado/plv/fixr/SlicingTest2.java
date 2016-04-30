@@ -56,5 +56,19 @@ public class SlicingTest2 {
 		
 	@Test
 	public void t1(){testSlice("testSequence01");}
+
+	@Test
+	public void t2(){testSlice("testSequence02");}
 	
+	@Test
+	public void t3(){testSlice("testSequence03");}
+	
+	@Test
+	public void t4(){testSlice("testConditional01");}
+
+	@Test
+	public void t5(){testSlice("testConditional02");}
+	
+	@Test
+	public void t6(){testSlice("testConditional03");}
 }
