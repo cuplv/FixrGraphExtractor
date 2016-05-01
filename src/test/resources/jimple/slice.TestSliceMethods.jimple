@@ -1,0 +1,115 @@
+public class slice.TestSliceMethods extends java.lang.Object
+{
+    private int innnerField1;
+    private int innnerField2;
+
+    public void testSliceMethods01()
+    {
+        slice.TestSliceMethods this;
+        int n1, n2, temp$1, temp$2, temp$3, temp$4;
+        java.util.Random r, temp$0;
+        long temp$5;
+
+        this := @this: slice.TestSliceMethods;
+        temp$0 = new java.util.Random;
+        specialinvoke temp$0.<java.util.Random: void <init>(long)>(0L);
+        r = temp$0;
+        temp$1 = 1;
+        n2 = temp$1;
+        temp$2 = 0;
+        n1 = temp$2;
+        temp$3 = virtualinvoke r.<java.util.Random: int nextInt(int)>(n1);
+        temp$4 = staticinvoke <java.lang.Math: int abs(int)>(n1);
+        n1 = temp$4;
+        temp$5 = (long) n2;
+        virtualinvoke r.<java.util.Random: void setSeed(long)>(temp$5);
+        return;
+    }
+
+    private final int innerMethod(int)
+    {
+        slice.TestSliceMethods this;
+        int a;
+
+        this := @this: slice.TestSliceMethods;
+        a := @parameter0: int;
+        return a;
+    }
+
+    public void testSliceMethods02()
+    {
+        slice.TestSliceMethods this;
+        int n1, temp$0;
+        java.util.Random r, temp$1;
+        long temp$2;
+
+        this := @this: slice.TestSliceMethods;
+        temp$0 = virtualinvoke this.<slice.TestSliceMethods: int innerMethod(int)>(0);
+        n1 = temp$0;
+        temp$1 = new java.util.Random;
+        temp$2 = (long) n1;
+        specialinvoke temp$1.<java.util.Random: void <init>(long)>(temp$2);
+        r = temp$1;
+        return;
+    }
+
+    public void testSliceMethods03()
+    {
+        slice.TestSliceMethods this;
+        int n1, n2, temp$0, temp$1, temp$2;
+        java.util.Random r, temp$3;
+        long temp$4;
+
+        this := @this: slice.TestSliceMethods;
+        temp$0 = 0;
+        n2 = temp$0;
+        temp$1 = 0;
+        n1 = temp$1;
+        temp$2 = virtualinvoke this.<slice.TestSliceMethods: int innerMethod(int)>(n2);
+        temp$3 = new java.util.Random;
+        temp$4 = (long) n1;
+        specialinvoke temp$3.<java.util.Random: void <init>(long)>(temp$4);
+        r = temp$3;
+        return;
+    }
+
+    public void testSliceMethods04()
+    {
+        slice.TestSliceMethods this;
+        int n1, temp$0, temp$1, temp$2, temp$3, temp$5;
+        java.util.Random r, temp$4;
+        long temp$6;
+
+        this := @this: slice.TestSliceMethods;
+        temp$0 = 0;
+        n1 = temp$0;
+        temp$1 = this.<slice.TestSliceMethods: int innnerField1>;
+        if temp$1 == 0 goto label0;
+
+        goto label1;
+
+     label0:
+        nop;
+        temp$2 = n1;
+        temp$3 = temp$2 + 1;
+        this.<slice.TestSliceMethods: int innnerField1> = temp$3;
+
+     label1:
+        nop;
+        temp$4 = new java.util.Random;
+        temp$5 = this.<slice.TestSliceMethods: int innnerField1>;
+        temp$6 = (long) temp$5;
+        specialinvoke temp$4.<java.util.Random: void <init>(long)>(temp$6);
+        r = temp$4;
+        return;
+    }
+
+    public void <init>()
+    {
+        slice.TestSliceMethods this;
+
+        this := @this: slice.TestSliceMethods;
+        specialinvoke this.<java.lang.Object: void <init>()>();
+        return;
+    }
+}
