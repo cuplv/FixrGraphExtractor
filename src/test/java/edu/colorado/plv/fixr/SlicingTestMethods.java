@@ -26,5 +26,8 @@ public class SlicingTestMethods extends TestSlicing {
 	public void t3(){testSlice("testSliceMethods03");}
 	
 	@Test
-	public void t4(){testSlice("testSliceMethods04");}	
+	public void t4(){testSlice("testSliceMethods04");}
+	
+	@Test
+	public void t5(){testSlice("testSliceMethods05");}	
 }

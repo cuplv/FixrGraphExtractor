@@ -27,6 +27,7 @@ public abstract class TestSlicing extends TestClassBase {
 
 		APISlicer slicer = new APISlicer(bodyToSlice);
 		Body slicedBody = slicer.slice(new MethodPackageSeed(getPackages()));
+		assertTrue(null != slicedBody); /* at least one seed in the test*/
 		
 //		// DEBUG
 //		{
