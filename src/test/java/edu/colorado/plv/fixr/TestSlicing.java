@@ -2,6 +2,9 @@ package edu.colorado.plv.fixr;
 
 import static org.junit.Assert.assertTrue;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import edu.colorado.plv.fixr.slicing.APISlicer;
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed;
 import soot.Body;
@@ -9,6 +12,8 @@ import soot.SootClass;
 
 public abstract class TestSlicing extends TestClassBase {
 
+	public abstract Collection<String> getPackages();
+	
 	public void testSlice(String methodName) 
 	{		
 		SootClass testClass = this.getTestClass();
@@ -21,7 +26,7 @@ public abstract class TestSlicing extends TestClassBase {
 		Body expectedRes = resClass.getMethodByName(APISlicer.getSlicedMethodName(methodName)).retrieveActiveBody();
 
 		APISlicer slicer = new APISlicer(bodyToSlice);
-		Body slicedBody = slicer.slice(new MethodPackageSeed("java.lang.Math"));
+		Body slicedBody = slicer.slice(new MethodPackageSeed(getPackages()));
 		
 //		// DEBUG
 //		{

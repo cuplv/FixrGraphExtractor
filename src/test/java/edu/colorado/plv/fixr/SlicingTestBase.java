@@ -1,5 +1,8 @@
 package edu.colorado.plv.fixr;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.junit.Test;
 
 public class SlicingTestBase extends TestSlicing {
@@ -38,5 +41,10 @@ public class SlicingTestBase extends TestSlicing {
 	@Override
 	public String getResClassName() {
 		return RES_CLASS_NAME;
-	}			
+	}
+	
+	@Override
+	public Collection<String> getPackages() {
+		return Collections.singletonList("java.lang.Math");
+	}	
 }

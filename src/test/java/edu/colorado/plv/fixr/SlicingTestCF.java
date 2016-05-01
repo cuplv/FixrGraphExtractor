@@ -1,20 +1,31 @@
 package edu.colorado.plv.fixr;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import org.junit.Test;
 
 public class SlicingTestCF extends TestSlicing {
 	static final String CLASS_NAME = "slice.TestControlFlow";
 	static final String RES_CLASS_NAME = "slice.TestControlFlowRes";		
 	
+	@Override
 	public String getTestClassName()
 	{
 		return CLASS_NAME;
 	}
+	
+	@Override
 	public String getResClassName()
 	{
 		return RES_CLASS_NAME;
 	}
-		
+	
+	@Override	
+	public Collection<String> getPackages() {
+		return Collections.singletonList("java.lang.Math");
+	}
+
 	@Test
 	public void t1(){testSlice("testSequence01");}
 
