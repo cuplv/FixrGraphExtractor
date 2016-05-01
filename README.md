@@ -2,19 +2,15 @@
 
 Functionalities:
 - Slice the control flow graph only w.r.t. calls to Android APIs (or some other user-defined API)
-- Extract the control flow graph with data information from java source code (CFDG)
-Now the extraction is limited to a graph per procedure.
-- Check the approximate isomorphism between two CDFG
+- Extract the control flow graph with data information from java source code (CDFG)
+- Implement the isomorphism check (TOOO)
 
-# Implementation plan
-List of tasks:
-- Slicing:
-  - Find relevant variable (DONE)
-  - Slice the CFG accordingly
-- CDFG:
-  - Define CDFG structure
-  - Extract the CDFG from a CFG and dataflow information
-- Isomorphism
+## Limitation of the features
+1. Now the extraction is limited to a intraprocedural analysis (one graph per procedure)
+2. Limitation of the current slicing technique (the slicing is not sound):
+  * No aliasing
+  * Method calls are opaque, and they do not change anything (e.g. memory content or have side effects on the parameters)
+
 
 # Compile (-x test avoid to run the test while building)
 gradle build -x test
