@@ -16,8 +16,8 @@ List of tasks:
   - Extract the CDFG from a CFG and dataflow information
 - Isomorphism
 
-# Compile
-gradle build
+# Compile (-x test avoid to run the test while building)
+gradle build -x test
 gradle uploadArchives
 
 # Run (java example)

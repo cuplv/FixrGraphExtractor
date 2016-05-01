@@ -148,6 +148,117 @@ public class slice.TestControlFlow extends java.lang.Object
         return temp$6;
     }
 
+    public int testLoop01()
+    {
+        slice.TestControlFlow this;
+        int a, b, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5, temp$6, temp$7, temp$8;
+
+        this := @this: slice.TestControlFlow;
+        temp$0 = 0;
+        a = temp$0;
+        temp$1 = 0;
+        b = temp$1;
+        temp$2 = 0;
+        a = temp$2;
+
+     label0:
+        nop;
+        if a <= 10 goto label1;
+
+        goto label2;
+
+     label1:
+        nop;
+        temp$3 = b;
+        temp$4 = temp$3 + 1;
+        b = temp$4;
+        nop;
+        temp$5 = a;
+        temp$6 = temp$5 + 1;
+        a = temp$6;
+        goto label0;
+
+     label2:
+        nop;
+        temp$7 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        temp$8 = 0;
+        return temp$8;
+    }
+
+    public int testLoop02()
+    {
+        slice.TestControlFlow this;
+        int a, b, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5, temp$6, temp$7, temp$8;
+
+        this := @this: slice.TestControlFlow;
+        temp$0 = 0;
+        a = temp$0;
+        temp$1 = 0;
+        b = temp$1;
+        temp$2 = 0;
+        b = temp$2;
+
+     label0:
+        nop;
+        if b <= 10 goto label1;
+
+        goto label2;
+
+     label1:
+        nop;
+        temp$3 = a;
+        temp$4 = temp$3 + 1;
+        a = temp$4;
+        nop;
+        temp$5 = b;
+        temp$6 = temp$5 + 1;
+        b = temp$6;
+        goto label0;
+
+     label2:
+        nop;
+        temp$7 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        temp$8 = 0;
+        return temp$8;
+    }
+
+    public int testLoop03()
+    {
+        slice.TestControlFlow this;
+        int a, b, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5, temp$6, temp$7, temp$8;
+
+        this := @this: slice.TestControlFlow;
+        temp$0 = 0;
+        a = temp$0;
+        temp$1 = 0;
+        b = temp$1;
+        temp$2 = 0;
+        b = temp$2;
+
+     label0:
+        nop;
+        if b <= 10 goto label1;
+
+        goto label2;
+
+     label1:
+        nop;
+        temp$3 = b;
+        temp$4 = temp$3 + 1;
+        b = temp$4;
+        nop;
+        temp$5 = b;
+        temp$6 = temp$5 + 1;
+        b = temp$6;
+        goto label0;
+
+     label2:
+        nop;
+        temp$7 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        temp$8 = 0;
+        return temp$8;
+    }
+
     public void <init>()
     {
         slice.TestControlFlow this;

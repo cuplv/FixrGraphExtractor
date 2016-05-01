@@ -1,12 +1,9 @@
 package edu.colorado.plv.fixr;
 
+import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import edu.colorado.plv.fixr.slicing.APISlicer;
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed;
 import edu.colorado.plv.fixr.slicing.RVDomain;
 import edu.colorado.plv.fixr.slicing.RelevantVariablesAnalysis;
@@ -14,35 +11,27 @@ import soot.Body;
 import soot.IntType;
 import soot.Local;
 import soot.PatchingChain;
-import soot.Scene;
-import soot.SootClass;
 import soot.Unit;
 import soot.jimple.Jimple;
-import soot.toolkits.graph.BriefUnitGraph;
-import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
 
-public class SlicingTest {
-	static final String CLASS_NAME = "slice.TestSlice";	
-	
-	@Before
-	public void setup()
-	{
-		SootHelper.reset();					
-		
-		SootHelper.configure("src/test/resources/jimple", true);
+public class TestRelevantVars extends TestClassBase {
+	static final String CLASS_NAME = "slice.TestSlice";
+
+	public TestRelevantVars() {
+		// TODO Auto-generated constructor stub
 	}
 
-	private Body getBody(String className, String methodName)
-	{
-		Scene.v().addBasicClass(className, SootClass.HIERARCHY);
-  	/* load dependencies */
-  	Scene.v().loadNecessaryClasses();
+	@Override
+	public String getTestClassName() {
+		return CLASS_NAME;
+	}
 
-  	/* get the method body (in jimple) */  	
-  	Body body = SootHelper.getMethodBody(className, methodName);  	
-  	return body;
-	}			 
+	@Override
+	public String getResClassName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
 	private void assertVarAtUnit(RelevantVariablesAnalysis rv, Unit unit,
 				Local[] vars_in, Local[] vars_out)
@@ -78,8 +67,8 @@ public class SlicingTest {
 	
 	private void testRV(String className, String methodName,
 			Local[][] vars_in, Local[][] vars_out)
-	{
-		Body body = getBody(CLASS_NAME, methodName);  	  	  	
+	{		
+		Body body = testClass.getMethodByName(methodName).retrieveActiveBody();		
   	RelevantVariablesAnalysis rv = new RelevantVariablesAnalysis(new EnhancedUnitGraph(body),
   				new MethodPackageSeed("java.lang.Math"));
 
@@ -97,21 +86,8 @@ public class SlicingTest {
   	assertVarAtBody(rv, body, vars_in, vars_out);				 
 	}
 
-	private void testSlice(String className, String methodName)
-	{
-		Body body = getBody(CLASS_NAME, methodName);
-  	EnhancedUnitGraph jimpleUnitGraph= new EnhancedUnitGraph(body);
-  	SootHelper.dumpToDot(jimpleUnitGraph, jimpleUnitGraph.getBody(), "/tmp/" + methodName + ".dot");
-  	
-  	APISlicer slicer = new APISlicer(jimpleUnitGraph, body);
-  	Body slicedBody = slicer.slice(new MethodPackageSeed("java.lang.Math"));  	
-  	UnitGraph g = new EnhancedUnitGraph(slicedBody);
-  	
-  	SootHelper.dumpToDot(g, g.getBody(), "/tmp/" + methodName + "_sliced.dot");
-	}
-	
 	@Test
-	public void rvTest()
+	public void rvTest1()
 	{
 		Local var_a = Jimple.v().newLocal("a", IntType.v());
 
@@ -234,53 +210,5 @@ public class SlicingTest {
 				no_a,no_b,no_b,no_a,all_vars};
 		
 		testRV(CLASS_NAME, "m5", in_vars, out_vars);	
-	}
-
-	@Test
-	public void sliceT1()	
-	{
-		testSlice(CLASS_NAME,"m1");		
-	}
-
-	@Test
-	public void sliceT2()	
-	{
-		testSlice(CLASS_NAME,"m2");		
-	}
-
-	@Test
-	public void sliceT3()	
-	{
-		testSlice(CLASS_NAME,"m3");		
-	}
-
-	@Test
-	public void sliceT4()	
-	{
-		testSlice(CLASS_NAME,"m4");		
-	}
-	
-	@Test
-	public void sliceT5()	
-	{
-		testSlice(CLASS_NAME,"m5");		
-	}
-	
-	@Test
-	public void sliceT6()	
-	{
-		testSlice(CLASS_NAME,"m6");		
-	}
-	
-	@Test
-	public void sliceT7()	
-	{
-		testSlice(CLASS_NAME, "m7");		
-	}
-	
-	@Test
-	public void sliceT8()	
-	{
-		testSlice(CLASS_NAME,"m8");		
-	}			
+	}	
 }

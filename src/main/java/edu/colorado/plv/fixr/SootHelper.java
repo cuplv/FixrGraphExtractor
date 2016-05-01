@@ -104,6 +104,24 @@ public class SootHelper {
   	Body b = m.retrieveActiveBody();  	
   	return b;
 	}
+
+	/**
+	 * Compares two bodies.
+	 * 
+	 * NOTE: this is a shallow implementation now, it just perform a
+	 * case insensitive comparison of the string representation of the bodies
+	 * 
+	 * @param b1
+	 * @param b2
+	 * @return true if the string representation of b1 and b2 are equal
+	 */
+	public static boolean compareBodies(Body b1, Body b2) {
+		String reprB1 = b1.toString();
+		String reprB2 = b2.toString();		
+		
+		return 0 == reprB1.compareToIgnoreCase(reprB2);
+	}
+	
 	
 	public static void dumpToDot(DirectedGraph<?> g, Body b, String fileName) {
 		

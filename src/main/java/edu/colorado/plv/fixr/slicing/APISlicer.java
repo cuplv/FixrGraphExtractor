@@ -64,8 +64,8 @@ public class APISlicer {
 	 */	
 	public Body slice(SlicingCriterion sc) {				
 		// DEBUG
-//		SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");		
-//		SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
+		SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");		
+		SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
 //				
 		/* 2.1 Find the slice units */
 		Set<Unit> seeds = getSeeds(sc);
@@ -159,7 +159,9 @@ public class APISlicer {
 				for (Object pdgObj : pdg.getPredsOf((current))) {
 					assert pdgObj instanceof PDGNode;
 					PDGNode pred = (PDGNode) pdgObj;				 
-					if (! visitedPdgNodes.contains(pred)) pdgNodesWorkList.push(pred);
+					if (! visitedPdgNodes.contains(pred)) {
+						pdgNodesWorkList.push(pred);
+					}
 				}
 			}
 			
@@ -187,7 +189,9 @@ public class APISlicer {
 				for (Object predObj : pdg.getPredsOf(pdgNode)) {
 					assert predObj instanceof PDGNode;
 					PDGNode pred = (PDGNode) predObj;
-					if (! visitedPdgNodes.contains(pred)) pdgNodesWorkList.push(pred);			
+					if (! visitedPdgNodes.contains(pred)) {
+						pdgNodesWorkList.push(pred);			
+					}
 				}
 								
 				/* get the list of predecessor in the DDG */
