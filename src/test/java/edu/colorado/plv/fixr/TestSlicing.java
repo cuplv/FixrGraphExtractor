@@ -3,12 +3,13 @@ package edu.colorado.plv.fixr;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
-import java.util.Collections;
 
 import edu.colorado.plv.fixr.slicing.APISlicer;
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed;
 import soot.Body;
 import soot.SootClass;
+import soot.toolkits.graph.BriefUnitGraph;
+import soot.toolkits.graph.UnitGraph;
 
 public abstract class TestSlicing extends TestClassBase {
 

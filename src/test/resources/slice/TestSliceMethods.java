@@ -73,7 +73,14 @@ public class TestSliceMethods {
     Random r = new Random(innerField1);
   }
 
-  
+
+  /* Cannot deal with double indirection in jimple
+   * Assign the ref of intIntArray to an intermediate variable
+   * Then the intermediate variable changes the content of the intIntArray
+   *
+   * We do not resolve the aliasing on the intermediate variable,
+   * hence we lose the dependency.
+   */
   public void testSliceMethods06()
   {
     int n1;

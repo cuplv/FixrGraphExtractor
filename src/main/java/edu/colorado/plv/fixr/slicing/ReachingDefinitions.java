@@ -11,7 +11,9 @@ import soot.Local;
 import soot.Unit;
 import soot.Value;
 import soot.ValueBox;
+import soot.jimple.AnyNewExpr;
 import soot.jimple.ArrayRef;
+import soot.jimple.AssignStmt;
 import soot.jimple.InstanceFieldRef;
 import soot.toolkits.graph.DirectedGraph;
 import soot.toolkits.graph.UnitGraph;
@@ -29,7 +31,8 @@ import soot.toolkits.scalar.ForwardFlowAnalysis;
  *
  */
 public class ReachingDefinitions extends ForwardFlowAnalysis<Unit, FlowSet> {	
-	private Map<Unit, Set<Local>> unit2LocalsMap;	
+	private Map<Unit, Set<Local>> unit2LocalsMap;
+	private Map<Unit, Set<Local>> underUnit2LocalsMap;	
 	private Map<Unit, FlowSet> kill;
 	private Map<Unit, FlowSet> gen;
 	FlowUniverse<Unit> defsUniverse; 
@@ -41,7 +44,8 @@ public class ReachingDefinitions extends ForwardFlowAnalysis<Unit, FlowSet> {
 		 * graphs */
 		assert graph instanceof UnitGraph;
 		
-		unit2LocalsMap = new HashMap<Unit, Set<Local>>();				
+		unit2LocalsMap = new HashMap<Unit, Set<Local>>();
+		underUnit2LocalsMap = new HashMap<Unit, Set<Local>>();
 		kill = new HashMap<Unit,FlowSet>();
 		gen = new HashMap<Unit,FlowSet>();
 		
@@ -122,23 +126,67 @@ public class ReachingDefinitions extends ForwardFlowAnalysis<Unit, FlowSet> {
 		FlowSet genSet = new ArrayPackedSet(defsUniverse);
 
 		/* get the set of units that declare */
-		for (Local l : getDefLocals(u)) {
+		for (Local l : getDefLocals(u, false)) {
 			for (Iterator<Unit> unitIter = this.defsUniverse.iterator();
 					unitIter.hasNext();) {
-				Unit u2 = unitIter.next();					 
-				if (u2 != u && getDefLocals(u2).contains(l)) {
+				Unit u2 = unitIter.next();
+				if (u2 != u && getDefLocals(u2, false).contains(l)) {
 					killSet.add(u2);
 				}
-			}
-
-			genSet.add(u);				
+			}				
 		}
+		genSet.add(u);
 
 		kill.put(u, killSet);
 		gen.put(u, genSet);
 	}
 
-	protected Set<Local> getDefLocals(Unit unit) {
+	protected Set<Local> getDefLocals(Unit unit, boolean overapprox) {
+		if (overapprox) {
+			return getOverApproxDefLocals(unit);
+		}
+		else {
+			return getUnderApproxDefLocals(unit);			
+		}
+	}
+	
+	protected Set<Local> getUnderApproxDefLocals(Unit unit) {
+		// TODO Extend to distinguish field and array accesses
+		// TODO Extend to handle method calls
+		
+		Set<Local> locals = underUnit2LocalsMap.get(unit);
+		if (null != locals) return locals;
+		
+		locals = new HashSet<Local>();
+		
+		boolean newExpr = false;
+		if (unit instanceof AssignStmt) {
+			Value rhs = ((AssignStmt) unit).getRightOp();
+			newExpr = rhs instanceof AnyNewExpr;
+		}
+		
+		for (ValueBox vb : unit.getDefBoxes()) {
+			Value v = vb.getValue();
+			if (v instanceof Local) {
+				locals.add((Local) v);
+			}
+			else if (v instanceof ArrayRef) {				
+				Value arrayBase = ((ArrayRef) v).getBase();
+				assert arrayBase instanceof Local;
+				if (newExpr) locals.add((Local) arrayBase);
+			}
+			else if (v instanceof InstanceFieldRef) {
+				Value instanceBase = ((InstanceFieldRef) v).getBase();
+				assert instanceBase instanceof Local;
+				if (newExpr) locals.add((Local) instanceBase);								
+			}
+		}
+		
+		underUnit2LocalsMap.put(unit, locals);
+		return locals;		
+	}
+	
+	protected Set<Local> getOverApproxDefLocals(Unit unit) {		
 		// TODO Extend to distinguish field and array accesses
 		// TODO Extend to handle method calls
 		
@@ -176,8 +224,8 @@ public class ReachingDefinitions extends ForwardFlowAnalysis<Unit, FlowSet> {
 	 * @param dstUnit
 	 * @return
 	 */
-	public boolean unitDefines(Unit srcUnit, Unit dstUnit) {
-		Set<Local> defsInDst = this.getDefLocals(dstUnit);
+	public boolean unitDefines(Unit srcUnit, Unit dstUnit, boolean overapprox) {
+		Set<Local> defsInDst = this.getDefLocals(dstUnit, overapprox);
 		
 		for (soot.ValueBox vb : srcUnit.getUseBoxes()) {			
 			Value v = vb.getValue();

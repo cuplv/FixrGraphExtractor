@@ -78,8 +78,22 @@ public class slice.TestSliceMethodsRes extends java.lang.Object
 
     public void testSliceMethods05__sliced__()
     {
-        int a;
-        a = a + 1;
+        slice.TestSliceMethods this;
+        int[] intArray, temp$0;
+        int temp$1, temp$2, temp$4;
+        java.util.Random r, temp$3;
+        long temp$5;
+
+        this := @this: slice.TestSliceMethods;
+        intArray = newarray (int)[5];
+        temp$0 = intArray;
+        temp$1 = 0;
+        temp$2 = temp$0[temp$1];
+        this.<slice.TestSliceMethods: int innerField1> = temp$2;
+        temp$3 = new java.util.Random;
+        temp$4 = this.<slice.TestSliceMethods: int innerField1>;
+        temp$5 = (long) temp$4;
+        specialinvoke temp$3.<java.util.Random: void <init>(long)>(temp$5);
     }
 
     public void testSliceMethods06__sliced__()

@@ -40,6 +40,9 @@ public class slice.TestSliceRes extends java.lang.Object
         if b == 0 goto label0;
 
      label0:
+        goto label1;
+
+     label1:
         a = b;
         temp$5 = staticinvoke <java.lang.Math: int abs(int)>(a);
     }
@@ -55,10 +58,15 @@ public class slice.TestSliceRes extends java.lang.Object
         b = temp$1;
         if b == 0 goto label0;
 
-        goto label0;
+        goto label1;
 
      label0:
+        goto label2;
+
+     label1:
         b = a;
+
+     label2:      
         a = b;
         temp$5 = staticinvoke <java.lang.Math: int abs(int)>(a);
     }

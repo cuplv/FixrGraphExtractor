@@ -116,7 +116,7 @@ public class DataDependencyGraph implements DirectedGraph<Unit> {
 		return DataDependencyGraph.getDefsOf(srcUnit, this.reachingDefinitions);		
 	}
 
-		/**
+	/**
 	 * Returns all the units that define a variable used in srcUnit. 
 	 * 
 	 * @param unit
@@ -125,7 +125,7 @@ public class DataDependencyGraph implements DirectedGraph<Unit> {
 	public static Collection<Unit> getDefsOf(Unit srcUnit, ReachingDefinitions rd) {
 		Set<Unit> defsOf = new HashSet<Unit>();
 		for (Unit u : rd.getReachableAt(srcUnit)) {
-			if (rd.unitDefines(srcUnit, u)) {
+			if (rd.unitDefines(srcUnit, u, true)) {
 				defsOf.add(u);
 			}
 		}
