@@ -1,6 +1,7 @@
 package edu.colorado.plv.fixr.graphs;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -8,10 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import edu.colorado.plv.fixr.slicing.ReachingDefinitions;
 import soot.Local;
 import soot.Unit;
 import soot.Value;
 import soot.ValueBox;
+import soot.jimple.ArrayRef;
+import soot.jimple.InstanceFieldRef;
 import soot.toolkits.graph.DirectedGraph;
 import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.scalar.LocalDefs;
@@ -40,6 +44,7 @@ public class DataDependencyGraph implements DirectedGraph<Unit> {
 	protected List<Unit> tails;	
 	protected Map<Unit, List<Unit>> preds;
 	protected Map<Unit, List<Unit>> succ;
+	protected ReachingDefinitions reachingDefinitions;
 	protected LocalDefs ld; 
 	
 	/**
@@ -58,7 +63,7 @@ public class DataDependencyGraph implements DirectedGraph<Unit> {
 		
 		/* Computes the use-dependency (UD) relation */
 		ld = new SimpleLocalDefs(graph);
-		
+		reachingDefinitions = new ReachingDefinitions(graph);
 		buildGraph();
 	}
 
@@ -69,7 +74,7 @@ public class DataDependencyGraph implements DirectedGraph<Unit> {
 	{
 		/* compute graph */
 		for (Unit u : this.srcGraph) {			
-			Set<Unit> defsOfUnit = getDefsOf(u);
+			Collection<Unit> defsOfUnit = getDefsOf(u);
 			List<Unit> predList = getPredsOf(u);
 			
 			graphNodes.add(u);
@@ -107,8 +112,8 @@ public class DataDependencyGraph implements DirectedGraph<Unit> {
 	 * @param unit
 	 * @return
 	 */
-	protected Set<Unit> getDefsOf(Unit srcUnit) {
-		return DataDependencyGraph.getDefsOf(srcUnit, this.ld);		
+	protected Collection<Unit> getDefsOf(Unit srcUnit) {
+		return DataDependencyGraph.getDefsOf(srcUnit, this.reachingDefinitions);		
 	}
 
 	/**
@@ -117,21 +122,61 @@ public class DataDependencyGraph implements DirectedGraph<Unit> {
 	 * @param unit
 	 * @return
 	 */
+	public static Collection<Unit> getDefsOf(Unit srcUnit, ReachingDefinitions rd) {
+		Set<Unit> defsOf = new HashSet<Unit>();
+		for (Unit u : rd.getReachableAt(srcUnit)) {
+			if (rd.unitDefines(srcUnit, u, true)) {
+				defsOf.add(u);
+			}
+		}
+		return defsOf;
+	}
+
+	
+	/**
+	 * Returns all the units that define a variable used in srcUnit. 
+	 * 
+	 * @param unit
+	 * @return
+	 */
+	@Deprecated
 	public static Set<Unit> getDefsOf(Unit srcUnit, LocalDefs ld) {
 		Set<Unit> res = new HashSet<Unit>();
 		
 		/* get variables used by srcUnit */
 		for (ValueBox b : srcUnit.getUseBoxes()) {
-			Value v = b.getValue();
-			// TODO Consider other interesting cases (e.g. access to arrays...)
-			if (v instanceof Local) {				
-				for (Unit dstUnit : ld.getDefsOfAt((Local) v, srcUnit)) {
+			Local local = DataDependencyGraph.getLocalFromValue(b.getValue());
+			if (null != local) {
+				for (Unit dstUnit : ld.getDefsOfAt(local, srcUnit)) {
 					/* Add a unit to the result if it defines v */					
 					res.add(dstUnit);	
-				}
-			}
+				}				
+			}						
 		}
 		return res;
+	}
+	
+	private static Local getLocalFromValue(Value v) {			
+			// TODO Consider other interesting cases (e.g. access to arrays...)
+			if (v instanceof Local) {
+				return (Local) v;
+			}
+			else if (v instanceof ArrayRef) {				
+				Value arrayBase = ((ArrayRef) v).getBase();
+				assert arrayBase instanceof Local;
+				return (Local) arrayBase;
+			}
+			else if (v instanceof InstanceFieldRef) {
+				Value instanceBase = ((InstanceFieldRef) v).getBase();
+				assert instanceBase instanceof Local;
+				return (Local) instanceBase;				
+			}
+//			else if (v instanceof FieldRef) {
+//				SootField f = ((FieldRef) v).getField();
+//				
+//			}
+			
+			return null; 
 	}
 	
 	@Override

@@ -1,5 +1,6 @@
 package edu.colorado.plv.fixr.slicing;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -13,11 +14,13 @@ import soot.PatchingChain;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Unit;
+import soot.UnitBox;
 import soot.jimple.GotoStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.Jimple;
 import soot.jimple.JimpleBody;
 import soot.jimple.LookupSwitchStmt;
+import soot.jimple.NopStmt;
 import soot.jimple.TableSwitchStmt;
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.UnitGraph;
@@ -63,10 +66,10 @@ public class APISlicer {
 	 * @return a slice for the sc criterion or null if there are no seeds.
 	 */	
 	public Body slice(SlicingCriterion sc) {				
-		// DEBUG
-		SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");		
-		SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
-//				
+//		// DEBUG
+//		SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");		
+//		SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
+			
 		/* 2.1 Find the slice units */
 		Set<Unit> seeds = getSeeds(sc);
 		
@@ -120,7 +123,8 @@ public class APISlicer {
 	 * @return the backward reachable nodes in PDG and DDG from seeds
 	 */
 	private Set<Unit> findReachableUnits(Set<Unit> seeds) 
-	{		
+	{	
+		Map<Unit, Set<Unit>> reverseGotoMap = getReverseGotoMap();
 		Set<Unit> visitedNodes = new HashSet<Unit>();
 		Set<PDGNode> visitedPdgNodes = new HashSet<PDGNode>();
 		Stack<Unit> unitsWorkList = new Stack<Unit>();
@@ -138,7 +142,8 @@ public class APISlicer {
 
 				visitedPdgNodes.add(current);
 				
-				/* Visit the block of the PDG node. 
+				/* Visit the block of the PDG node.
+				 *  
 				 * If the unit is a conditional or a label, add it to the units work 
 				 * lists. 
 				 */
@@ -150,6 +155,16 @@ public class APISlicer {
 						if (isControlFlow(unit)) {
 							if (! visitedNodes.contains(unit)) {
 								unitsWorkList.push(unit);
+							}
+						} else if (isLabel(unit)) {
+							// Include the units that target this label backward							
+							Set<Unit> prevUnits = reverseGotoMap.get(unit);
+							if (null != prevUnits) {
+								for (Unit prevUnit : prevUnits) {
+									if (! visitedNodes.contains(prevUnit)) {
+										unitsWorkList.push(prevUnit);
+									}
+								}
 							}
 						}
 					}
@@ -179,10 +194,17 @@ public class APISlicer {
 					assert pdgObject instanceof Block; 
 					for (Iterator<Unit> iter = ((Block) pdgObject).iterator(); iter.hasNext();) {
 						Unit unit = iter.next();
-						if (unit instanceof GotoStmt) {
-							// Add the goto statement to the slice
-							visitedNodes.add(unit);
-						}
+						if (isLabel(unit)) {
+							// Include the units that target this label backward
+							Set<Unit> prevUnits = reverseGotoMap.get(unit);
+							if (null != prevUnits) {
+								for (Unit prevUnit : prevUnits) {
+									if (! visitedNodes.contains(prevUnit)) {
+										unitsWorkList.push(prevUnit);
+									}
+								}
+							}
+						}									
 					}
 				}
 				
@@ -205,6 +227,28 @@ public class APISlicer {
 
 		return visitedNodes;
 	}	 
+	
+	protected Map<Unit,Set<Unit>> getReverseGotoMap()
+	{
+		Map<Unit,Set<Unit>> reverseGotoMap = new HashMap<Unit, Set<Unit>>();
+ 
+		for (Unit unit : this.cfg) {
+			if (unit instanceof GotoStmt || 
+					unit instanceof IfStmt) {				
+				for (UnitBox ub : unit.getUnitBoxes()) {
+					Unit targetUnit = ub.getUnit();					
+					Set<Unit> prevUnits = reverseGotoMap.get(targetUnit);
+					if (null == prevUnits) {
+						prevUnits = new HashSet<Unit>();
+						reverseGotoMap.put(targetUnit, prevUnits);
+					}					
+					prevUnits.add(unit);
+				}
+			}			
+		}
+
+		return reverseGotoMap;
+	}
 	
 	/**
 	 * Return a slice (as a block graph) of the cfg nodes in unitsInSlice 
@@ -249,4 +293,8 @@ public class APISlicer {
 					u instanceof TableSwitchStmt ||
 					u instanceof LookupSwitchStmt);
 	}
+	
+	private boolean isLabel(Unit u) {
+		return (u instanceof NopStmt);
+	}	
 }

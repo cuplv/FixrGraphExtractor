@@ -1,7 +1,17 @@
 public class slice.TestSliceMethods extends java.lang.Object
 {
-    private int innnerField1;
-    private int innnerField2;
+    private int innerField1;
+    private int innerField2;
+    private static int staticField;
+
+    static void <clinit>()
+    {
+        int temp$0;
+
+        temp$0 = 0;
+        <slice.TestSliceMethods: int staticField> = temp$0;
+        return;
+    }
 
     public void testSliceMethods01()
     {
@@ -83,7 +93,7 @@ public class slice.TestSliceMethods extends java.lang.Object
         this := @this: slice.TestSliceMethods;
         temp$0 = 0;
         n1 = temp$0;
-        temp$1 = this.<slice.TestSliceMethods: int innnerField1>;
+        temp$1 = this.<slice.TestSliceMethods: int innerField1>;
         if temp$1 == 0 goto label0;
 
         goto label1;
@@ -92,15 +102,76 @@ public class slice.TestSliceMethods extends java.lang.Object
         nop;
         temp$2 = n1;
         temp$3 = temp$2 + 1;
-        this.<slice.TestSliceMethods: int innnerField1> = temp$3;
+        this.<slice.TestSliceMethods: int innerField1> = temp$3;
 
      label1:
         nop;
         temp$4 = new java.util.Random;
-        temp$5 = this.<slice.TestSliceMethods: int innnerField1>;
+        temp$5 = this.<slice.TestSliceMethods: int innerField1>;
         temp$6 = (long) temp$5;
         specialinvoke temp$4.<java.util.Random: void <init>(long)>(temp$6);
         r = temp$4;
+        return;
+    }
+
+    public void testSliceMethods05()
+    {
+        slice.TestSliceMethods this;
+        int[] intArray, temp$0;
+        int temp$1, temp$2, temp$4;
+        java.util.Random r, temp$3;
+        long temp$5;
+
+        this := @this: slice.TestSliceMethods;
+        intArray = newarray (int)[5];
+        temp$0 = intArray;
+        temp$1 = 0;
+        temp$2 = temp$0[temp$1];
+        this.<slice.TestSliceMethods: int innerField1> = temp$2;
+        temp$3 = new java.util.Random;
+        temp$4 = this.<slice.TestSliceMethods: int innerField1>;
+        temp$5 = (long) temp$4;
+        specialinvoke temp$3.<java.util.Random: void <init>(long)>(temp$5);
+        r = temp$3;
+        return;
+    }
+
+    public void testSliceMethods06()
+    {
+        slice.TestSliceMethods this;
+        int n1, temp$0, temp$2, temp$4, temp$6, temp$8, temp$9, temp$11, temp$13, temp$14, temp$16;
+        int[] intArray, temp$1, temp$5, temp$7, temp$12;
+        int[][] intIntArray, temp$3, temp$10;
+        java.util.Random r, temp$15;
+        long temp$17;
+
+        this := @this: slice.TestSliceMethods;
+        intArray = newarray (int)[5];
+        intIntArray = newmultiarray (int)[5][6];
+        temp$0 = 0;
+        n1 = temp$0;
+        temp$1 = intArray;
+        temp$2 = 0;
+        temp$1[temp$2] = n1;
+        temp$3 = intIntArray;
+        temp$4 = 1;
+        temp$5 = temp$3[temp$4];
+        temp$6 = 1;
+        temp$7 = intArray;
+        temp$8 = 0;
+        temp$9 = temp$7[temp$8];
+        temp$5[temp$6] = temp$9;
+        temp$10 = intIntArray;
+        temp$11 = 1;
+        temp$12 = temp$10[temp$11];
+        temp$13 = 1;
+        temp$14 = temp$12[temp$13];
+        this.<slice.TestSliceMethods: int innerField1> = temp$14;
+        temp$15 = new java.util.Random;
+        temp$16 = this.<slice.TestSliceMethods: int innerField1>;
+        temp$17 = (long) temp$16;
+        specialinvoke temp$15.<java.util.Random: void <init>(long)>(temp$17);
+        r = temp$15;
         return;
     }
 

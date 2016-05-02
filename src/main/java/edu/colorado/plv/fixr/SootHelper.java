@@ -129,7 +129,6 @@ public class SootHelper {
 			CDFGToDotGraph toDot = new CDFGToDotGraph(); 
 			DotGraph viewgraph = toDot.drawCFG(g, b); 	     	
 			viewgraph.plot(fileName);			
-			System.out.println("ciao");
 		}
 		else {		
 			CFGToDotGraph gr = new CFGToDotGraph();
