@@ -10,16 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.colorado.plv.fixr.SootHelper;
 import soot.Unit;
 import soot.toolkits.graph.DirectedGraph;
 import soot.toolkits.graph.DominatorNode;
 import soot.toolkits.graph.DominatorTree;
-import soot.toolkits.graph.DominatorTreeAdapter;
 import soot.toolkits.graph.MHGDominatorsFinder;
-import soot.toolkits.graph.UnitGraph;
-import soot.toolkits.graph.pdg.HashMutablePDG;
-import soot.toolkits.graph.pdg.ProgramDependenceGraph;
 
 /**
  * Analysis used to computes the statements of a cfg contained in a slice.

@@ -1,20 +1,19 @@
 package edu.colorado.plv.fixr.graphs;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import edu.colorado.plv.fixr.slicing.ReachingDefinitions;
 import soot.Body;
 import soot.Local;
 import soot.Unit;
 import soot.Value;
 import soot.ValueBox;
-import soot.toolkits.exceptions.ThrowAnalysis;
 import soot.toolkits.graph.BriefUnitGraph;
-import soot.toolkits.graph.ExceptionalUnitGraph;
-import soot.toolkits.graph.pdg.EnhancedUnitGraph;
 import soot.toolkits.scalar.SimpleLocalDefs;
 
 /**
@@ -27,28 +26,74 @@ import soot.toolkits.scalar.SimpleLocalDefs;
  * @author Sergio Mover
  *
  */
-public class UnitCdfgGraph extends BriefUnitGraph {
-	
-	protected ExceptionalUnitGraph unitGraph;
-	
+public class UnitCdfgGraph extends BriefUnitGraph {				
 	protected List<Local> localsList= null;
 	protected Map<Local, List<Unit>> useEdges = null;
 	protected Map<Unit, List<Local>> defEdges = null;	
-		
+	protected DataDependencyGraph ddg = null;	
+	
 	public UnitCdfgGraph(Body body) {
 		super(body);		
+		
+		this.ddg = new DataDependencyGraph(this);		
+		addDataDependentNodes();
+	}
+	
+	public UnitCdfgGraph(Body body, DataDependencyGraph ddg) {
+		super(body);				
 		
 		addDataDependentNodes();
 	}
 	
+
+		
 	public Iterator<Unit> unitIterator() {
 		return unitChain.iterator();
 	}		
 	
+	private void addDataDependentNodes()
+	{
+		/* The construction should happen at most once */
+		assert useEdges == null && defEdges == null;
+		useEdges = new HashMap<Local, List<Unit>>();
+		defEdges = new HashMap<Unit, List<Local>>();
+		
+		/* Generates the list of all the locals */
+		localsList = new ArrayList<Local>();
+		for (Local l : this.getBody().getLocals()) {			
+			localsList.add(l);
+			assert ! useEdges.containsKey(l);
+			useEdges.put(l, new ArrayList<Unit>());
+		}
+		
+		/* Add the define edges - 
+		 * NOTE: now we are not computing the transitive closure
+		 * */
+		for (Unit u : this) {
+			ReachingDefinitions rd = ddg.getReachingDefinitions();
+			List<Local> defsInU = defEdges.get(u);
+			if (null == defsInU) {
+				defsInU = new ArrayList<Local>();
+				defEdges.put(u, defsInU);
+			}
+			defsInU.addAll(rd.getDefLocals(u, true));
+			
+			/* Add the use edges - inefficient */			
+			for (Unit pred : ddg.getPredsOf(u)) {			
+				Collection<Local> defsInPred = defEdges.get(pred);
+				if (null != defsInPred) {
+					for (Local l : defsInPred) {
+						useEdges.get(l).add(u);					
+					}
+				}
+			}			
+		}		
+	}
+	
 	/**
 	 * Generates the data flow graph
 	 */
-	private void addDataDependentNodes()
+	private void addDataDependentNodesOld()
 	{
 		assert useEdges == null && defEdges == null;
 		

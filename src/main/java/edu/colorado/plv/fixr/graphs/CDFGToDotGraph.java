@@ -1,12 +1,17 @@
 package edu.colorado.plv.fixr.graphs;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import soot.Body;
 import soot.Local;
 import soot.Unit;
 import soot.util.dot.DotGraph;
 import soot.util.dot.DotGraphConstants;
+import soot.util.dot.DotGraphEdge;
+import soot.util.dot.DotGraphNode;
 
 public class CDFGToDotGraph extends CFGToDotGraph {
 
@@ -19,6 +24,10 @@ public class CDFGToDotGraph extends CFGToDotGraph {
 		DotNamer namer = new DotNamer((int)(graph.size()/0.7f), 0.7f);
 		NodeComparator comparator = new NodeComparator(namer);
 
+		Set<Object> varNodes = new HashSet<Object>();
+		Set<Object> useEdges= new HashSet<Object>();
+		Set<Object> defEdges= new HashSet<Object>();
+		
 		// To facilitate comparisons between different graphs of the same
 		// method, prelabel the nodes in the order they appear
 		// in the iterator, rather than the order that they appear in the
@@ -32,29 +41,38 @@ public class CDFGToDotGraph extends CFGToDotGraph {
 				iterLocals.hasNext(); ) {
 			Local var = iterLocals.next();			
 			namer.getName(var);
-			canvas.drawNode(namer.getName(var));
+			Object b = canvas.drawNode(namer.getName(var));
+			varNodes.add(b);
 		}
 
 		for (Iterator nodesIt = graph.iterator(); nodesIt.hasNext(); ) {
 			Object node = nodesIt.next();
 			canvas.drawNode(namer.getName(node));
 			
-			for (Iterator succsIt = sortedIterator(graph.getSuccsOf((Unit) node), comparator);
-					succsIt.hasNext(); ) {
-				Object succ = succsIt.next();
-				canvas.drawEdge(namer.getName(node), namer.getName(succ));
+			try {
+				for (Iterator succsIt = sortedIterator(graph.getSuccsOf((Unit) node), comparator);
+						succsIt.hasNext(); ) {
+					Object succ = succsIt.next();
+					canvas.drawEdge(namer.getName(node), namer.getName(succ));
+				}				
+			} catch (RuntimeException e) {
+				// TODO better deal with nodes that are not in the pred or successor list 
 			}
 			
-			for (Local succ : graph.getDefVars((Unit) node)) {
-				canvas.drawEdge(namer.getName(succ), namer.getName(node));
-			}			
+			Collection<Local> defVars = graph.getDefVars((Unit) node);
+			if (null != defVars) {
+				for (Local succ : defVars) {
+					Object e = canvas.drawEdge(namer.getName(succ), namer.getName(node));
+					defEdges.add(e);
+				}
+			}
 		}
 
-		for (Iterator<Local> iterLocals = graph.localsIter();
-				iterLocals.hasNext(); ) {
+		for (Iterator<Local> iterLocals = graph.localsIter(); iterLocals.hasNext(); ) {
 			Local v = iterLocals.next();
 			for (Unit u : graph.getUseUnits(v)) {
-				canvas.drawEdge(namer.getName(u), namer.getName(v));				
+				Object e = canvas.drawEdge(namer.getName(u), namer.getName(v));
+				useEdges.add(e);
 			}
 		}
 
@@ -63,6 +81,20 @@ public class CDFGToDotGraph extends CFGToDotGraph {
 				DotGraphConstants.NODE_STYLE_FILLED, headAttr);
 		setStyle(graph.getTails(), canvas, namer, 
 				DotGraphConstants.NODE_STYLE_FILLED, tailAttr);
+		
+		for (Object b : varNodes) {
+			((DotGraphNode) b).setStyle(DotGraphConstants.NODE_STYLE_DASHED);
+			((DotGraphNode) b).setAttribute("shape", "ellipse");
+		}
+		for (Object b : useEdges) {
+			((DotGraphEdge) b).setStyle(DotGraphConstants.EDGE_STYLE_DOTTED);
+			((DotGraphEdge) b).setAttribute("color","blue");			
+		}
+		for (Object b : defEdges) {
+			((DotGraphEdge) b).setAttribute("style","dashed");
+			((DotGraphEdge) b).setAttribute("color","red");
+		}
+		
 		if (! isBrief) {
 			formatNodeText(body, canvas, namer);
 		}

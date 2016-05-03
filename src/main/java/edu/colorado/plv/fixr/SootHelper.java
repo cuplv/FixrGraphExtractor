@@ -8,9 +8,7 @@ import soot.PhaseOptions;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
-import soot.jimple.JimpleBody;
 import soot.options.Options;
-
 import soot.toolkits.graph.DirectedGraph;
 import soot.util.cfgcmd.CFGToDotGraph;
 import soot.util.dot.DotGraph;

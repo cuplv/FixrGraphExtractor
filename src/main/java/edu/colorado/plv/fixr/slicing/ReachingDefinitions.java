@@ -141,7 +141,14 @@ public class ReachingDefinitions extends ForwardFlowAnalysis<Unit, FlowSet> {
 		gen.put(u, genSet);
 	}
 
-	protected Set<Local> getDefLocals(Unit unit, boolean overapprox) {
+	/**
+	 * Get the set of locals defined by unit.
+	 *   
+	 * @param unit
+	 * @param overapprox
+	 * @return
+	 */
+	public Set<Local> getDefLocals(Unit unit, boolean overapprox) {
 		if (overapprox) {
 			return getOverApproxDefLocals(unit);
 		}
@@ -247,6 +254,12 @@ public class ReachingDefinitions extends ForwardFlowAnalysis<Unit, FlowSet> {
 		return false;
 	}
 	
+	/**
+	 * Get the reachable definition at unit u.
+	 * 
+	 * @param u
+	 * @return
+	 */
 	public List<Unit> getReachableAt(Unit u) {
 		/* get the reachable definition at unit u */
 		ArrayPackedSet s = (ArrayPackedSet) getFlowAfter(u);

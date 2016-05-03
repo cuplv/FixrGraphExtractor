@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
-import edu.colorado.plv.fixr.SootHelper;
 import edu.colorado.plv.fixr.graphs.DataDependencyGraph;
 import soot.Body;
 import soot.PatchingChain;
@@ -22,6 +21,8 @@ import soot.jimple.JimpleBody;
 import soot.jimple.LookupSwitchStmt;
 import soot.jimple.NopStmt;
 import soot.jimple.TableSwitchStmt;
+import soot.jimple.ThrowStmt;
+import soot.jimple.internal.JNopStmt;
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
@@ -43,6 +44,27 @@ public class APISlicer {
 	private PDGSlicer pdg; 
 	private DataDependencyGraph ddg;
 	
+	/**
+	 * @return the cfg
+	 */
+	public UnitGraph getCfg() {
+		return cfg;
+	}
+
+	/**
+	 * @return the pdg
+	 */
+	public PDGSlicer getPdg() {
+		return pdg;
+	}
+
+	/**
+	 * @return the ddg
+	 */
+	public DataDependencyGraph getDdg() {
+		return ddg;
+	}
+
 	public APISlicer(UnitGraph cfg, Body body) {
 		super();
 		
@@ -149,25 +171,9 @@ public class APISlicer {
 				 */
 				Object pdgObject = current.getNode();		
 				if (pdgObject instanceof Block) {
-					assert pdgObject instanceof Block; 
-					for (Iterator<Unit> iter = ((Block) pdgObject).iterator(); iter.hasNext();) {
-						Unit unit = iter.next();
-						if (isControlFlow(unit)) {
-							if (! visitedNodes.contains(unit)) {
-								unitsWorkList.push(unit);
-							}
-						} else if (isLabel(unit)) {
-							// Include the units that target this label backward							
-							Set<Unit> prevUnits = reverseGotoMap.get(unit);
-							if (null != prevUnits) {
-								for (Unit prevUnit : prevUnits) {
-									if (! visitedNodes.contains(prevUnit)) {
-										unitsWorkList.push(prevUnit);
-									}
-								}
-							}
-						}
-					}
+					assert pdgObject instanceof Block;
+					processPDGBlock((Block) pdgObject,
+							visitedNodes, unitsWorkList, reverseGotoMap);					
 				}
 
 				/* Add the backward reachable PDG nodes */
@@ -191,21 +197,9 @@ public class APISlicer {
 				
 				Object pdgObject = pdgNode.getNode(); 
 				if (pdgObject instanceof Block) {
-					assert pdgObject instanceof Block; 
-					for (Iterator<Unit> iter = ((Block) pdgObject).iterator(); iter.hasNext();) {
-						Unit unit = iter.next();
-						if (isLabel(unit)) {
-							// Include the units that target this label backward
-							Set<Unit> prevUnits = reverseGotoMap.get(unit);
-							if (null != prevUnits) {
-								for (Unit prevUnit : prevUnits) {
-									if (! visitedNodes.contains(prevUnit)) {
-										unitsWorkList.push(prevUnit);
-									}
-								}
-							}
-						}									
-					}
+					assert pdgObject instanceof Block;
+					processPDGBlock((Block) pdgObject,
+							visitedNodes, unitsWorkList, reverseGotoMap);					
 				}
 				
 				for (Object predObj : pdg.getPredsOf(pdgNode)) {
@@ -227,6 +221,34 @@ public class APISlicer {
 
 		return visitedNodes;
 	}	 
+	
+	protected void processPDGBlock(Block block,
+			Set<Unit> visitedNodes,
+			Stack<Unit> unitsWorkList,
+			Map<Unit, Set<Unit>> reverseGotoMap) {
+		for (Iterator<Unit> iter = (block).iterator(); iter.hasNext();) {
+			Unit unit = iter.next();
+			if (isControlFlow(unit)) {
+				if (! visitedNodes.contains(unit)) {
+					unitsWorkList.push(unit);
+				}
+			} else if (isLabel(unit)) {
+				// Include the units that target this label backward							
+				Set<Unit> prevUnits = reverseGotoMap.get(unit);
+				if (null != prevUnits) {
+					for (Unit prevUnit : prevUnits) {
+						if (! visitedNodes.contains(prevUnit)) {
+							unitsWorkList.push(prevUnit);
+						}
+					}
+				}
+				if (! visitedNodes.contains(unit)) unitsWorkList.push(unit);
+			} else if (unit instanceof ThrowStmt) {
+				/* Add the throw statement as a dependency */
+				if (! visitedNodes.contains(unit)) unitsWorkList.push(unit);
+			}
+		}		
+	}
 	
 	protected Map<Unit,Set<Unit>> getReverseGotoMap()
 	{
@@ -276,6 +298,7 @@ public class APISlicer {
 		PatchingChain<Unit> dstPc = dstBody.getUnits();
 		
 		
+		dstPc.addLast(new JNopStmt());
 		for (Unit srcUnit : srcPc) {	
 			if (! unitsInSlice.contains(srcUnit)) {
 				Unit dstUnit = (Unit) src2dst.get(srcUnit);
@@ -283,7 +306,7 @@ public class APISlicer {
 				dstPc.remove(dstUnit);
 			}
 		}
-
+				
 		return dstBody;		
 	}			
 	
