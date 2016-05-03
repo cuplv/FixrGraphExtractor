@@ -10,7 +10,7 @@ Functionalities:
 2. Limitation of the current slicing technique (the slicing is not sound):
   * No aliasing (due to this, we cannot handle arrays of arrays correctly, since in jimple they are encoded with intermeditate variables)
   * Method calls are opaque, and they do not change anything (e.g. memory content or have side effects on the parameters)
-  * I did not test exceptions
+  * Exceptions are not currently handled correctly (need to deal with them in the PDG)
 
 # Compile (-x test avoid to run the test while building)
 gradle build -x test
