@@ -13,22 +13,23 @@ Functionalities:
   * Exceptions are not currently handled correctly (need to deal with them in the PDG)
 
 # Compile (-x test avoid to run the test while building)
-gradle build -x test
-gradle uploadArchives
+
+`gradle build -x test`
+
+`gradle uploadArchives`
 
 # Run (java example)
 Now the program takes as input a java file and a method name and builds the sliced CDFG graph using the android APIs as seeds.
 It then creates a dot file named <method_name>_<sliced>.dot that represents the CDFG.
 
-java -cp lib/soot-2.5.0.jar:repos/FixrGraphExtractor-1.0.jar edu.colorado.plv.fixr.Main <path_to_rt.jar>:./src/test/resources simple.Simple main
+`java -cp lib/soot-2.5.0.jar:repos/FixrGraphExtractor-1.0.jar edu.colorado.plv.fixr.Main <path_to_rt.jar>:./src/test/resources simple.Simple main`
 
 were <path_to_rt.jar> is the path to the file rt.jar in the jdk directory (e.g. /usr/lib/jvm/jdk1.7.0/jre/lib/rt.jar)
-
 
 # Run (android example)
 Need the android.jar file
 
-java -cp lib/soot-2.5.0.jar:repos/FixrGraphExtractor-1.0.jar edu.colorado.plv.fixr.Main rt.jar:android.jar:./src/test/resources androidtests.HelloWorldActivity onCreate
+`java -cp lib/soot-2.5.0.jar:repos/FixrGraphExtractor-1.0.jar edu.colorado.plv.fixr.Main rt.jar:android.jar:./src/test/resources androidtests.HelloWorldActivity onCreate`
 
 rt.jar: jar file of the runtime environment for java
 android.jar: jar file of the android framework.
