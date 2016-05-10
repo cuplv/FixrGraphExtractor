@@ -16,7 +16,6 @@ import soot.util.dot.DotGraphNode;
 public class CDFGToDotGraph extends CFGToDotGraph {
 
 	public CDFGToDotGraph() {
-
 	}
 
 	public DotGraph drawCFG(UnitCdfgGraph graph, Body body) {
@@ -37,9 +36,8 @@ public class CDFGToDotGraph extends CFGToDotGraph {
 			String junk = namer.getName(nodesIt.next());
 		}
 		
-		for (Iterator<Local> iterLocals = graph.localsIter();
-				iterLocals.hasNext(); ) {
-			Local var = iterLocals.next();			
+		for (Iterator<Local> iterLocals = graph.localsIter(); iterLocals.hasNext(); ) {
+			Local var = iterLocals.next();
 			namer.getName(var);
 			Object b = canvas.drawNode(namer.getName(var));
 			varNodes.add(b);
@@ -54,7 +52,7 @@ public class CDFGToDotGraph extends CFGToDotGraph {
 						succsIt.hasNext(); ) {
 					Object succ = succsIt.next();
 					canvas.drawEdge(namer.getName(node), namer.getName(succ));
-				}				
+				}
 			} catch (RuntimeException e) {
 				// TODO better deal with nodes that are not in the pred or successor list 
 			}
