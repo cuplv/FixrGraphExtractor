@@ -14,9 +14,9 @@ Functionalities:
 
 # Compile (-x test avoid to run the test while building)
 
-`gradle build -x test`
+`./gradlew build -x test`
 
-`gradle uploadArchives`
+`./gradlew uploadArchives`
 
 # Run (java example)
 Now the program takes as input a java file and a method name and builds the sliced CDFG graph using the android APIs as seeds.
@@ -38,7 +38,7 @@ You can obtain a version of the jar here http://repository.grepcode.com/java/ext
 
 
 # Test
-Run the test cases: `gradle test`
+Run the test cases: `./gradlew test`
 
 The test uses the jimple representation that can be generated calling soot:
 `java -jar ./lib/soot-2.5.0.jar --f J -src-prec java -cp <rt.jar>:<full path to FixrGraphExtractor/src/test/resources> slice.TestSlice`
