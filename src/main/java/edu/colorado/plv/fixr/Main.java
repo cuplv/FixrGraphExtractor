@@ -23,12 +23,12 @@ public class Main {
   	}
   	
   	String filter = null;
-  	if (args.length == 4) {
+  	if (args.length >= 4) {
   		filter = args[3];
   	}
   	
-  	String classPath = args[0];
-  	String className = args[1];
+  	String classPath  = args[0];
+  	String className  = args[1];
   	String methodName = args[2];
   	
   	/* Configure soot */
@@ -40,7 +40,7 @@ public class Main {
 
   	/* Get the method body (in jimple)  and perform the slicing */
   	Body body = SootHelper.getMethodBody(className, methodName);
-  	EnhancedUnitGraph jimpleUnitGraph= new EnhancedUnitGraph(body);
+  	EnhancedUnitGraph jimpleUnitGraph = new EnhancedUnitGraph(body);
   	APISlicer slicer = new APISlicer(jimpleUnitGraph, body);
   	
   	SlicingCriterion sc;
@@ -55,10 +55,10 @@ public class Main {
    	if (null == slicedJimple) {
    		System.out.println("Cannot find a relevant method call for slicing");
    	}
-   	else {   	
-   		/* build the CdFG graph */
-   		UnitCdfgGraph cdfg = new UnitCdfgGraph(slicedJimple); 
-  	
+   	else {
+   		/* build the CDFG graph */
+   		UnitCdfgGraph cdfg = new UnitCdfgGraph(slicedJimple);
+
    		/* Dump the sliced graph */
    		SootHelper.dumpToDot(cdfg, cdfg.getBody(), cdfg.getBody().getMethod().getName() + ".dot");	  	 
    	}
