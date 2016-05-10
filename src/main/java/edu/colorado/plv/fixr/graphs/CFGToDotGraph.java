@@ -493,10 +493,8 @@ public class CFGToDotGraph {
 	  } else {
 	    nodeLabel = targetLabel + ": " + printer.toString();
 	  }
-      if (node instanceof Local) {
+	}else if (node instanceof Local) {
           nodeLabel = nodeLabel + " : " + ((Local) node).getType().toString();
-      }
-
 	} else if (node instanceof Block) {
 	  Iterator units = ((Block) node).iterator();
 	  StringBuffer buffer = new StringBuffer();
