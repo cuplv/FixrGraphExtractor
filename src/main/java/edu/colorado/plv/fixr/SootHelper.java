@@ -134,5 +134,5 @@ public class SootHelper {
   	
 			viewgraph.plot(fileName);
 		}
-	}	
+	}
 }
