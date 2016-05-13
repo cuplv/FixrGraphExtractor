@@ -1,0 +1,249 @@
+public class slice.TestSlice extends java.lang.Object
+{
+    public void m1()
+    {
+        slice.TestSlice this;
+        int a, temp$0;
+
+        this := @this: slice.TestSlice;
+        a = 0;
+        temp$0 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        return;
+    }
+
+    public void m2()
+    {
+        slice.TestSlice this;
+        int a, b, temp$0, temp$1, temp$2;
+
+        this := @this: slice.TestSlice;
+        temp$0 = 0;
+        a = temp$0;
+        temp$1 = 0;
+        b = temp$1;
+        temp$2 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        return;
+    }
+
+    public void m3()
+    {
+        slice.TestSlice this;
+        int a, b, temp$0, temp$1, temp$2;
+
+        this := @this: slice.TestSlice;
+        temp$0 = 0;
+        a = temp$0;
+        temp$1 = 0;
+        b = temp$1;
+        a = b;
+        temp$2 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        return;
+    }
+
+    public void m4()
+    {
+        slice.TestSlice this;
+        int a, b, c, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5;
+
+        this := @this: slice.TestSlice;
+        temp$0 = 0;
+        a = temp$0;
+        temp$1 = 0;
+        b = temp$1;
+        temp$2 = 0;
+        c = temp$2;
+        if b == 0 goto label0;
+
+        goto label1;
+
+     label0:
+        nop;
+        temp$3 = a;
+        temp$4 = temp$3 + b;
+        a = temp$4;
+        goto label2;
+
+     label1:
+        nop;
+        c = a;
+
+     label2:
+        nop;
+        a = b;
+        temp$5 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        return;
+    }
+
+    public void m5()
+    {
+        slice.TestSlice this;
+        int a, b, c, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5;
+
+        this := @this: slice.TestSlice;
+        temp$0 = 0;
+        a = temp$0;
+        temp$1 = 0;
+        b = temp$1;
+        temp$2 = 0;
+        c = temp$2;
+        if b == 0 goto label0;
+
+        goto label1;
+
+     label0:
+        nop;
+        temp$3 = a;
+        temp$4 = temp$3 + b;
+        a = temp$4;
+        goto label2;
+
+     label1:
+        nop;
+        b = a;
+
+     label2:
+        nop;
+        a = b;
+        temp$5 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        return;
+    }
+
+    public void m6()
+    {
+        slice.TestSlice this;
+        int a, b, c, temp$0, temp$1, temp$2, temp$3;
+
+        this := @this: slice.TestSlice;
+        temp$0 = 0;
+        a = temp$0;
+        temp$1 = 0;
+        b = temp$1;
+        temp$2 = 3;
+        c = temp$2;
+        if b == 0 goto label0;
+
+        goto label1;
+
+     label0:
+        nop;
+        a = c;
+        goto label2;
+
+     label1:
+        nop;
+        b = a;
+
+     label2:
+        nop;
+        temp$3 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        return;
+    }
+
+    public void m7()
+    {
+        slice.TestSlice this;
+        int i, temp$0, temp$1, temp$2, temp$3;
+
+        this := @this: slice.TestSlice;
+        temp$0 = 0;
+        i = temp$0;
+
+     label0:
+        nop;
+        if i <= 10 goto label1;
+
+        goto label2;
+
+     label1:
+        nop;
+        temp$1 = staticinvoke <java.lang.Math: int abs(int)>(i);
+        nop;
+        temp$2 = i;
+        temp$3 = temp$2 + 1;
+        i = temp$3;
+        goto label0;
+
+     label2:
+        nop;
+        return;
+    }
+
+    public void m8()
+    {
+        slice.TestSlice this;
+        int i, a, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5, temp$6;
+
+        this := @this: slice.TestSlice;
+        temp$0 = 0;
+        i = temp$0;
+        temp$1 = 0;
+        a = temp$1;
+
+     label0:
+        nop;
+        if a <= 10 goto label1;
+
+        goto label2;
+
+     label1:
+        nop;
+        temp$2 = a;
+        temp$3 = temp$2 + 1;
+        a = temp$3;
+        nop;
+        temp$4 = a;
+        temp$5 = temp$4 + 1;
+        a = temp$5;
+        goto label0;
+
+     label2:
+        nop;
+        temp$6 = staticinvoke <java.lang.Math: int abs(int)>(i);
+        return;
+    }
+
+    public void m9()
+    {
+        slice.TestSlice this;
+        int i, a, b, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5, temp$6, temp$7;
+
+        this := @this: slice.TestSlice;
+        temp$0 = 0;
+        a = temp$0;
+        temp$1 = 0;
+        b = temp$1;
+        temp$2 = 0;
+        i = temp$2;
+
+     label0:
+        nop;
+        if i <= 10 goto label1;
+
+        goto label2;
+
+     label1:
+        nop;
+        temp$3 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        temp$4 = b;
+        temp$5 = temp$4 + 1;
+        a = temp$5;
+        nop;
+        temp$6 = i;
+        temp$7 = temp$6 + 1;
+        i = temp$7;
+        goto label0;
+
+     label2:
+        nop;
+        return;
+    }
+
+    public void <init>()
+    {
+        slice.TestSlice this;
+
+        this := @this: slice.TestSlice;
+        specialinvoke this.<java.lang.Object: void <init>()>();
+        return;
+    }
+}
