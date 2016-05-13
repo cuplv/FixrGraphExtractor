@@ -28,7 +28,14 @@ public class TestTransactionAPI extends TestCdfg {
 	 */
 	@Override
 	public String getClassPath() {
-		String classpath = this.classPath + ":./src/test/resources/libs/android.jar"; 
+		// String classpath = this.getClassPath();
+		//System.err.println(classpath);
+		//	"/cygdrive/c/Users/cuplv/IdeaProjects/FixrGraphExtractor/src/test/resources/libs/android.jar";
+		String classpath = this.classPath + ":./src/test/resources/libs/android.jar";
+
+		// String classpath = "./src/test/resources/libs/android.jar";
+
+		// String classpath = System.getProperty("user.dir") + ":./src/test/resources/libs/android.jar";
 		return classpath;
 	}
 

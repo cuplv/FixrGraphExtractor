@@ -1,0 +1,151 @@
+public class slice.TestSliceRes extends java.lang.Object
+{
+    public void m1__sliced__()
+    {
+        slice.TestSlice this;
+        int a, temp$0;
+
+        a = 0;
+        temp$0 = staticinvoke <java.lang.Math: int abs(int)>(a);
+    }
+
+    public void m2__sliced__()
+    {
+        slice.TestSlice this;
+        int a, b, temp$0, temp$1, temp$2;
+
+        temp$0 = 0;
+        a = temp$0;
+        temp$2 = staticinvoke <java.lang.Math: int abs(int)>(a);
+    }
+
+    public void m3__sliced__()
+    {
+        slice.TestSlice this;
+        int a, b, temp$0, temp$1, temp$2;
+
+        temp$1 = 0;
+        b = temp$1;
+        a = b;
+        temp$2 = staticinvoke <java.lang.Math: int abs(int)>(a);
+    }
+
+    public void m4__sliced__()
+    {
+        slice.TestSlice this;
+        int a, b, c, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5;
+
+        temp$1 = 0;
+        b = temp$1;
+        if b == 0 goto label0;
+
+     label0:
+        goto label1;
+
+     label1:
+        a = b;
+        temp$5 = staticinvoke <java.lang.Math: int abs(int)>(a);
+    }
+
+    public void m5__sliced__()
+    {
+        slice.TestSlice this;
+        int a, b, c, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5;
+
+        temp$0 = 0;
+        a = temp$0;
+        temp$1 = 0;
+        b = temp$1;
+        if b == 0 goto label0;
+
+        goto label1;
+
+     label0:
+        goto label2;
+
+     label1:
+        b = a;
+
+     label2:      
+        a = b;
+        temp$5 = staticinvoke <java.lang.Math: int abs(int)>(a);
+    }
+
+    public void m6__sliced__()
+    {
+        slice.TestSlice this;
+        int a, b, c, temp$0, temp$1, temp$2, temp$3;
+
+        temp$0 = 0;
+        a = temp$0;
+        temp$1 = 0;
+        b = temp$1;
+        temp$2 = 3;
+        c = temp$2;
+        if b == 0 goto label0;
+
+     label0:
+        a = c;
+        goto label1;
+
+     label1:
+        temp$3 = staticinvoke <java.lang.Math: int abs(int)>(a);
+    }
+
+
+    public void m7__sliced__()
+    {
+        slice.TestSlice this;
+        int i, temp$0, temp$1, temp$2, temp$3;
+
+        temp$0 = 0;
+        i = temp$0;
+
+     label0:
+        if i <= 10 goto label1;
+
+     label1:
+        temp$1 = staticinvoke <java.lang.Math: int abs(int)>(i);
+        temp$2 = i;
+        temp$3 = temp$2 + 1;
+        i = temp$3;
+        goto label0;
+    }
+
+    public void m8__sliced__()
+    {
+        slice.TestSlice this;
+        int i, a, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5, temp$6;
+
+        temp$0 = 0;
+        i = temp$0;
+        temp$1 = 0;
+        a = temp$1;
+
+     label0:
+        if a <= 10 goto label1;
+
+        goto label2;
+
+     label1:
+        temp$2 = a;
+        temp$3 = temp$2 + 1;
+        a = temp$3;
+        temp$4 = a;
+        temp$5 = temp$4 + 1;
+        a = temp$5;
+        goto label0;
+
+     label2:
+        temp$6 = staticinvoke <java.lang.Math: int abs(int)>(i);
+    }
+
+    public void <init>()
+    {
+        slice.TestSlice this;
+
+        this := @this: slice.TestSlice;
+        specialinvoke this.<java.lang.Object: void <init>()>();
+        return;
+    }
+}
