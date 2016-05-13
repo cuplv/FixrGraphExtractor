@@ -29,7 +29,7 @@ public class TestSamples extends TestCdfg {
 	
 	@Override
 	public String getClassPath() {
-		String classpath = this.classPath + ":./src/test/resources/libs/android.jar"; 
+		String classpath = "./src/test/resources/libs/android.jar";
 		return classpath;
 	}
 
