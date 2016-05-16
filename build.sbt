@@ -21,15 +21,8 @@ resolvers += "Local Maven Repository" at "file:///"+Path.userHome.absolutePath+"
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 
-resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
-
-javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
-scalacOptions += "-target:jvm-1.7"
-
 libraryDependencies ++= Seq(
-  "org.eclipse.jdt" % "org.eclipse.jdt.core" % "3.10.0",
-  "org.scalatest" %% "scalatest" % "2.2.2" % Test,
-  "junit" % "junit" % "4.11" % Test
+  "org.eclipse.jdt" % "org.eclipse.jdt.core" % "3.10.0"
 )
 
 /*

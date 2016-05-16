@@ -6,10 +6,7 @@ import soot.Scene;
 import soot.SootClass;
 
 public abstract class TestClassBase {
-	protected final String classPath = "src/test/resources/jimple";
-	// protected final String classPath = ".";
-	// protected String classPath = System.getProperty("user.dir");
-
+	protected final String classPath = "src/test/resources/jimple"; 
 	protected SootClass testClass = null;
 	protected SootClass resClass = null;
 
@@ -63,13 +60,13 @@ public abstract class TestClassBase {
 		}
 		if (null != getResClassName()) {
 			Scene.v().addBasicClass(getResClassName(), SootClass.HIERARCHY);			
-		}
-
+		}		
 		Scene.v().loadNecessaryClasses();		
 		
 		if (null != getTestClassName())
 			setTestClass(Scene.v().tryLoadClass(getTestClassName(), SootClass.BODIES));			
 		if (null != getResClassName())				
 			setResClass(Scene.v().tryLoadClass(getResClassName(), SootClass.BODIES));
+		
 	}	
 }
