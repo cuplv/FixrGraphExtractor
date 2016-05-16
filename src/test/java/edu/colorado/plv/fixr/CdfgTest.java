@@ -5,8 +5,6 @@ import java.util.Collections;
 
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
-
 
 public class CdfgTest extends TestCdfg {
 	static final String CLASS_NAME = "slice.TestSlice";	

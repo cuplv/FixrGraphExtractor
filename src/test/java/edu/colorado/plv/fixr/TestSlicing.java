@@ -19,7 +19,7 @@ public abstract class TestSlicing extends TestClassBase {
 		SootClass resClass = this.getResClass();
 		
 		assertTrue(testClass != null);
-		assertTrue(resClass != null);
+		assertTrue(resClass!= null);
 		
 		Body bodyToSlice = testClass.getMethodByName(methodName).retrieveActiveBody();
 		Body expectedRes = resClass.getMethodByName(APISlicer.getSlicedMethodName(methodName)).retrieveActiveBody();
