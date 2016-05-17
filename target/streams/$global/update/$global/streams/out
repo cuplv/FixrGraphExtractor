@@ -7,7 +7,7 @@
 [0m[[0mdebug[0m] [0m== resolving dependencies for edu.colorado.plv.fixr#fixrgraphextractor_2.10;0.1-SNAPSHOT [compile][0m
 [0m[[0mdebug[0m] [0m== resolving dependencies edu.colorado.plv.fixr#fixrgraphextractor_2.10;0.1-SNAPSHOT->org.scala-lang#scala-library;2.10.5 [compile->default(compile)][0m
 [0m[[0minfo[0m] [0mResolving org.scala-lang#scala-library;2.10.5 ...[0m
-[0m[[0mdebug[0m] [0msbt-chain: Checking cache for: sbt.ivyint.MergedDescriptors@56585faf[0m
+[0m[[0mdebug[0m] [0msbt-chain: Checking cache for: sbt.ivyint.MergedDescriptors@3aea61ac[0m
 [0m[[0mdebug[0m] [0msbt-chain: module revision found in cache: org.scala-lang#scala-library;2.10.5[0m
 [0m[[0mdebug[0m] [0m	found org.scala-lang#scala-library;2.10.5 in sbt-chain[0m
 [0m[[0mdebug[0m] [0m	[2.10.5] org.scala-lang#scala-library;2.10.5[0m
@@ -969,7 +969,7 @@
 [0m[[0mdebug[0m] [0m	[NOT REQUIRED] org.scala-lang#scala-reflect;2.10.5!scala-reflect.jar[0m
 [0m[[0mdebug[0m] [0m	[NOT REQUIRED] org.scala-lang#jline;2.10.5!jline.jar[0m
 [0m[[0mdebug[0m] [0m	[NOT REQUIRED] org.fusesource.jansi#jansi;1.4!jansi.jar[0m
-[0m[[0mdebug[0m] [0m:: resolution report :: resolve 2079ms :: artifacts dl 46ms[0m
+[0m[[0mdebug[0m] [0m:: resolution report :: resolve 1333ms :: artifacts dl 50ms[0m
 [0m[[0mdebug[0m] [0m	report for edu.colorado.plv.fixr#fixrgraphextractor_2.10;0.1-SNAPSHOT compile produced in C:\Users\cuplv\IdeaProjects\FixrGraphExtractor\target\resolution-cache\reports\edu.colorado.plv.fixr-fixrgraphextractor_2.10-compile.xml[0m
 [0m[[0mdebug[0m] [0m	report for edu.colorado.plv.fixr#fixrgraphextractor_2.10;0.1-SNAPSHOT runtime produced in C:\Users\cuplv\IdeaProjects\FixrGraphExtractor\target\resolution-cache\reports\edu.colorado.plv.fixr-fixrgraphextractor_2.10-runtime.xml[0m
 [0m[[0mdebug[0m] [0m	report for edu.colorado.plv.fixr#fixrgraphextractor_2.10;0.1-SNAPSHOT test produced in C:\Users\cuplv\IdeaProjects\FixrGraphExtractor\target\resolution-cache\reports\edu.colorado.plv.fixr-fixrgraphextractor_2.10-test.xml[0m
@@ -983,5 +983,5 @@
 [0m[[0mdebug[0m] [0m	report for edu.colorado.plv.fixr#fixrgraphextractor_2.10;0.1-SNAPSHOT docs produced in C:\Users\cuplv\IdeaProjects\FixrGraphExtractor\target\resolution-cache\reports\edu.colorado.plv.fixr-fixrgraphextractor_2.10-docs.xml[0m
 [0m[[0mdebug[0m] [0m	report for edu.colorado.plv.fixr#fixrgraphextractor_2.10;0.1-SNAPSHOT pom produced in C:\Users\cuplv\IdeaProjects\FixrGraphExtractor\target\resolution-cache\reports\edu.colorado.plv.fixr-fixrgraphextractor_2.10-pom.xml[0m
 [0m[[0mdebug[0m] [0m	report for edu.colorado.plv.fixr#fixrgraphextractor_2.10;0.1-SNAPSHOT scala-tool produced in C:\Users\cuplv\IdeaProjects\FixrGraphExtractor\target\resolution-cache\reports\edu.colorado.plv.fixr-fixrgraphextractor_2.10-scala-tool.xml[0m
-[0m[[0mdebug[0m] [0m	resolve done (2079ms resolve - 46ms download)[0m
+[0m[[0mdebug[0m] [0m	resolve done (1333ms resolve - 50ms download)[0m
 [0m[[0minfo[0m] [0mDone updating.[0m

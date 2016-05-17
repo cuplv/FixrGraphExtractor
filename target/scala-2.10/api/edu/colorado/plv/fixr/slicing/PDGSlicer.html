@@ -1,0 +1,902 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html>
+        <head>
+          <title>PDGSlicer - edu.colorado.plv.fixr.slicing.PDGSlicer</title>
+          <meta name="description" content="PDGSlicer - edu.colorado.plv.fixr.slicing.PDGSlicer" />
+          <meta name="keywords" content="PDGSlicer edu.colorado.plv.fixr.slicing.PDGSlicer" />
+          <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+          
+      <link href="../../../../../lib/template.css" media="screen" type="text/css" rel="stylesheet" />
+      <link href="../../../../../lib/diagrams.css" media="screen" type="text/css" rel="stylesheet" id="diagrams-css" />
+      <script type="text/javascript">
+         if(top === self) {
+            var url = '../../../../../index.html';
+            var hash = 'edu.colorado.plv.fixr.slicing.PDGSlicer';
+            var anchor = window.location.hash;
+            var anchor_opt = '';
+            if (anchor.length >= 1)
+              anchor_opt = '@' + anchor.substring(1);
+            window.location.href = url + '#' + hash + anchor_opt;
+         }
+   	  </script>
+    
+        </head>
+        <body class="type">
+      <div id="definition">
+        <img src="../../../../../lib/class_big.png" />
+        <p id="owner"><a href="../../../../package.html" class="extype" name="edu">edu</a>.<a href="../../../package.html" class="extype" name="edu.colorado">colorado</a>.<a href="../../package.html" class="extype" name="edu.colorado.plv">plv</a>.<a href="../package.html" class="extype" name="edu.colorado.plv.fixr">fixr</a>.<a href="package.html" class="extype" name="edu.colorado.plv.fixr.slicing">slicing</a></p>
+        <h1>PDGSlicer</h1>
+      </div>
+
+      <h4 id="signature" class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">class</span>
+      </span>
+      <span class="symbol">
+        <span class="name">PDGSlicer</span><span class="result"> extends <span class="extype" name="soot.toolkits.graph.pdg.HashMutablePDG">HashMutablePDG</span></span>
+      </span>
+      </h4>
+      
+          <div id="comment" class="fullcommenttop"><div class="toggleContainer block">
+          <span class="toggle">Linear Supertypes</span>
+          <div class="superTypes hiddenContent"><span class="extype" name="soot.toolkits.graph.pdg.HashMutablePDG">HashMutablePDG</span>, <span class="extype" name="soot.toolkits.graph.pdg.ProgramDependenceGraph">ProgramDependenceGraph</span>, <span class="extype" name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph">HashMutableEdgeLabelledDirectedGraph</span>, <span class="extype" name="soot.toolkits.graph.MutableEdgeLabelledDirectedGraph">MutableEdgeLabelledDirectedGraph</span>, <span class="extype" name="soot.toolkits.graph.DirectedGraph">DirectedGraph</span>[<span class="extype" name="soot.toolkits.graph.DirectedGraph.N">N</span>], <span class="extype" name="java.lang.Iterable">Iterable</span>[<span class="extype" name="soot.toolkits.graph.DirectedGraph.N">N</span>], <span class="extype" name="scala.AnyRef">AnyRef</span>, <span class="extype" name="scala.Any">Any</span></div>
+        </div></div>
+        
+
+      <div id="mbrsel">
+        <div id="textfilter"><span class="pre"></span><span class="input"><input id="mbrsel-input" type="text" accesskey="/" /></span><span class="post"></span></div>
+        <div id="order">
+              <span class="filtertype">Ordering</span>
+              <ol>
+                
+                <li class="alpha in"><span>Alphabetic</span></li>
+                <li class="inherit out"><span>By inheritance</span></li>
+              </ol>
+            </div>
+        <div id="ancestors">
+                <span class="filtertype">Inherited<br />
+                </span>
+                <ol id="linearization">
+                  <li class="in" name="edu.colorado.plv.fixr.slicing.PDGSlicer"><span>PDGSlicer</span></li><li class="in" name="soot.toolkits.graph.pdg.HashMutablePDG"><span>HashMutablePDG</span></li><li class="in" name="soot.toolkits.graph.pdg.ProgramDependenceGraph"><span>ProgramDependenceGraph</span></li><li class="in" name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph"><span>HashMutableEdgeLabelledDirectedGraph</span></li><li class="in" name="soot.toolkits.graph.MutableEdgeLabelledDirectedGraph"><span>MutableEdgeLabelledDirectedGraph</span></li><li class="in" name="soot.toolkits.graph.DirectedGraph"><span>DirectedGraph</span></li><li class="in" name="java.lang.Iterable"><span>Iterable</span></li><li class="in" name="scala.AnyRef"><span>AnyRef</span></li><li class="in" name="scala.Any"><span>Any</span></li>
+                </ol>
+              </div><div id="ancestors">
+            <span class="filtertype"></span>
+            <ol>
+              <li class="hideall out"><span>Hide All</span></li>
+              <li class="showall in"><span>Show all</span></li>
+            </ol>
+            <a href="http://docs.scala-lang.org/overviews/scaladoc/usage.html#members" target="_blank">Learn more about member selection</a>
+          </div>
+        <div id="visbl">
+            <span class="filtertype">Visibility</span>
+            <ol><li class="public in"><span>Public</span></li><li class="all out"><span>All</span></li></ol>
+          </div>
+      </div>
+
+      <div id="template">
+        <div id="allMembers">
+        <div id="constructors" class="members">
+              <h3>Instance Constructors</h3>
+              <ol><li name="edu.colorado.plv.fixr.slicing.PDGSlicer#&lt;init&gt;" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="&lt;init&gt;(cfg:soot.toolkits.graph.UnitGraph):edu.colorado.plv.fixr.slicing.PDGSlicer"></a>
+      <a id="&lt;init&gt;:PDGSlicer"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">new</span>
+      </span>
+      <span class="symbol">
+        <span class="name">PDGSlicer</span><span class="params">(<span name="cfg">cfg: <span class="extype" name="soot.toolkits.graph.UnitGraph">UnitGraph</span></span>)</span>
+      </span>
+      </h4>
+      
+    </li></ol>
+            </div>
+
+        
+
+        <div id="values" class="values members">
+              <h3>Abstract Value Members</h3>
+              <ol><li name="soot.toolkits.graph.DirectedGraph#getPredsOf" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="getPredsOf(x$1:N):java.util.List[N]"></a>
+      <a id="getPredsOf(N):List[N]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getPredsOf</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="soot.toolkits.graph.DirectedGraph.N">N</span></span>)</span><span class="result">: <span class="extype" name="java.util.List">List</span>[<span class="extype" name="soot.toolkits.graph.DirectedGraph.N">N</span>]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>DirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.DirectedGraph#getSuccsOf" visbl="pub" data-isabs="true" fullComment="yes" group="Ungrouped">
+      <a id="getSuccsOf(x$1:N):java.util.List[N]"></a>
+      <a id="getSuccsOf(N):List[N]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">abstract </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getSuccsOf</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="soot.toolkits.graph.DirectedGraph.N">N</span></span>)</span><span class="result">: <span class="extype" name="java.util.List">List</span>[<span class="extype" name="soot.toolkits.graph.DirectedGraph.N">N</span>]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>DirectedGraph</dd></dl></div>
+    </li></ol>
+            </div>
+
+        <div id="values" class="values members">
+              <h3>Concrete Value Members</h3>
+              <ol><li name="scala.AnyRef#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:AnyRef):Boolean"></a>
+      <a id="!=(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.Any#!=" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="!=(x$1:Any):Boolean"></a>
+      <a id="!=(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $bang$eq" class="name">!=</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="scala.AnyRef###" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="##():Int"></a>
+      <a id="##():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $hash$hash" class="name">##</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:AnyRef):Boolean"></a>
+      <a id="==(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.Any#==" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="==(x$1:Any):Boolean"></a>
+      <a id="==(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span title="gt4s: $eq$eq" class="name">==</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="soot.toolkits.graph.pdg.HashMutablePDG#GetStartNode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="GetStartNode():soot.toolkits.graph.pdg.PDGNode"></a>
+      <a id="GetStartNode():PDGNode"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">GetStartNode</span><span class="params">()</span><span class="result">: <span class="extype" name="soot.toolkits.graph.pdg.PDGNode">PDGNode</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutablePDG → ProgramDependenceGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.pdg.HashMutablePDG#GetStartRegion" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="GetStartRegion():soot.toolkits.graph.pdg.IRegion"></a>
+      <a id="GetStartRegion():IRegion"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">GetStartRegion</span><span class="params">()</span><span class="result">: <span class="extype" name="soot.toolkits.graph.pdg.IRegion">IRegion</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutablePDG → ProgramDependenceGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#addEdge" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="addEdge(x$1:Any,x$2:Any,x$3:Any):Unit"></a>
+      <a id="addEdge(Any,Any,Any):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">addEdge</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Any">Any</span></span>, <span name="arg2">arg2: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → MutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#addNode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="addNode(x$1:Any):Unit"></a>
+      <a id="addNode(Any):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">addNode</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → MutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="scala.Any#asInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="asInstanceOf[T0]:T0"></a>
+      <a id="asInstanceOf[T0]:T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">asInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Any.asInstanceOf.T0">T0</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="edu.colorado.plv.fixr.slicing.PDGSlicer#buildUnitToBlockMap" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="buildUnitToBlockMap():Unit"></a>
+      <a id="buildUnitToBlockMap():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">buildUnitToBlockMap</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="package.html" class="extype" name="edu.colorado.plv.fixr.slicing">edu.colorado.plv.fixr.slicing</a>] </dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#clearAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clearAll():Unit"></a>
+      <a id="clearAll():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clearAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#clone" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="clone():Object"></a>
+      <a id="clone():AnyRef"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">clone</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.AnyRef">AnyRef</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → AnyRef</dd></dl></div>
+    </li><li name="soot.toolkits.graph.pdg.HashMutablePDG#constructPDG" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="constructPDG():Unit"></a>
+      <a id="constructPDG():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">constructPDG</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../soot$toolkits$graph$pdg.html" class="extype" name="soot.toolkits.graph.pdg">soot.toolkits.graph.pdg</a>] </dd><dt>Definition Classes</dt><dd>HashMutablePDG</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#containsAnyEdge" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="containsAnyEdge(x$1:Any):Boolean"></a>
+      <a id="containsAnyEdge(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">containsAnyEdge</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → MutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#containsAnyEdge" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="containsAnyEdge(x$1:Any,x$2:Any):Boolean"></a>
+      <a id="containsAnyEdge(Any,Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">containsAnyEdge</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → MutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#containsEdge" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="containsEdge(x$1:Any,x$2:Any,x$3:Any):Boolean"></a>
+      <a id="containsEdge(Any,Any,Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">containsEdge</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Any">Any</span></span>, <span name="arg2">arg2: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → MutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#containsNode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="containsNode(x$1:Any):Boolean"></a>
+      <a id="containsNode(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">containsNode</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → MutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.pdg.HashMutablePDG#dependentOn" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="dependentOn(x$1:soot.toolkits.graph.pdg.PDGNode,x$2:soot.toolkits.graph.pdg.PDGNode):Boolean"></a>
+      <a id="dependentOn(PDGNode,PDGNode):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">dependentOn</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="soot.toolkits.graph.pdg.PDGNode">PDGNode</span></span>, <span name="arg1">arg1: <span class="extype" name="soot.toolkits.graph.pdg.PDGNode">PDGNode</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutablePDG → ProgramDependenceGraph</dd></dl></div>
+    </li><li name="scala.AnyRef#eq" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="eq(x$1:AnyRef):Boolean"></a>
+      <a id="eq(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">eq</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#equals" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="equals(x$1:Any):Boolean"></a>
+      <a id="equals(Any):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">equals</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#finalize" visbl="prt" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="finalize():Unit"></a>
+      <a id="finalize():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">finalize</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Attributes</dt><dd>protected[<a href="../../../../../java$lang.html" class="extype" name="java.lang">java.lang</a>] </dd><dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="symbol">classOf[java.lang.Throwable]</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="soot.toolkits.graph.pdg.HashMutablePDG#getCFG" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getCFG():soot.toolkits.graph.UnitGraph"></a>
+      <a id="getCFG():UnitGraph"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getCFG</span><span class="params">()</span><span class="result">: <span class="extype" name="soot.toolkits.graph.UnitGraph">UnitGraph</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutablePDG</dd></dl></div>
+    </li><li name="scala.AnyRef#getClass" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getClass():Class[_]"></a>
+      <a id="getClass():Class[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getClass</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.Class">Class</span>[_]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="soot.toolkits.graph.pdg.HashMutablePDG#getDependents" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getDependents(x$1:soot.toolkits.graph.pdg.PDGNode):java.util.List[soot.toolkits.graph.pdg.PDGNode]"></a>
+      <a id="getDependents(PDGNode):List[PDGNode]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getDependents</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="soot.toolkits.graph.pdg.PDGNode">PDGNode</span></span>)</span><span class="result">: <span class="extype" name="java.util.List">List</span>[<span class="extype" name="soot.toolkits.graph.pdg.PDGNode">PDGNode</span>]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutablePDG → ProgramDependenceGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#getEdgesForLabel" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getEdgesForLabel(x$1:Any):soot.toolkits.graph.MutableDirectedGraph"></a>
+      <a id="getEdgesForLabel(Any):MutableDirectedGraph"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getEdgesForLabel</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="soot.toolkits.graph.MutableDirectedGraph">MutableDirectedGraph</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → MutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#getHeads" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getHeads():java.util.List[_]"></a>
+      <a id="getHeads():List[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getHeads</span><span class="params">()</span><span class="result">: <span class="extype" name="java.util.List">List</span>[_]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → DirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#getLabelsForEdges" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getLabelsForEdges(x$1:Any,x$2:Any):java.util.List[Object]"></a>
+      <a id="getLabelsForEdges(Any,Any):List[AnyRef]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getLabelsForEdges</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="java.util.List">List</span>[<span class="extype" name="scala.AnyRef">AnyRef</span>]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → MutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#getNodes" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getNodes():java.util.List[Object]"></a>
+      <a id="getNodes():List[AnyRef]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getNodes</span><span class="params">()</span><span class="result">: <span class="extype" name="java.util.List">List</span>[<span class="extype" name="scala.AnyRef">AnyRef</span>]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → MutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.pdg.HashMutablePDG#getPDGNode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getPDGNode(x$1:Any):soot.toolkits.graph.pdg.PDGNode"></a>
+      <a id="getPDGNode(Any):PDGNode"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getPDGNode</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="soot.toolkits.graph.pdg.PDGNode">PDGNode</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutablePDG → ProgramDependenceGraph</dd></dl></div>
+    </li><li name="edu.colorado.plv.fixr.slicing.PDGSlicer#getPDGNodeFromUnit" visbl="pub" data-isabs="false" fullComment="no" group="Ungrouped">
+      <a id="getPDGNodeFromUnit(u:soot.Unit):soot.toolkits.graph.pdg.PDGNode"></a>
+      <a id="getPDGNodeFromUnit(Unit):PDGNode"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getPDGNodeFromUnit</span><span class="params">(<span name="u">u: <span class="extype" name="soot.Unit">Unit</span></span>)</span><span class="result">: <span class="extype" name="soot.toolkits.graph.pdg.PDGNode">PDGNode</span></span>
+      </span>
+      </h4>
+      
+    </li><li name="soot.toolkits.graph.pdg.HashMutablePDG#getPDGRegions" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getPDGRegions():java.util.List[soot.toolkits.graph.pdg.PDGRegion]"></a>
+      <a id="getPDGRegions():List[PDGRegion]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getPDGRegions</span><span class="params">()</span><span class="result">: <span class="extype" name="java.util.List">List</span>[<span class="extype" name="soot.toolkits.graph.pdg.PDGRegion">PDGRegion</span>]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutablePDG → ProgramDependenceGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#getPredsOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getPredsOf(x$1:Any):java.util.List[_]"></a>
+      <a id="getPredsOf(Any):List[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getPredsOf</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="java.util.List">List</span>[_]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.pdg.HashMutablePDG#getStrongRegions" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getStrongRegions():java.util.List[soot.toolkits.graph.pdg.Region]"></a>
+      <a id="getStrongRegions():List[Region]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getStrongRegions</span><span class="params">()</span><span class="result">: <span class="extype" name="java.util.List">List</span>[<span class="extype" name="soot.toolkits.graph.pdg.Region">Region</span>]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutablePDG → ProgramDependenceGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#getSuccsOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getSuccsOf(x$1:Any):java.util.List[_]"></a>
+      <a id="getSuccsOf(Any):List[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getSuccsOf</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="java.util.List">List</span>[_]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#getTails" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getTails():java.util.List[_]"></a>
+      <a id="getTails():List[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getTails</span><span class="params">()</span><span class="result">: <span class="extype" name="java.util.List">List</span>[_]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → DirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.pdg.HashMutablePDG#getWeakRegions" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="getWeakRegions():java.util.List[soot.toolkits.graph.pdg.Region]"></a>
+      <a id="getWeakRegions():List[Region]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">getWeakRegions</span><span class="params">()</span><span class="result">: <span class="extype" name="java.util.List">List</span>[<span class="extype" name="soot.toolkits.graph.pdg.Region">Region</span>]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutablePDG → ProgramDependenceGraph</dd></dl></div>
+    </li><li name="scala.AnyRef#hashCode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="hashCode():Int"></a>
+      <a id="hashCode():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">hashCode</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef → Any</dd></dl></div>
+    </li><li name="scala.Any#isInstanceOf" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <a id="isInstanceOf[T0]:Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">isInstanceOf</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>Any</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#iterator" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="iterator():java.util.Iterator[_]"></a>
+      <a id="iterator():Iterator[_]"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">iterator</span><span class="params">()</span><span class="result">: <span class="extype" name="java.util.Iterator">Iterator</span>[_]</span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → DirectedGraph → Iterable</dd></dl></div>
+    </li><li name="scala.AnyRef#ne" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="ne(x$1:AnyRef):Boolean"></a>
+      <a id="ne(AnyRef):Boolean"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">ne</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.AnyRef">AnyRef</span></span>)</span><span class="result">: <span class="extype" name="scala.Boolean">Boolean</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notify" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notify():Unit"></a>
+      <a id="notify():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notify</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="scala.AnyRef#notifyAll" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="notifyAll():Unit"></a>
+      <a id="notifyAll():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">notifyAll</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#printGraph" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="printGraph():Unit"></a>
+      <a id="printGraph():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">printGraph</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.pdg.HashMutablePDG#removeAllEdges" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="removeAllEdges(x$1:Any,x$2:Any):Unit"></a>
+      <a id="removeAllEdges(Any,Any):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">removeAllEdges</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutablePDG → HashMutableEdgeLabelledDirectedGraph → MutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#removeAllEdges" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="removeAllEdges(x$1:Any):Unit"></a>
+      <a id="removeAllEdges(Any):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">removeAllEdges</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → MutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#removeEdge" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="removeEdge(x$1:Any,x$2:Any,x$3:Any):Unit"></a>
+      <a id="removeEdge(Any,Any,Any):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">removeEdge</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Any">Any</span></span>, <span name="arg2">arg2: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → MutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#removeNode" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="removeNode(x$1:Any):Unit"></a>
+      <a id="removeNode(Any):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">removeNode</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Any">Any</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → MutableEdgeLabelledDirectedGraph</dd></dl></div>
+    </li><li name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph#size" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="size():Int"></a>
+      <a id="size():Int"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">size</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Int">Int</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutableEdgeLabelledDirectedGraph → DirectedGraph</dd></dl></div>
+    </li><li name="scala.AnyRef#synchronized" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="synchronized[T0](x$1:=&gt;T0):T0"></a>
+      <a id="synchronized[T0](⇒T0):T0"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">synchronized</span><span class="tparams">[<span name="T0">T0</span>]</span><span class="params">(<span name="arg0">arg0: ⇒ <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>)</span><span class="result">: <span class="extype" name="java.lang.AnyRef.synchronized.T0">T0</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd></dl></div>
+    </li><li name="soot.toolkits.graph.pdg.HashMutablePDG#toString" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="toString():String"></a>
+      <a id="toString():String"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier"></span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">toString</span><span class="params">()</span><span class="result">: <span class="extype" name="java.lang.String">String</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>HashMutablePDG → ProgramDependenceGraph → AnyRef → Any</dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait():Unit"></a>
+      <a id="wait():Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">()</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long,x$2:Int):Unit"></a>
+      <a id="wait(Long,Int):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>, <span name="arg1">arg1: <span class="extype" name="scala.Int">Int</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li><li name="scala.AnyRef#wait" visbl="pub" data-isabs="false" fullComment="yes" group="Ungrouped">
+      <a id="wait(x$1:Long):Unit"></a>
+      <a id="wait(Long):Unit"></a>
+      <h4 class="signature">
+      <span class="modifier_kind">
+        <span class="modifier">final </span>
+        <span class="kind">def</span>
+      </span>
+      <span class="symbol">
+        <span class="name">wait</span><span class="params">(<span name="arg0">arg0: <span class="extype" name="scala.Long">Long</span></span>)</span><span class="result">: <span class="extype" name="scala.Unit">Unit</span></span>
+      </span>
+      </h4>
+      <div class="fullcomment"><dl class="attributes block"> <dt>Definition Classes</dt><dd>AnyRef</dd><dt>Annotations</dt><dd>
+                <span class="name">@throws</span><span class="args">(<span>
+      
+      <span class="defval" name="classOf[java.lang.InterruptedException]">...</span>
+    </span>)</span>
+              
+        </dd></dl></div>
+    </li></ol>
+            </div>
+
+        
+
+        
+        </div>
+
+        <div id="inheritedMembers">
+        <div class="parent" name="soot.toolkits.graph.pdg.HashMutablePDG">
+              <h3>Inherited from <span class="extype" name="soot.toolkits.graph.pdg.HashMutablePDG">HashMutablePDG</span></h3>
+            </div><div class="parent" name="soot.toolkits.graph.pdg.ProgramDependenceGraph">
+              <h3>Inherited from <span class="extype" name="soot.toolkits.graph.pdg.ProgramDependenceGraph">ProgramDependenceGraph</span></h3>
+            </div><div class="parent" name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph">
+              <h3>Inherited from <span class="extype" name="soot.toolkits.graph.HashMutableEdgeLabelledDirectedGraph">HashMutableEdgeLabelledDirectedGraph</span></h3>
+            </div><div class="parent" name="soot.toolkits.graph.MutableEdgeLabelledDirectedGraph">
+              <h3>Inherited from <span class="extype" name="soot.toolkits.graph.MutableEdgeLabelledDirectedGraph">MutableEdgeLabelledDirectedGraph</span></h3>
+            </div><div class="parent" name="soot.toolkits.graph.DirectedGraph">
+              <h3>Inherited from <span class="extype" name="soot.toolkits.graph.DirectedGraph">DirectedGraph</span>[<span class="extype" name="soot.toolkits.graph.DirectedGraph.N">N</span>]</h3>
+            </div><div class="parent" name="java.lang.Iterable">
+              <h3>Inherited from <span class="extype" name="java.lang.Iterable">Iterable</span>[<span class="extype" name="soot.toolkits.graph.DirectedGraph.N">N</span>]</h3>
+            </div><div class="parent" name="scala.AnyRef">
+              <h3>Inherited from <span class="extype" name="scala.AnyRef">AnyRef</span></h3>
+            </div><div class="parent" name="scala.Any">
+              <h3>Inherited from <span class="extype" name="scala.Any">Any</span></h3>
+            </div>
+        
+        </div>
+
+        <div id="groupedMembers">
+        <div class="group" name="Ungrouped">
+              <h3>Ungrouped</h3>
+              
+            </div>
+        </div>
+
+      </div>
+
+      <div id="tooltip"></div>
+
+      <div id="footer">  </div>
+      <script defer="defer" type="text/javascript" id="jquery-js" src="../../../../../lib/jquery.js"></script><script defer="defer" type="text/javascript" id="jquery-ui-js" src="../../../../../lib/jquery-ui.js"></script><script defer="defer" type="text/javascript" id="tools-tooltip-js" src="../../../../../lib/tools.tooltip.js"></script><script defer="defer" type="text/javascript" id="template-js" src="../../../../../lib/template.js"></script>
+    </body>
+      </html>

@@ -4,7 +4,7 @@ import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
 import edu.colorado.plv.fixr.slicing.APISlicer
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed
 import edu.colorado.plv.fixr.slicing.SlicingCriterion
-import edu.colorado.plv.fixr.abstraction
+import edu.colorado.plv.fixr.abstraction.Acdfg
 import soot.Body
 import soot.Scene
 import soot.SootClass
@@ -53,4 +53,3 @@ object Main {
     System.out.println("Done")
   }
 }
-
