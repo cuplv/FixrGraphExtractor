@@ -9,7 +9,7 @@ import soot.Scene;
 import soot.SootClass;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
 
-public class Main {
+public class MainOld {
 	
 	/**
 	 * Now the program takes as input the classpath, the class name and the method name for which we have to build the graph

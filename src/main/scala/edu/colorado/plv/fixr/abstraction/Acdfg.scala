@@ -1,4 +1,8 @@
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
+import soot.jimple.DefinitionStmt
+
+import scala.collection.JavaConversions.asScalaIterator
+
 
 /**
   * Acdfg
@@ -12,44 +16,44 @@ class Acdfg(cdfg : UnitCdfgGraph) {
 
   /* Nodes */
 
-  private trait Node {
+  trait Node {
     def id : Long
   }
 
-  private trait CommandNode extends Node
+  trait CommandNode extends Node
 
-  private class DataNode(
+  class DataNode(
     override val id : Long,
     val name : String
   ) extends Node
 
-  private class MethodNode(
+  class MethodNode(
     override val id : Long,
     val assignee : Option[String],
     val name : String,
     val arguments : Array[String]
   ) extends CommandNode
 
-  private class MiscNode(
+  class MiscNode(
     override val id : Long
   ) extends CommandNode
 
   /* Edges */
 
-  private trait Edge {
+  trait Edge {
     val to   : Long
     val from : Long
     val id   : Long
   }
 
-  private class DefEdge(
+  class DefEdge(
     override val id   : Long,
     override val from : Long,
     override val to   : Long
   ) extends Edge
 
 
-  private class UseEdge(
+  class UseEdge(
     override val id   : Long,
     override val from : Long,
     override val to   : Long
@@ -64,8 +68,8 @@ class Acdfg(cdfg : UnitCdfgGraph) {
    *   Design rationale: our graph will be very sparse; want indexing by ID to be fast
    */
 
-  var edges = scala.collection.mutable.HashMap[Long, Edge]()
-  var nodes = scala.collection.mutable.HashMap[Long, Node]()
+  private def edges = scala.collection.mutable.HashMap[Long, Edge]()
+  private def nodes = scala.collection.mutable.HashMap[Long, Node]()
 
   object MinOrder extends Ordering[Int] {
     def compare(x:Int, y:Int) = y compare x
@@ -88,22 +92,24 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     newId
   }
 
-  def removeId(id : Long) : Unit = {
+  def removeId(id : Long) = {
     freshIds.enqueue(id)
   }
+
+  def addNode(id : Long, node : Node) = nodes.+=((id, node))
 
   def addDataNode(name : String) = {
     val id = getNewId
     val node = new DataNode(id, name)
-    nodes.+=((id, node))
+    addNode(id, node)
   }
 
-  def removeEdge(to : Long, from : Long): Unit = {
+  def removeEdge(to : Long, from : Long) = {
     val id = edges.find {pair => (pair._2.from == from) && (pair._2.to == to) }.get._1
     edges.remove(id)
   }
 
-  def removeEdgesOf(id : Long) : Unit = {
+  def removeEdgesOf(id : Long) = {
     edges.find({pair => (pair._2.from == id) || pair._2.to == id }).foreach(pair => edges remove pair._1)
   }
 
@@ -121,11 +127,30 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     removeId(id)
   }
 
+  /*
+  override def toString = {
+    "ACDFG:" + "\n" + "  " + "Nodes:"
+  }
+   */
+
+  def addMethodNode(assignee : Option[String], name : String, arguments : Array[String]) = {
+    val id   = getNewId
+    val node = new MethodNode(id, assignee, name, arguments)
+    addNode(id, node)
+  }
+
+
 
   /**
     * @constructor
     */
 
-  cdfg.localsIter().
+  cdfg.localsIter().foreach {
+    case m: DefinitionStmt =>
+      val name = m.getName
+      addMethodNode(None, name, new Array(0))
+      println("Added node for " + name)
+    case _ => null
+  }
 
 }
