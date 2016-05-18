@@ -7,56 +7,7 @@
 		revision="0.1-SNAPSHOT"
 		conf="plugin"
 		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, sources, docs, pom, scala-tool"
-		date="20160517152924"/>
+		date="20160518164226"/>
 	<dependencies>
-		<module organisation="com.artima.supersafe" name="supersafe_2.10.5">
-			<revision name="1.1.0-RC6" status="release" pubdate="20160110091116" resolver="sbt-chain" artresolver="sbt-chain" homepage="" downloaded="false" searched="false" default="false" conf="default(compile), default, compile, runtime, master" position="0">
-				<metadata-artifact status="no" details="" size="2731" time="0" location="C:\Users\cuplv\.ivy2\cache\com.artima.supersafe\supersafe_2.10.5\ivy-1.1.0-RC6.xml" searched="false" origin-is-local="false" origin-location="http://repo.artima.com/releases/com/artima/supersafe/supersafe_2.10.5/1.1.0-RC6/supersafe_2.10.5-1.1.0-RC6.pom"/>
-				<caller organisation="edu.colorado.plv.fixr" name="fixrgraphextractor_2.10" conf="plugin" rev="1.1.0-RC6" rev-constraint-default="1.1.0-RC6" rev-constraint-dynamic="1.1.0-RC6" callerrev="0.1-SNAPSHOT"/>
-				<artifacts>
-					<artifact name="supersafe_2.10.5" type="jar" ext="jar" status="no" details="" size="218697" time="0" location="C:\Users\cuplv\.ivy2\cache\com.artima.supersafe\supersafe_2.10.5\jars\supersafe_2.10.5-1.1.0-RC6.jar">
-						<origin-location is-local="false" location="http://repo.artima.com/releases/com/artima/supersafe/supersafe_2.10.5/1.1.0-RC6/supersafe_2.10.5-1.1.0-RC6.jar"/>
-					</artifact>
-				</artifacts>
-			</revision>
-		</module>
-		<module organisation="org.scala-lang" name="scala-compiler">
-			<revision name="2.10.5" status="release" pubdate="20150226185400" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://www.scala-lang.org/" downloaded="false" searched="false" default="false" conf="compile, runtime, compile(*), runtime(*), master(compile), master" position="1">
-				<license name="BSD-like" url="http://www.scala-lang.org/downloads/license.html    "/>
-				<metadata-artifact status="no" details="" size="2843" time="0" location="C:\Users\cuplv\.ivy2\cache\org.scala-lang\scala-compiler\ivy-2.10.5.xml" searched="false" origin-is-local="false" origin-location="https://jcenter.bintray.com/org/scala-lang/scala-compiler/2.10.5/scala-compiler-2.10.5.pom"/>
-				<caller organisation="com.artima.supersafe" name="supersafe_2.10.5" conf="default, compile, runtime, master" rev="2.10.5" rev-constraint-default="2.10.5" rev-constraint-dynamic="2.10.5" callerrev="1.1.0-RC6"/>
-				<artifacts>
-					<artifact name="scala-compiler" type="jar" ext="jar" status="no" details="" size="14472629" time="0" location="C:\Users\cuplv\.ivy2\cache\org.scala-lang\scala-compiler\jars\scala-compiler-2.10.5.jar">
-						<origin-location is-local="false" location="https://jcenter.bintray.com/org/scala-lang/scala-compiler/2.10.5/scala-compiler-2.10.5.jar"/>
-					</artifact>
-				</artifacts>
-			</revision>
-		</module>
-		<module organisation="org.scala-lang" name="scala-reflect">
-			<revision name="2.10.5" status="release" pubdate="20150226185400" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://www.scala-lang.org/" extra-info.apiURL="http://www.scala-lang.org/api/2.10.5/" downloaded="false" searched="false" default="false" conf="compile, master(*), runtime, compile(*), runtime(*), master" position="3">
-				<license name="BSD-like" url="http://www.scala-lang.org/downloads/license.html    "/>
-				<metadata-artifact status="no" details="" size="2680" time="0" location="C:\Users\cuplv\.ivy2\cache\org.scala-lang\scala-reflect\ivy-2.10.5.xml" searched="false" origin-is-local="false" origin-location="https://jcenter.bintray.com/org/scala-lang/scala-reflect/2.10.5/scala-reflect-2.10.5.pom"/>
-				<caller organisation="org.scala-lang" name="scala-compiler" conf="compile, runtime" rev="2.10.5" rev-constraint-default="2.10.5" rev-constraint-dynamic="2.10.5" callerrev="2.10.5"/>
-				<artifacts>
-					<artifact name="scala-reflect" type="jar" ext="jar" status="no" details="" size="3206179" time="0" location="C:\Users\cuplv\.ivy2\cache\org.scala-lang\scala-reflect\jars\scala-reflect-2.10.5.jar">
-						<origin-location is-local="false" location="UNKNOWN"/>
-					</artifact>
-				</artifacts>
-			</revision>
-		</module>
-		<module organisation="org.scala-lang" name="scala-library">
-			<revision name="2.10.5" status="release" pubdate="20150226185400" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://www.scala-lang.org/" extra-info.apiURL="http://www.scala-lang.org/api/2.10.5/" downloaded="false" searched="false" default="false" conf="compile, master(*), runtime, compile(*), runtime(*), master(compile), master" position="2">
-				<license name="BSD-like" url="http://www.scala-lang.org/downloads/license.html          "/>
-				<metadata-artifact status="no" details="" size="2517" time="0" location="C:\Users\cuplv\.ivy2\cache\org.scala-lang\scala-library\ivy-2.10.5.xml" searched="false" origin-is-local="false" origin-location="https://jcenter.bintray.com/org/scala-lang/scala-library/2.10.5/scala-library-2.10.5.pom"/>
-				<caller organisation="org.scala-lang" name="scala-compiler" conf="compile, runtime" rev="2.10.5" rev-constraint-default="2.10.5" rev-constraint-dynamic="2.10.5" callerrev="2.10.5"/>
-				<caller organisation="org.scala-lang" name="scala-reflect" conf="compile, runtime" rev="2.10.5" rev-constraint-default="2.10.5" rev-constraint-dynamic="2.10.5" callerrev="2.10.5"/>
-				<caller organisation="com.artima.supersafe" name="supersafe_2.10.5" conf="default, compile, runtime, master" rev="2.10.5" rev-constraint-default="2.10.5" rev-constraint-dynamic="2.10.5" callerrev="1.1.0-RC6"/>
-				<artifacts>
-					<artifact name="scala-library" type="jar" ext="jar" status="no" details="" size="7130772" time="0" location="C:\Users\cuplv\.ivy2\cache\org.scala-lang\scala-library\jars\scala-library-2.10.5.jar">
-						<origin-location is-local="false" location="UNKNOWN"/>
-					</artifact>
-				</artifacts>
-			</revision>
-		</module>
 	</dependencies>
 </ivy-report>

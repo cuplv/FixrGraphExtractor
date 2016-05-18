@@ -1,0 +1,8 @@
+[debug] Running TaskDef(edu.colorado.plv.fixr.Tester, org.scalatest.tools.Framework$$anon$1@6848f03d, false, [SuiteSelector])
+[info] 36mRun completed in 2 seconds, 233 milliseconds.0m
+[info] 36mTotal number of tests run: 10m
+[info] 36mSuites: completed 1, aborted 00m
+[info] 36mTests: succeeded 1, failed 0, canceled 0, ignored 0, pending 00m
+[info] 32mAll tests passed.0m
+[debug] Passed tests:
+[debug] 	edu.colorado.plv.fixr.Tester
