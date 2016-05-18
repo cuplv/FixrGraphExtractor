@@ -1,7 +1,5 @@
-/*
-import com.trueaccord.scalapb.{ScalaPbPlugin => PB}
-import com.github.retronym.SbtOneJar._
-*/
+// import com.trueaccord.scalapb.{ScalaPbPlugin => PB}
+// import com.github.retronym.SbtOneJar._
 
 lazy val commonSettings = Seq(
 	organization := "edu.colorado.plv.fixr",
@@ -24,6 +22,7 @@ resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repos
 resolvers += "Artima Maven Repository" at "http://repo.artima.com/releases"
 
 javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
+
 scalacOptions += "-target:jvm-1.7"
 
 libraryDependencies ++= Seq(
@@ -31,8 +30,3 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.2" % Test,
   "junit" % "junit" % "4.11" % Test
 )
-
-/*
-PB.protobufSettings
-oneJarSettings
-*/
