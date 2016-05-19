@@ -5,9 +5,15 @@
 # Standing proble:
 #		`java.lang.RuntimeException: couldn't find class: java.lang.Object``
 #
+# CAUSE FOR `Exception in thread "main" java.lang.RuntimeException: couldn't find class: java.lang.Object (is your soot-class-path set properly?) Try adding rt.jar to Soot's classpath, e.g.:`:
+# An incompatible version of rt.jar is in use. Find a suitable local installation of rt.jar by executing:
+# `find / -name "rt.jar" 2>/dev/null | head`
+#
+#
 # RULED OUT AS CAUSE:
-#   * Version of Java
+#   * Version of Java (removed version from build; tried different rt.jar files)
 #   * Order of classpath entries for every classpath variable
+#   * Wrong extractor .jar file
 
 # TODO:
 #		* Experiment with different RT .jar's
@@ -15,7 +21,6 @@
 # JAVA = /Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/bin/java
 
 JAVA = java
-# Should be good in general
 
 SOOT = ./lib/soot-2.5.0.jar
 
@@ -25,6 +30,16 @@ MAIN_CLASS = edu.colorado.plv.fixr.Main
 
 RT = ./classes.jar
 
+
+find / -name "rt.jar" 2>/dev/null | head
+
+# OSX 10.10.5 (Tested on Hedy): Uncomment one of the following:
+# RT = /Library/Java/JavaVirtualMachines/jdk1.7.0_71.jdk/Contents/Home/jre/lib/rt.jar
+# RT = /Library/Java/JavaVirtualMachines/jdk1.7.0_79.jdk/Contents/Home/jre/lib/rt.jar
+# RT = /Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/jre/lib/rt.jar
+# RT = /Library/Java/JavaVirtualMachines/jdk1.8.0_25.jdk/Contents/Home/jre/lib/rt.jar
+
+
 TEST = ./src/test/resources
 
 TEST_CLASS = simple.Simple
@@ -32,7 +47,7 @@ TEST_CLASS = simple.Simple
 TEST_METHOD = main
 
 default:
-	$(JAVA) -cp $(SOOT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(TEST) $(TEST_CLASS) $(TEST_METHOD)
+	$(JAVA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(TEST) $(TEST_CLASS) $(TEST_METHOD)
 
 hedy:
 	java -cp ./lib/soot-2.5.0.jar:./target/scala-2.10/fixrgraphextractor_2.10-0.1-SNAPSHOT.jar edu.colorado.plv.fixr.Main ./classes.jar:./src/test/resources simple.Simple main
