@@ -47,7 +47,7 @@ object Main {
     }
     else {
       val cdfg: UnitCdfgGraph = new UnitCdfgGraph(slicedJimple)
-      // SootHelper.dumpToDot(cdfg, cdfg.getBody, cdfg.getBody.getMethod.getName + ".dot")
+      SootHelper.dumpToDot(cdfg, cdfg.getBody, cdfg.getBody.getMethod.getName + ".dot")
       val acdfg : Acdfg = new Acdfg(cdfg)
     }
     System.out.println("Done")

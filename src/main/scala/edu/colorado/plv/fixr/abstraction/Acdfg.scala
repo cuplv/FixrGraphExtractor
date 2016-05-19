@@ -53,16 +53,16 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     override val to   : Long
   ) extends Edge
 
-
   class UseEdge(
     override val id   : Long,
     override val from : Long,
     override val to   : Long
   ) extends Edge
 
+  // ControlEdge, ExceptionalEdge
+
   // var edges : ArrayBuffer[Edge] = ArrayBuffer()
   //var nodes : ArrayBuffer[Node] = ArrayBuffer()
-
 
   /*
    * Edges and nodes
@@ -140,8 +140,6 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     addNode(id, node)
   }
 
-
-
   /**
     * @constructor
     */
@@ -153,5 +151,4 @@ class Acdfg(cdfg : UnitCdfgGraph) {
       println("Added node for " + name)
     case _ => null
   }
-
 }
