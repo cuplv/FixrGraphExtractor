@@ -29,6 +29,8 @@ RT = /Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/jre/lib/rt.
 
 TEST = ./src/test/resources
 
+ANDROID = ./build/resources/test/libs/android.jar
+
 TEST_CLASS = simple.Simple
 
 TEST_METHOD = main
@@ -36,5 +38,5 @@ TEST_METHOD = main
 default:
 	$(JAVA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(TEST) $(TEST_CLASS) $(TEST_METHOD)
 
-peace:
-	echo $(RT)
+android:
+	$(JAVA) -cp $(SOOT):$(RT):$(ANDROID):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(TEST) $(TEST_CLASS) $(TEST_METHOD)
