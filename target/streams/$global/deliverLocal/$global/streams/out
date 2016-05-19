@@ -1,4 +1,0 @@
-[0m[[0minfo[0m] [0m:: delivering :: edu.colorado.plv.fixr#fixrgraphextractor_2.10;0.1-SNAPSHOT :: 0.1-SNAPSHOT :: integration :: Tue May 17 15:29:34 MDT 2016[0m
-[0m[[0mdebug[0m] [0m	options = status=integration pubdate=Tue May 17 15:29:34 MDT 2016 validate=true resolveDynamicRevisions=true merge=true resolveId=null pubBranch=null[0m
-[0m[[0minfo[0m] [0m	delivering ivy file to C:\Users\cuplv\IdeaProjects\FixrGraphExtractor\target\scala-2.10\ivy-0.1-SNAPSHOT.xml[0m
-[0m[[0mdebug[0m] [0m	deliver done (57ms)[0m
