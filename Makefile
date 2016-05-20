@@ -28,7 +28,10 @@ MAIN_CLASS = edu.colorado.plv.fixr.Main
 # OSX 10.10.5 (Tested on Hedy): Uncomment one of the following:
 # RT = /Library/Java/JavaVirtualMachines/jdk1.7.0_71.jdk/Contents/Home/jre/lib/rt.jar
 # RT = /Library/Java/JavaVirtualMachines/jdk1.7.0_79.jdk/Contents/Home/jre/lib/rt.jar
-RT = /Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/jre/lib/rt.jar
+# RT = /Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/jre/lib/rt.jar
+
+# Linux (Tested on Sergio's Machine):
+# RT = /usr/lib/jvm/jdk1.7.0/jre/lib/rt.jar
 
 TEST = ./src/test/resources
 
@@ -41,6 +44,10 @@ TEST_METHOD = main
 ANDROID_TEST_CLASS = androidtests.HelloWorldActivity
 
 ANDROID_TEST_METHOD = onCreate
+
+ifndef RT
+$(error RT is not set. Please uncomment or write a suitable assignment of RT to the location of your Java installation\'s rt.jar file)
+endif
 
 android:
 	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)
