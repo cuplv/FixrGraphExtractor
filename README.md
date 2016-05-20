@@ -1,7 +1,9 @@
 # Fixr Graph Extractor
 
 Sergio Mower and Rhys Braginton Pettee Olsen
+
 University of Colorado at Boulder CUPLV Lab
+
 Boulder, Colorado
 
 Part of CUPLV's DARPA MUSE Effort
