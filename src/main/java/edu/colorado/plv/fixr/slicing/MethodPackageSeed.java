@@ -30,12 +30,9 @@ public class MethodPackageSeed implements SlicingCriterion {
 		MethodPackageSeed s = new MethodPackageSeed(packageList);
 		return s;
 	}
-
 	
 	@Override
 	public Boolean is_seed(Unit unit) {
-		
-		
 		for (ValueBox valBox : unit.getUseBoxes()) {
 			// DEBUG
 			// System.out.println(valBox + " : " + valBox.getClass());

@@ -14,7 +14,10 @@
 #   * Order of classpath entries for every classpath variable
 #   * Wrong extractor .jar file
 
-JAVA = java
+# SCALA = scala
+# SCALA = sbt run
+# JAVA = java
+JAVA = /Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/bin/java
 
 SOOT = ./lib/soot-2.5.0.jar
 
@@ -35,8 +38,12 @@ TEST_CLASS = simple.Simple
 
 TEST_METHOD = main
 
+ANDROID_TEST_CLASS = androidtests.HelloWorldActivity
+
+ANDROID_TEST_METHOD = onCreate
+
 default:
 	$(JAVA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(TEST) $(TEST_CLASS) $(TEST_METHOD)
 
 android:
-	$(JAVA) -cp $(SOOT):$(RT):$(ANDROID):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(TEST) $(TEST_CLASS) $(TEST_METHOD)
+	$(JAVA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)

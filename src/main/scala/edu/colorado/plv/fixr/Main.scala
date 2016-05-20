@@ -21,9 +21,15 @@ object Main {
       System.err.println("Missing classpath, class name and method name")
       return
     }
+    var i : Int = 1
+    args.foreach({arg =>
+      System.out.println("Argument " + i.toString + ": " + arg)
+      i = i + 1
+    })
     var filter: String = null
     if (args.length >= 4) {
       filter = args(3)
+      System.out.println("Filter: " + filter)
     }
     val classPath: String = args(0)
     val className: String = args(1)
@@ -49,6 +55,7 @@ object Main {
       val cdfg: UnitCdfgGraph = new UnitCdfgGraph(slicedJimple)
       SootHelper.dumpToDot(cdfg, cdfg.getBody, cdfg.getBody.getMethod.getName + ".dot")
       val acdfg : Acdfg = new Acdfg(cdfg)
+      System.out.println(acdfg)
     }
     System.out.println("Done")
   }
