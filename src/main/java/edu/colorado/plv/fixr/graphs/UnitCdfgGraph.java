@@ -27,13 +27,14 @@ import soot.toolkits.scalar.SimpleLocalDefs;
  *
  */
 public class UnitCdfgGraph extends BriefUnitGraph {				
-	protected List<Local> localsList= null;
+	protected List<Local> localsList = null;
+	protected List<Unit>  unitsList  = null;
 	protected Map<Local, List<Unit>> useEdges = null;
 	protected Map<Unit, List<Local>> defEdges = null;	
 	protected DataDependencyGraph ddg = null;	
-	
+
 	public UnitCdfgGraph(Body body) {
-		super(body);		
+		super(body);
 		
 		this.ddg = new DataDependencyGraph(this);		
 		addDataDependentNodes();
@@ -58,18 +59,26 @@ public class UnitCdfgGraph extends BriefUnitGraph {
 		useEdges = new HashMap<Local, List<Unit>>();
 		defEdges = new HashMap<Unit, List<Local>>();
 		
-		/* Generates the list of all the locals */
+		/* Generate the list of all the locals */
 		localsList = new ArrayList<Local>();
 		for (Local l : this.getBody().getLocals()) {			
 			localsList.add(l);
 			assert ! useEdges.containsKey(l);
 			useEdges.put(l, new ArrayList<Unit>());
 		}
-		
+
+		/* Generate the list of the all units */
+		unitsList = new ArrayList<Unit>();
+		for (Unit u : this.getBody().getUnits()) {
+			unitsList.add(u);
+			assert ! defEdges.containsKey(u);
+			defEdges.put(u, new ArrayList<Local>());
+		}
+
 		/* Add the define edges - 
 		 * NOTE: now we are not computing the transitive closure
 		 * */
-		for (Unit u : this) {
+		for (Unit u : unitsList) {
 			ReachingDefinitions rd = ddg.getReachingDefinitions();
 			List<Local> defsInU = defEdges.get(u);
 			if (null == defsInU) {
@@ -78,7 +87,8 @@ public class UnitCdfgGraph extends BriefUnitGraph {
 			}
 			defsInU.addAll(rd.getDefLocals(u, true));
 			
-			/* Add the use edges - inefficient */			
+			/* Add the use edges - inefficient */
+			/*
 			for (Unit pred : ddg.getPredsOf(u)) {			
 				Collection<Local> defsInPred = defEdges.get(pred);
 				if (null != defsInPred) {
@@ -86,8 +96,17 @@ public class UnitCdfgGraph extends BriefUnitGraph {
 						useEdges.get(l).add(u);					
 					}
 				}
-			}			
-		}		
+			}
+			*/
+		}
+		for (Local l : localsList) {
+			List<Unit> usesInL = useEdges.get(l);
+			if (null == usesInL) {
+				usesInL = new ArrayList<Unit>();
+				useEdges.put(l, usesInL);
+			}
+			usesInL.addAll(ddg.graphNodes);
+		}
 	}
 	
 	/**

@@ -2,6 +2,8 @@ package edu.colorado.plv.fixr.abstraction
 
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
 import soot.jimple.DefinitionStmt
+import soot.jimple.internal.{JIdentityStmt, JimpleLocal}
+import soot.IdentityUnit
 
 import scala.collection.JavaConversions.asScalaIterator
 
@@ -25,8 +27,9 @@ class Acdfg(cdfg : UnitCdfgGraph) {
 
   class DataNode(
     override val id : Long,
-    val name : String
-  ) extends Node
+    val name : String,
+    val datatype : String
+  ) extends this.Node
 
   class MethodNode(
     override val id : Long,
@@ -99,9 +102,9 @@ class Acdfg(cdfg : UnitCdfgGraph) {
 
   def addNode(id : Long, node : Node) = nodes.+=((id, node))
 
-  def addDataNode(name : String) = {
+  def addDataNode(name : String, datatype : String) = {
     val id = getNewId
-    val node = new DataNode(id, name)
+    val node = new DataNode(id, name, datatype)
     addNode(id, node)
   }
 
@@ -128,11 +131,15 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     removeId(id)
   }
 
-  /*
   override def toString = {
-    "ACDFG:" + "\n" + "  " + "Nodes:"
+    var output : String = "ACDFG:" + "\n"
+    output += ("  " + "Nodes:")
+    nodes.foreach(node => output += ("    " + node.toString()))
+    output += "\n"
+    output += ("  " + "Edges:")
+    edges.foreach(edge => output += ("    " + edge.toString()))
+    output
   }
-   */
 
   def addMethodNode(assignee : Option[String], name : String, arguments : Array[String]) = {
     val id   = getNewId
@@ -144,11 +151,35 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     * @constructor
     */
 
+  println("### Adding local/data nodes...")
   cdfg.localsIter().foreach {
-    case m: DefinitionStmt =>
-      val name = m.getName
-      addMethodNode(None, name, new Array(0))
-      println("Added node for " + name)
-    case _ => null
+    case n =>
+      println("Found local/data node " + n.getName + " : " + n.getType.toString)
+      println("  node type of " + n.getClass.toString)
+      n match {
+      case n : JimpleLocal =>
+        addDataNode(n.getName, n.getType.toString)
+        println("    Node added!")
+      case m => {
+        println("    Data node of unknown type; ignoring...")
+      }
+    }
+  }
+
+  println("### Adding unit/command nodes...")
+  cdfg.unitIterator.foreach {
+    case n =>
+      println("Found unit/command node of type " + n.getClass.toString)
+      n match {
+        case n : IdentityUnit =>
+          // must pass in null to disambiguate method invoked; better way?
+          /*
+          val assignee = n.getLeftOp.toString(null)
+          val methodName = n.getRightOp.toString(null)
+          println("    Assignee = " + assignee)
+          println("    methodName = " + methodName)
+          */
+          println("    " + n.toString(null))
+      }
   }
 }
