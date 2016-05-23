@@ -1,11 +1,12 @@
 package edu.colorado.plv.fixr.abstraction
 
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
-import soot.jimple.DefinitionStmt
+import soot.jimple.{InvokeStmt, DefinitionStmt}
 import soot.jimple.internal.{JIdentityStmt, JimpleLocal}
 import soot.IdentityUnit
 
 import scala.collection.JavaConversions.asScalaIterator
+import scala.collection.mutable.ArrayBuffer
 
 /**
   * Acdfg
@@ -72,8 +73,8 @@ class Acdfg(cdfg : UnitCdfgGraph) {
    *   Design rationale: our graph will be very sparse; want indexing by ID to be fast
    */
 
-  private def edges = scala.collection.mutable.HashMap[Long, Edge]()
-  private def nodes = scala.collection.mutable.HashMap[Long, Node]()
+  private var edges = scala.collection.mutable.HashMap[Long, Edge]()
+  private var nodes = scala.collection.mutable.HashMap[Long, Node]()
 
   object MinOrder extends Ordering[Int] {
     def compare(x:Int, y:Int) = y compare x
@@ -100,7 +101,12 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     freshIds.enqueue(id)
   }
 
-  def addNode(id : Long, node : Node) = nodes.+=((id, node))
+  def addNode(id : Long, node : Node) : Unit = {
+    val oldCount = nodes.size
+    nodes.+=((id, node))
+    val newCount = nodes.size
+    assert(oldCount + 1 == newCount)
+  }
 
   def addDataNode(name : String, datatype : String) = {
     val id = getNewId
@@ -160,9 +166,9 @@ class Acdfg(cdfg : UnitCdfgGraph) {
       case n : JimpleLocal =>
         addDataNode(n.getName, n.getType.toString)
         println("    Node added!")
-      case m => {
+        println(this.nodes.size)
+      case m =>
         println("    Data node of unknown type; ignoring...")
-      }
     }
   }
 
@@ -172,14 +178,38 @@ class Acdfg(cdfg : UnitCdfgGraph) {
       println("Found unit/command node of type " + n.getClass.toString)
       n match {
         case n : IdentityUnit =>
-          // must pass in null to disambiguate method invoked; better way?
-          /*
-          val assignee = n.getLeftOp.toString(null)
-          val methodName = n.getRightOp.toString(null)
-          println("    Assignee = " + assignee)
+          // must have NO arguments to toString(), which MUST have parens;
+          // otherwise needs a pointer to some printer object
+          val assignee     = n.getLeftOp.toString()
+          val methodName   = n.getRightOp.getType.toString()
+          println("    Assignee     = " + assignee)
+          println("    methodName   = " + methodName)
+          println("    " + n.toString())
+          addMethodNode(Some(assignee), methodName, new Array[String](0))
+        case n : InvokeStmt =>
+          val declaringClass = n.getInvokeExpr.getMethod.getDeclaringClass.getName
+          val methodName = n.getInvokeExpr.getMethod.getName
+          // must have empty arguments to toString(); otherwise needs a pointer to some printer object
+          val arguments = n.getInvokeExpr.getArgs
+          println("    declaringClass = " + declaringClass)
           println("    methodName = " + methodName)
-          */
-          println("    " + n.toString(null))
+          println("    Arguments:")
+          var i : Int = 1
+          arguments.iterator.foreach({argument =>
+            println("      " + i.toString + " = " + argument.toString())
+            i += 1
+          })
+          println("    " + n.toString())
+          val argumentStrings = arguments.iterator.foldRight(new ArrayBuffer[String]())(
+            (argument, array) => array += (argument.toString())
+          )
+          addMethodNode(None, declaringClass + "." + methodName, argumentStrings.toArray)
+          println("    Node added!")
+          println(this.nodes.size)
+        case n =>
+          println("    Data node of unknown type; ignoring...")
       }
   }
+  println("ACDFG populated. Outputting...")
+  println(this)
 }
