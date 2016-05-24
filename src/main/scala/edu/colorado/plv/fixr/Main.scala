@@ -32,11 +32,11 @@ object Main {
       System.out.println("Filter: " + filter)
     }
     val classPath: String = args(0)
-    val className: String = args(1)
+    val className:  String = args(1)
     val methodName: String = args(2)
     SootHelper.configure(classPath, false)
     Scene.v.addBasicClass(className, SootClass.HIERARCHY)
-    Scene.v.loadNecessaryClasses
+    Scene.v.loadNecessaryClasses()
     val body: Body = SootHelper.getMethodBody(className, methodName)
     val jimpleUnitGraph: EnhancedUnitGraph = new EnhancedUnitGraph(body)
     val slicer: APISlicer = new APISlicer(jimpleUnitGraph, body)

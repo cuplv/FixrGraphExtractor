@@ -1,7 +1,7 @@
 package edu.colorado.plv.fixr.abstraction
 
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
-import soot.jimple.{InvokeStmt, DefinitionStmt}
+import soot.jimple.{IdentityStmt, AssignStmt, InvokeStmt, DefinitionStmt}
 import soot.jimple.internal.{JIdentityStmt, JimpleLocal}
 import soot.IdentityUnit
 
@@ -76,6 +76,12 @@ class Acdfg(cdfg : UnitCdfgGraph) {
   private var edges = scala.collection.mutable.HashMap[Long, Edge]()
   private var nodes = scala.collection.mutable.HashMap[Long, Node]()
 
+  private var unitToId = scala.collection.mutable.HashMap[soot.Unit, Long]()
+  private var localToId = scala.collection.mutable.HashMap[soot.Local, Long]()
+
+  val defEdges = cdfg.defEdges()
+  val useEdges = cdfg.useEdges()
+
   object MinOrder extends Ordering[Int] {
     def compare(x:Int, y:Int) = y compare x
   }
@@ -101,16 +107,22 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     freshIds.enqueue(id)
   }
 
-  def addNode(id : Long, node : Node) : Unit = {
+  def addNode(id : Long, node : Node) : (Long, Node) = {
     val oldCount = nodes.size
     nodes.+=((id, node))
     val newCount = nodes.size
     assert(oldCount + 1 == newCount)
+    (id, node)
   }
 
-  def addDataNode(name : String, datatype : String) = {
+  def addDataNode(
+    local : soot.Local,
+    name : String,
+    datatype : String
+  ) = {
     val id = getNewId
     val node = new DataNode(id, name, datatype)
+    localToId += ((local,id))
     addNode(id, node)
   }
 
@@ -137,6 +149,65 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     removeId(id)
   }
 
+  def addMethodNode(
+      unit : soot.Unit,
+      assignee : Option[String],
+      name : String,
+      arguments : Array[String]
+  ) : (Long, this.Node) = {
+    val id   = getNewId
+    val node = new MethodNode(id, assignee, name, arguments)
+    addNode(id, node)
+    unitToId += ((unit, id))
+    (id, node)
+  }
+
+  def addMiscNode(
+    unit : soot.Unit
+  ) : (Long, this.Node) = {
+    val id = getNewId
+    val node = new MiscNode(id)
+    addNode(id, node)
+    unitToId += ((unit, id))
+    (id, node)
+  }
+
+  def addDefEdge(fromId : Long, toId : Long): Unit = {
+    val id = getNewId
+    val edge = new DefEdge(id, fromId, toId)
+    edges += ((id, edge))
+  }
+
+  def addUseEdge(fromId : Long, toId : Long): Unit = {
+    val id = getNewId
+    val edge = new UseEdge(id, fromId, toId)
+    edges += ((id, edge))
+  }
+
+  def addDefEdges(unit : soot.Unit, unitId : Long): Unit = {
+    if (!defEdges.containsKey(unit)) {
+      return
+      // defensive programming; don't know if defEdges has a value for every unit
+    }
+    val localIds : Array[Long] = defEdges.get(unit).iterator().map({local : soot.Local =>
+      localToId(local)
+    }).toArray
+    localIds.foreach({localId : Long => addDefEdge(unitId, localId)
+    })
+  }
+
+  def addUseEdges(local : soot.Local, localId : Long): Unit = {
+    if (!useEdges.containsKey(local)) {
+      return
+      // defensive programming; don't know if useEdges has a value for every local
+    }
+    val unitIds : Array[Long] = useEdges.get(local).iterator().map({unit : soot.Unit =>
+      unitToId(unit)
+    }).toArray
+    unitIds.foreach({unitId : Long => addDefEdge(unitId, localId)
+    })
+  }
+
   override def toString = {
     var output : String = "ACDFG:" + "\n"
     output += ("  " + "Nodes:")
@@ -145,12 +216,6 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     output += ("  " + "Edges:")
     edges.foreach(edge => output += ("    " + edge.toString()))
     output
-  }
-
-  def addMethodNode(assignee : Option[String], name : String, arguments : Array[String]) = {
-    val id   = getNewId
-    val node = new MethodNode(id, assignee, name, arguments)
-    addNode(id, node)
   }
 
   /**
@@ -164,20 +229,19 @@ class Acdfg(cdfg : UnitCdfgGraph) {
       println("  node type of " + n.getClass.toString)
       n match {
       case n : JimpleLocal =>
-        addDataNode(n.getName, n.getType.toString)
+        addDataNode(n, n.getName, n.getType.toString)
         println("    Node added!")
-        println(this.nodes.size)
       case m =>
         println("    Data node of unknown type; ignoring...")
     }
   }
 
-  println("### Adding unit/command nodes...")
+  println("### Adding unit/command nodes & def-edges ...")
   cdfg.unitIterator.foreach {
     case n =>
       println("Found unit/command node of type " + n.getClass.toString)
       n match {
-        case n : IdentityUnit =>
+        case n : IdentityStmt =>
           // must have NO arguments to toString(), which MUST have parens;
           // otherwise needs a pointer to some printer object
           val assignee     = n.getLeftOp.toString()
@@ -185,7 +249,10 @@ class Acdfg(cdfg : UnitCdfgGraph) {
           println("    Assignee     = " + assignee)
           println("    methodName   = " + methodName)
           println("    " + n.toString())
-          addMethodNode(Some(assignee), methodName, new Array[String](0))
+          val (id, _) = addMethodNode(n, Some(assignee), methodName, new Array[String](0))
+          println("    Node added!")
+          addDefEdges(n, id)
+          println("    Def-edge added!")
         case n : InvokeStmt =>
           val declaringClass = n.getInvokeExpr.getMethod.getDeclaringClass.getName
           val methodName = n.getInvokeExpr.getMethod.getName
@@ -203,13 +270,64 @@ class Acdfg(cdfg : UnitCdfgGraph) {
           val argumentStrings = arguments.iterator.foldRight(new ArrayBuffer[String]())(
             (argument, array) => array += (argument.toString())
           )
-          addMethodNode(None, declaringClass + "." + methodName, argumentStrings.toArray)
+          val (id, _) = addMethodNode(n, None, declaringClass + "." + methodName, argumentStrings.toArray)
           println("    Node added!")
-          println(this.nodes.size)
+          addDefEdges(n, id)
+          println("    Def-edge added!")
+        case n : AssignStmt =>
+          val assignee  = n.getLeftOp.toString()
+          if (n.containsInvokeExpr()) {
+            val declaringClass = n.getInvokeExpr.getMethod.getDeclaringClass.getName
+            val methodName = n.getInvokeExpr.getMethod.getName
+            // must have empty arguments to toString(); otherwise needs a pointer to some printer object
+            val arguments = n.getInvokeExpr.getArgs
+            println("    Assignee       = " + assignee)
+            println("    declaringClass = " + declaringClass)
+            println("    methodName     = " + methodName)
+            println("    Arguments:")
+            var i : Int = 1
+            arguments.iterator.foreach({argument =>
+              println("      " + i.toString + " = " + argument.toString())
+              i += 1
+            })
+            println("    " + n.toString())
+            val argumentStrings = arguments.iterator.foldRight(new ArrayBuffer[String]())(
+              (argument, array) => array += (argument.toString())
+            )
+            val (id, _) = addMethodNode(n, Some(assignee), declaringClass + "." + methodName, argumentStrings.toArray)
+            println("    Node added!")
+            addDefEdges(n, id)
+            println("    Def-edge added!")
+          } else {
+            val right = n.getRightOp.toString()
+            println("    Assignee = " + assignee)
+            println("    Right    = " + right)
+            val (id, _) = addMethodNode(n, Some(assignee), right, new Array[String](0))
+            println("    Node added!")
+            addDefEdges(n, id)
+            println("    Def-edge added!")
+          }
         case n =>
+          println("    Data node of unknown type; adding misc node...")
+          val (id, _) = addMiscNode(n)
+          println("    Node added!")
+          addDefEdges(n, id)
+          println("    Def-edge added!")
+      }
+  }
+
+  println("### Adding use-edges...")
+  cdfg.localsIter().foreach {
+    case n =>
+      println("Found local/data node " + n.getName + " : " + n.getType.toString)
+      println("  node type of " + n.getClass.toString)
+      n match {
+        case n : JimpleLocal =>
+          addUseEdges(n, localToId(n))
+          println("    Use-edge(s) added!")
+        case m =>
           println("    Data node of unknown type; ignoring...")
       }
   }
-  println("ACDFG populated. Outputting...")
-  println(this)
+
 }

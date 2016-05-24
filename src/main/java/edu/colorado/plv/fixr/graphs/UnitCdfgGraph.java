@@ -46,6 +46,8 @@ public class UnitCdfgGraph extends BriefUnitGraph {
 		addDataDependentNodes();
 	}
 	
+	public Map<Local, List<Unit>> useEdges() {return useEdges;}
+	public Map<Unit, List<Local>> defEdges() {return defEdges;}
 
 		
 	public Iterator<Unit> unitIterator() {
