@@ -1,10 +1,8 @@
 package edu.colorado.plv.fixr.abstraction
 
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
-import soot.jimple.{IdentityStmt, AssignStmt, InvokeStmt, DefinitionStmt}
-import soot.jimple.internal.{JIdentityStmt, JimpleLocal}
-import soot.IdentityUnit
-
+import soot.jimple.{IdentityStmt, AssignStmt, InvokeStmt}
+import soot.jimple.internal.JimpleLocal
 import scala.collection.JavaConversions.asScalaIterator
 import scala.collection.mutable.ArrayBuffer
 
@@ -63,6 +61,12 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     override val to   : Long
   ) extends Edge
 
+  class ControlEdge(
+    override val id   : Long,
+    override val from : Long,
+    override val to   : Long
+  ) extends Edge
+
   // ControlEdge, ExceptionalEdge
 
   // var edges : ArrayBuffer[Edge] = ArrayBuffer()
@@ -76,8 +80,11 @@ class Acdfg(cdfg : UnitCdfgGraph) {
   private var edges = scala.collection.mutable.HashMap[Long, Edge]()
   private var nodes = scala.collection.mutable.HashMap[Long, Node]()
 
-  private var unitToId = scala.collection.mutable.HashMap[soot.Unit, Long]()
-  private var localToId = scala.collection.mutable.HashMap[soot.Local, Long]()
+
+  // the following are used to make lookup more efficient
+  private var unitToId     = scala.collection.mutable.HashMap[soot.Unit, Long]()
+  private var localToId    = scala.collection.mutable.HashMap[soot.Local, Long]()
+  private var edgePairToId = scala.collection.mutable.HashMap[(Long, Long), Long]()
 
   val defEdges = cdfg.defEdges()
   val useEdges = cdfg.useEdges()
@@ -176,12 +183,22 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     val id = getNewId
     val edge = new DefEdge(id, fromId, toId)
     edges += ((id, edge))
+    edgePairToId += (((fromId, toId), id))
   }
 
   def addUseEdge(fromId : Long, toId : Long): Unit = {
     val id = getNewId
     val edge = new UseEdge(id, fromId, toId)
     edges += ((id, edge))
+    edgePairToId += (((fromId, toId), id))
+  }
+
+
+  def addControlEdge(fromId : Long, toId : Long): Unit = {
+    val id = getNewId
+    val edge = new ControlEdge(id, fromId, toId)
+    edges += ((id, edge))
+    edgePairToId += (((fromId, toId), id))
   }
 
   def addDefEdges(unit : soot.Unit, unitId : Long): Unit = {
@@ -206,6 +223,24 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     }).toArray
     unitIds.foreach({unitId : Long => addDefEdge(unitId, localId)
     })
+  }
+
+  def addControlEdges(unit : soot.Unit, unitId : Long): Unit = {
+    // add predecessor edges, if not extant
+    val unitId = unitToId(unit)
+    cdfg.getPredsOf(unit).iterator().foreach{ (predUnit) =>
+      val predUnitId = unitToId(predUnit)
+      if (!edgePairToId.contains(predUnitId, unitId)) {
+        addControlEdge(predUnitId, unitId)
+      }
+    }
+    // add succesor edges, if not extant
+    cdfg.getSuccsOf(unit).iterator().foreach{ (succUnit) =>
+      val succUnitId = unitToId(succUnit)
+      if (!edgePairToId.contains(unitId, succUnitId)) {
+        addControlEdge(unitId, succUnitId)
+      }
+    }
   }
 
   override def toString = {
@@ -329,5 +364,10 @@ class Acdfg(cdfg : UnitCdfgGraph) {
           println("    Data node of unknown type; ignoring...")
       }
   }
-
+  println("### Adding control-edges...")
+  cdfg.unitIterator.foreach { n =>
+    println("Found unit/command node of type " + n.getClass.toString)
+    addControlEdges(n, unitToId(n))
+    println("Unadded control-edges added.")
+  }
 }
