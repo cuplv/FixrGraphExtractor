@@ -20,6 +20,7 @@ class Acdfg(cdfg : UnitCdfgGraph) {
 
   trait Node {
     def id : Long
+    override def toString = this.getClass.getSimpleName + "(" + id.toString + ")"
   }
 
   trait CommandNode extends Node
@@ -47,6 +48,12 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     val to   : Long
     val from : Long
     val id   : Long
+    override def toString =
+      this.getClass.getSimpleName +
+      "(id: "     + id.toString   +
+      ", to: "    + to.toString   +
+      ", from: "  + from.toString +
+      ")"
   }
 
   class DefEdge(
@@ -77,9 +84,8 @@ class Acdfg(cdfg : UnitCdfgGraph) {
    *   Design rationale: our graph will be very sparse; want indexing by ID to be fast
    */
 
-  private var edges = scala.collection.mutable.HashMap[Long, Edge]()
-  private var nodes = scala.collection.mutable.HashMap[Long, Node]()
-
+  protected[fixr] var edges = scala.collection.mutable.HashMap[Long, Edge]()
+  protected[fixr] var nodes = scala.collection.mutable.HashMap[Long, Node]()
 
   // the following are used to make lookup more efficient
   private var unitToId     = scala.collection.mutable.HashMap[soot.Unit, Long]()
@@ -221,7 +227,7 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     val unitIds : Array[Long] = useEdges.get(local).iterator().map({unit : soot.Unit =>
       unitToId(unit)
     }).toArray
-    unitIds.foreach({unitId : Long => addDefEdge(unitId, localId)
+    unitIds.foreach({unitId : Long => addUseEdge(localId, unitId)
     })
   }
 
@@ -246,10 +252,10 @@ class Acdfg(cdfg : UnitCdfgGraph) {
   override def toString = {
     var output : String = "ACDFG:" + "\n"
     output += ("  " + "Nodes:")
-    nodes.foreach(node => output += ("    " + node.toString()))
+    nodes.foreach(node => output += ("    " + node.toString()) + "\n")
     output += "\n"
     output += ("  " + "Edges:")
-    edges.foreach(edge => output += ("    " + edge.toString()))
+    edges.foreach(edge => output += ("    " + edge.toString()) + "\n")
     output
   }
 

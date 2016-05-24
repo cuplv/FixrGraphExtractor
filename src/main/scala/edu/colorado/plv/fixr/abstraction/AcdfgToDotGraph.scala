@@ -3,6 +3,7 @@ package edu.colorado.plv.fixr.abstraction
 import java.util
 import java.util.Iterator
 
+import edu.colorado.plv.fixr.graphs.CFGToDotGraph.{DotNamer, NodeComparator}
 import edu.colorado.plv.fixr.graphs.{UnitCdfgGraph, CFGToDotGraph}
 import soot.{Body, Unit, Local}
 import soot.util.dot.{DotGraphEdge, DotGraphNode, DotGraphConstants, DotGraph}
@@ -17,5 +18,41 @@ import soot.util.dot.{DotGraphEdge, DotGraphNode, DotGraphConstants, DotGraph}
  *   @group  University of Colorado at Boulder CUPLV
  */
 
-class AcdfgToDotGraph(acdfg : Acdfg) {
+class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
+  def draw() : DotGraph = {
+		var canvas     : DotGraph       = initDotGraph(null)
+    canvas.setGraphLabel("ACDFG")
+    import scala.collection.JavaConversions._
+    for (n <- acdfg.nodes) {
+      var dotNode : DotGraphNode = canvas.drawNode(n._1.toString)
+      n match {
+        case n@(id : Long, node : acdfg.DataNode) =>
+          dotNode.setLabel("#" + id.toString + ": " + node.datatype.toString)
+          dotNode.setStyle(DotGraphConstants.NODE_STYLE_DASHED)
+          dotNode.setAttribute("shape", "ellipse")
+        case n@(id : Long, node : acdfg.MethodNode) =>
+          var name : String = ""
+          if (node.assignee.nonEmpty) {
+            name += (node.assignee.get + " = ")
+          }
+          name += node.name + "(" + node.arguments.mkString(",") + ")"
+          dotNode.setLabel(name)
+        case n@(id : Long, node : acdfg.MiscNode) =>
+          dotNode.setLabel("")
+        case n => Nil
+      }
+    }
+    for (e <- acdfg.edges) {
+      var dotEdge : DotGraphEdge = canvas.drawEdge(e._2.from.toString, e._2.to.toString)
+      e match {
+        case e@(id : Long, edge : acdfg.DefEdge) =>
+          dotEdge.setAttribute("color", "blue")
+        case e@(id : Long, edge : acdfg.UseEdge) =>
+          dotEdge.setAttribute("color", "red")
+          dotEdge.setAttribute("Damping", "0.7")
+        case _ => null
+      }
+    }
+    canvas
+	}
 }

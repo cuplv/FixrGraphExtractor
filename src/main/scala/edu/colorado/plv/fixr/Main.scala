@@ -4,7 +4,7 @@ import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
 import edu.colorado.plv.fixr.slicing.APISlicer
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed
 import edu.colorado.plv.fixr.slicing.SlicingCriterion
-import edu.colorado.plv.fixr.abstraction.Acdfg
+import edu.colorado.plv.fixr.abstraction.{AcdfgToDotGraph, Acdfg}
 import soot.Body
 import soot.Scene
 import soot.SootClass
@@ -56,6 +56,8 @@ object Main {
       SootHelper.dumpToDot(cdfg, cdfg.getBody, cdfg.getBody.getMethod.getName + ".dot")
       val acdfg : Acdfg = new Acdfg(cdfg)
       System.out.println(acdfg)
+      val dotGraph : AcdfgToDotGraph = new AcdfgToDotGraph(acdfg)
+      dotGraph.draw().plot("hello_acdfg.dot")
     }
     System.out.println("Done")
   }
