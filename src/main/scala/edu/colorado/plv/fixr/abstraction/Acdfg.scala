@@ -251,10 +251,10 @@ class Acdfg(cdfg : UnitCdfgGraph) {
 
   override def toString = {
     var output : String = "ACDFG:" + "\n"
-    output += ("  " + "Nodes:")
+    output += ("  " + "Nodes:\n")
     nodes.foreach(node => output += ("    " + node.toString()) + "\n")
     output += "\n"
-    output += ("  " + "Edges:")
+    output += ("  " + "Edges:\n")
     edges.foreach(edge => output += ("    " + edge.toString()) + "\n")
     output
   }
