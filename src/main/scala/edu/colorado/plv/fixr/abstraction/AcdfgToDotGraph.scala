@@ -31,14 +31,14 @@ class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
           dotNode.setStyle(DotGraphConstants.NODE_STYLE_DASHED)
           dotNode.setAttribute("shape", "ellipse")
         case n@(id : Long, node : acdfg.MethodNode) =>
-          var name : String = ""
+          var name : String = "#" + node.id.toString + ": "
           if (node.assignee.nonEmpty) {
             name += (node.assignee.get + " = ")
           }
           name += node.name + "(" + node.arguments.mkString(",") + ")"
           dotNode.setLabel(name)
         case n@(id : Long, node : acdfg.MiscNode) =>
-          dotNode.setLabel("")
+          dotNode.setLabel("#" + id.toString)
         case n => Nil
       }
     }
