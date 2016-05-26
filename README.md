@@ -44,9 +44,7 @@ and set `RT` to this in the Makefile. Because this may take a while, we suggest 
 
 To clean the environment, run `sbt clean`.
 
-To compile, run `sbt build`.
-
-Finally, to generate the .jar files needed for execution, run `sbt publish-local`.
+To compile and generate the .jar files needed for execution, run `sbt package`.
 
 ### Execution
 
