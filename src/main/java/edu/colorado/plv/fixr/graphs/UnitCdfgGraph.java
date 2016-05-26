@@ -90,7 +90,6 @@ public class UnitCdfgGraph extends BriefUnitGraph {
 			defsInU.addAll(rd.getDefLocals(u, true));
 			
 			/* Add the use edges - inefficient */
-			/*
 			for (Unit pred : ddg.getPredsOf(u)) {			
 				Collection<Local> defsInPred = defEdges.get(pred);
 				if (null != defsInPred) {
@@ -98,17 +97,16 @@ public class UnitCdfgGraph extends BriefUnitGraph {
 						useEdges.get(l).add(u);					
 					}
 				}
-			}
-			*/
+			}			
 		}
-		for (Local l : localsList) {
-			List<Unit> usesInL = useEdges.get(l);
-			if (null == usesInL) {
-				usesInL = new ArrayList<Unit>();
-				useEdges.put(l, usesInL);
-			}
-			usesInL.addAll(ddg.graphNodes);
-		}
+//		for (Local l : localsList) {
+//			List<Unit> usesInL = useEdges.get(l);
+//			if (null == usesInL) {
+//				usesInL = new ArrayList<Unit>();
+//				useEdges.put(l, usesInL);
+//			}
+//			usesInL.addAll(ddg.graphNodes);
+//		}
 	}
 	
 	/**
