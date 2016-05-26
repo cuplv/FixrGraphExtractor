@@ -113,11 +113,13 @@ class Acdfg(cdfg : UnitCdfgGraph) {
       // Must maintain invariant: freshIds always has at least one fresh id
       freshIds.enqueue(newId + 1)
     }
+    // System.err.println("ID #" + newId.toString + " issued")
     newId
   }
 
   def removeId(id : Long) = {
     freshIds.enqueue(id)
+    // System.err.println("ID #" + id.toString + " revoked")
   }
 
   def addNode(id : Long, node : Node) : (Long, Node) = {
