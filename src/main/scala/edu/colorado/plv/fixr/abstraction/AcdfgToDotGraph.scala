@@ -27,7 +27,7 @@ class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
       var dotNode : DotGraphNode = canvas.drawNode(n._1.toString)
       n match {
         case n@(id : Long, node : acdfg.DataNode) =>
-          dotNode.setLabel("#" + id.toString + ": " + node.datatype.toString)
+          dotNode.setLabel("#" + id.toString + ": " + node.datatype.toString + " " + node.name)
           dotNode.setStyle(DotGraphConstants.NODE_STYLE_DASHED)
           dotNode.setAttribute("shape", "ellipse")
         case n@(id : Long, node : acdfg.MethodNode) =>
