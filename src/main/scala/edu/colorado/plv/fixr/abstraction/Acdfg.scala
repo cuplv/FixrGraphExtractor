@@ -285,12 +285,8 @@ class Acdfg(cdfg : UnitCdfgGraph) {
         case n : IdentityStmt =>
           // must have NO arguments to toString(), which MUST have parens;
           // otherwise needs a pointer to some printer object
-          val assignee     = n.getLeftOp.toString()
-          val methodName   = n.getRightOp.getType.toString()
-          println("    Assignee     = " + assignee)
-          println("    methodName   = " + methodName)
-          println("    " + n.toString())
-          val (id, _) = addMethodNode(n, Some(assignee), methodName, new Array[String](0))
+          println("    Data node of unknown type; adding misc node...")
+          val (id, _) = addMiscNode(n)
           println("    Node added!")
           addDefEdges(n, id)
           println("    Def-edge added!")
@@ -340,10 +336,8 @@ class Acdfg(cdfg : UnitCdfgGraph) {
             addDefEdges(n, id)
             println("    Def-edge added!")
           } else {
-            val right = n.getRightOp.toString()
-            println("    Assignee = " + assignee)
-            println("    Right    = " + right)
-            val (id, _) = addMethodNode(n, Some(assignee), right, new Array[String](0))
+            println("    Data node doesn't use invocation; adding empty misc node...")
+            val (id, _) = addMiscNode(n)
             println("    Node added!")
             addDefEdges(n, id)
             println("    Def-edge added!")
@@ -376,4 +370,12 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     addControlEdges(n, unitToId(n))
     println("Unadded control-edges added.")
   }
+  println("### Removing unconnected nodes...")
+  nodes.foreach({ case (id, _) =>
+    val connection = edges.values.find(edge => edge.from == id || edge.to == id)
+    if (connection.isEmpty) {
+      removeNode(id)
+    }
+  })
+
 }
