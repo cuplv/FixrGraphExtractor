@@ -16,7 +16,7 @@
 
 SCALA = scala
 # SCALA = sbt run
-# JAVA = java
+JAVA = java
 # JAVA = /Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/bin/java
 
 SOOT = ./lib/soot-2.5.0.jar
@@ -45,12 +45,22 @@ ANDROID_TEST_CLASS = androidtests.HelloWorldActivity
 
 ANDROID_TEST_METHOD = onCreate
 
+PACKAGE = android.app
+
+SOURCE_CLASS = slice.TestSlice
+
 ifndef RT
 $(error RT is not set. Please uncomment or write a suitable assignment of RT to the location of your Java installation\'s rt.jar file)
 endif
+
+android-slice:
+	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD) $(PACKAGE)
 
 android:
 	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)
 
 test:
 	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(TEST) $(TEST_CLASS) $(TEST_METHOD)
+
+generate-jimple:
+	$(JAVA) -jar $(SOOT) --f J -src-prec java -cp $(RT):$(TEST) $(SOURCE_CLASS)
