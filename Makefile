@@ -53,11 +53,11 @@ ifndef RT
 $(error RT is not set. Please uncomment or write a suitable assignment of RT to the location of your Java installation\'s rt.jar file)
 endif
 
-android-slice:
-	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD) $(PACKAGE)
-
 android:
 	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)
+
+android-slice:
+	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD) $(PACKAGE)
 
 test:
 	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(TEST) $(TEST_CLASS) $(TEST_METHOD)
