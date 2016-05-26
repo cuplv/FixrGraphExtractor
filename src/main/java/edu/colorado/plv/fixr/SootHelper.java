@@ -125,7 +125,7 @@ public class SootHelper {
 		
 		if (g instanceof UnitCdfgGraph) {
 			CDFGToDotGraph toDot = new CDFGToDotGraph(); 
-			DotGraph viewgraph = toDot.drawCFG(g, b); 	     	
+			DotGraph viewgraph = toDot.drawCFG(((UnitCdfgGraph) g), b); 	     	
 			viewgraph.plot(fileName);
 		}
 		else {
