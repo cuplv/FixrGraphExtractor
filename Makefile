@@ -41,9 +41,11 @@ TEST_CLASS = simple.Simple
 
 TEST_METHOD = main
 
-ANDROID_TEST_CLASS = androidtests.HelloWorldActivity
+# ANDROID_TEST_CLASS = androidtests.HelloWorldActivity
+ANDROID_TEST_CLASS = androidtests.Samples
 
-ANDROID_TEST_METHOD = onCreate
+# ANDROID_TEST_METHOD = onCreate
+ANDROID_TEST_METHOD = retrieveData
 
 PACKAGE = android.app
 
