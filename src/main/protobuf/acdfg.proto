@@ -1,0 +1,42 @@
+message Acdfg {
+  message DataNode {
+    required uint64 id   = 1;
+    required string name = 2;
+    required string type = 3;
+  }
+
+  message MethodNode {
+    required uint64 id       = 1;
+    optional uint64 assignee = 2;
+    required string name     = 3;
+    repeated uint64 argument = 4;
+  }
+
+  message MiscNode {
+    required uint64 id = 1;
+  }
+
+  message ControlEdge {
+    required uint64 id   = 1;
+    required uint64 from = 2;
+    required uint64 to   = 3;
+  }
+
+  message DefEdge {
+    required uint64 id   = 1;
+    required uint64 from = 2;
+    required uint64 to   = 3;
+  }
+
+  message UseEdge {
+    required uint64 id   = 1;
+    required uint64 from = 2;
+    required uint64 to   = 3;
+  }
+  
+  repeated DataNode data_node               = 1;
+  repeated InstructionNode instruction_node = 2;
+  repeated ControlEdge control_edge         = 3;
+  repeated TransEdge trans_edge             = 4;
+  repeated DefEdge def_edge                 = 5;
+}
