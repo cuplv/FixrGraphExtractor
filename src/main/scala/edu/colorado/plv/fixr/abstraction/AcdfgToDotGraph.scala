@@ -35,7 +35,18 @@ class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
           if (node.assignee.nonEmpty) {
             name += (node.assignee.get + " = ")
           }
-          name += node.name + "(" + node.argumentNames.mkString(",") + ")"
+          val arguments = node.argumentNames.zip(node.argumentIds).map { case (name, id) =>
+            if (id == 0) {
+              name // + " [string constant]"
+            } else {
+              name + " [#" + id.toString + "]"
+            }
+          }
+          name += node.name
+          if (node.invokee.isDefined) {
+            name += "[#" + node.invokee.get + "]"
+          }
+          name += "(" + arguments.mkString(",") + ")"
           dotNode.setLabel(name)
         case n@(id : Long, node : acdfg.MiscNode) =>
           dotNode.setLabel("#" + id.toString)
