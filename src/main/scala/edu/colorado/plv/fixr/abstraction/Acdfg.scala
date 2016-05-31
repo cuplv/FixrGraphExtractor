@@ -159,6 +159,7 @@ class Acdfg(cdfg : UnitCdfgGraph) {
       }
     )
   }
+
   def removeNode(id : Long) = {
     nodes.remove(id)
     removeId(id)
