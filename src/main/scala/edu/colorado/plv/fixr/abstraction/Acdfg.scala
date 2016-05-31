@@ -1,10 +1,12 @@
 package edu.colorado.plv.fixr.abstraction
 
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
+import edu.colorado.plv.fixr.protobuf.ProtoAcdfg.Acdfg.MethodNode
 import soot.jimple.{IdentityStmt, AssignStmt, InvokeStmt}
 import soot.jimple.internal.JimpleLocal
 import scala.collection.JavaConversions.asScalaIterator
 import scala.collection.mutable.ArrayBuffer
+import scala.util.control.Breaks._
 
 /**
   * Acdfg
@@ -33,9 +35,12 @@ class Acdfg(cdfg : UnitCdfgGraph) {
 
   class MethodNode(
     override val id : Long,
+    //  note: assignee is NOT used to generate Protobuf
     val assignee : Option[String],
+    var invokee : Option[Long],
     val name : String,
-    val arguments : Array[String]
+    var argumentIds : Array[Long],
+    var argumentNames : Array[String]
   ) extends CommandNode
 
   class MiscNode(
@@ -168,11 +173,19 @@ class Acdfg(cdfg : UnitCdfgGraph) {
   def addMethodNode(
       unit : soot.Unit,
       assignee : Option[String],
+      invokee : Option[Long],
       name : String,
-      arguments : Array[String]
+      argumentStrings : Array[String]
   ) : (Long, this.Node) = {
     val id   = getNewId
-    val node = new MethodNode(id, assignee, name, arguments)
+    val node = new MethodNode(
+      id,
+      assignee,
+      invokee,
+      name,
+      new Array[Long](argumentStrings.size),
+      argumentStrings
+    )
     addNode(id, node)
     unitToId += ((unit, id))
     (id, node)
@@ -310,7 +323,7 @@ class Acdfg(cdfg : UnitCdfgGraph) {
           val argumentStrings = arguments.iterator.foldRight(new ArrayBuffer[String]())(
             (argument, array) => array += (argument.toString())
           )
-          val (id, _) = addMethodNode(n, None, declaringClass + "." + methodName, argumentStrings.toArray)
+          val (id, _) = addMethodNode(n, None, None, declaringClass + "." + methodName, argumentStrings.toArray)
           println("    Node added!")
           addDefEdges(n, id)
           println("    Def-edge added!")
@@ -334,7 +347,13 @@ class Acdfg(cdfg : UnitCdfgGraph) {
             val argumentStrings = arguments.iterator.foldRight(new ArrayBuffer[String]())(
               (argument, array) => array += (argument.toString())
             )
-            val (id, _) = addMethodNode(n, Some(assignee), declaringClass + "." + methodName, argumentStrings.toArray)
+            val (id, _) = addMethodNode(
+              n,
+              Some(assignee),
+              None,
+              declaringClass + "." + methodName,
+              argumentStrings.toArray
+            )
             println("    Node added!")
             addDefEdges(n, id)
             println("    Def-edge added!")
@@ -381,4 +400,40 @@ class Acdfg(cdfg : UnitCdfgGraph) {
     }
   })
 
+  println("### Extending method nodes w/ arg. ids from arg. names & use-edges...")
+  nodes
+    .filter(_._2.isInstanceOf[MethodNode])
+    .foreach { case (id, methodNode : MethodNode) =>
+      println("Found method node " + methodNode.toString)
+      println("  Arguments: ")
+      methodNode.argumentNames.foreach{ argumentName =>
+        println("  " + argumentName)
+      }
+      methodNode.argumentNames.zipWithIndex.foreach { case (argumentName, index) =>
+          println("  Finding id of argument " + index + " with name " + argumentName + "...")
+          val argumentPairs = nodes
+            .filter(_._2.isInstanceOf[DataNode])
+            .filter(_._2.asInstanceOf[DataNode].name==(argumentName))
+          if (argumentPairs.nonEmpty) {
+            println("    Data node pair for argument is " + argumentPairs.head.toString())
+            methodNode.argumentIds(index) = argumentPairs.head._1
+          } else {
+            println("    Argument is a hard string. Ignoring...")
+            methodNode.argumentIds(index) = 0
+          }
+
+      }
+    }
+
+  println("### Adding argument ids from argument names and use-edges...")
+
+  edges
+    .filter(_._2.isInstanceOf[UseEdge])
+    .foreach { case (_, edge : UseEdge) => nodes.get(edge.to).get match {
+      case node : MethodNode =>
+        if (! node.argumentIds.toStream.exists(_.equals(edge.from))) {
+          node.invokee = Some(edge.from)
+        }
+      case _ => Nil
+    }}
 }

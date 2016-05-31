@@ -52,12 +52,9 @@ class AcdfgToProtobuf(acdfg : Acdfg) {
     case (id : Long, node : this.acdfg.MethodNode) =>
       val protoMethodNode : ProtoAcdfg.Acdfg.MethodNode.Builder =
         ProtoAcdfg.Acdfg.MethodNode.newBuilder()
-      protoMethodNode.setId(id)
-      protoMethodNode.s
-      node.assignee
-      node.id
-      node.arguments
-      builder.addMiscNode(protoMiscNode)
+      /*
+       * finish this
+       */
   }
 
 }

@@ -13,7 +13,7 @@ message Acdfg {
 
   message MethodNode {
     required uint64 id       = 1;
-    optional uint64 assignee = 2;
+    optional uint64 invokee  = 2;
     required string name     = 3;
     repeated uint64 argument = 4;
   }

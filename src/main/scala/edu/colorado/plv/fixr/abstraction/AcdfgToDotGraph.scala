@@ -35,7 +35,7 @@ class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
           if (node.assignee.nonEmpty) {
             name += (node.assignee.get + " = ")
           }
-          name += node.name + "(" + node.arguments.mkString(",") + ")"
+          name += node.name + "(" + node.argumentNames.mkString(",") + ")"
           dotNode.setLabel(name)
         case n@(id : Long, node : acdfg.MiscNode) =>
           dotNode.setLabel("#" + id.toString)
