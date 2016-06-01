@@ -23,12 +23,14 @@ SOOT = ./lib/soot-2.5.0.jar
 
 EXTRACTOR = ./target/scala-2.10/fixrgraphextractor_2.10-0.1-SNAPSHOT.jar
 
+ONEJAR_EXTRACTOR = ./target/scala-2.10/fixrgraphextractor_2.10-0.1-SNAPSHOT-one-jar.jar
+
 MAIN_CLASS = edu.colorado.plv.fixr.Main
 
 # OSX 10.10.5 (Tested on Hedy): Uncomment one of the following:
 # RT = /Library/Java/JavaVirtualMachines/jdk1.7.0_71.jdk/Contents/Home/jre/lib/rt.jar
 # RT = /Library/Java/JavaVirtualMachines/jdk1.7.0_79.jdk/Contents/Home/jre/lib/rt.jar
-# RT = /Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/jre/lib/rt.jar
+RT = /Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/jre/lib/rt.jar
 
 # Linux (Tested on Sergio's Machine):
 # RT = /usr/lib/jvm/jdk1.7.0/jre/lib/rt.jar
@@ -36,6 +38,8 @@ MAIN_CLASS = edu.colorado.plv.fixr.Main
 TEST = ./src/test/resources
 
 ANDROID = ./build/resources/test/libs/android.jar
+
+PROTOBUF = ./build/resources/test/libs/protobuf-java-2.6.1.jar
 
 TEST_CLASS = simple.Simple
 
@@ -56,13 +60,17 @@ $(error RT is not set. Please uncomment or write a suitable assignment of RT to 
 endif
 
 android:
-	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)
+	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR):$(PROTOBUF) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)
 
 android-slice:
-	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD) $(PACKAGE)
+	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR):$(PROTOBUF) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD) $(PACKAGE)
 
 test:
-	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR) $(MAIN_CLASS) $(RT):$(TEST) $(TEST_CLASS) $(TEST_METHOD)
+	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR):$(PROTOBUF) $(MAIN_CLASS) $(RT):$(TEST) $(TEST_CLASS) $(TEST_METHOD)
 
 generate-jimple:
 	$(JAVA) -jar $(SOOT) --f J -src-prec java -cp $(RT):$(TEST) $(SOURCE_CLASS)
+
+# NOTE: this doesn't work! --- TODO: fix
+android-onejar:
+	$(JAVA) -cp $(SOOT):$(RT) -jar $(ONEJAR_EXTRACTOR) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)
