@@ -1,5 +1,6 @@
 package edu.colorado.plv.fixr.abstraction
 
+import com.google.protobuf.CodedOutputStream
 import edu.colorado.plv.fixr.protobuf.ProtoAcdfg
 
 /**
@@ -52,9 +53,15 @@ class AcdfgToProtobuf(acdfg : Acdfg) {
     case (id : Long, node : this.acdfg.MethodNode) =>
       val protoMethodNode : ProtoAcdfg.Acdfg.MethodNode.Builder =
         ProtoAcdfg.Acdfg.MethodNode.newBuilder()
-      /*
-       * finish this
-       */
+        protoMethodNode.setId(id)
+        if (node.invokee.isDefined) {
+          protoMethodNode.setInvokee(node.invokee.get)
+        }
+        node.argumentIds.foreach(protoMethodNode.addArgument)
+        protoMethodNode.setName(node.name)
+        builder.addMethodNode(protoMethodNode)
   }
+  val protobuf = builder.build()
 
+  def writeTo(output : CodedOutputStream) = protobuf.writeTo(output)
 }
