@@ -63,7 +63,7 @@ object Main {
       dotGraph.draw().plot(cdfg.getBody.getMethod.getName + "_acdfg.dot")
       val protobuf = new AcdfgToProtobuf(acdfg)
       val output : FileOutputStream = new FileOutputStream(cdfg.getBody.getMethod.getName + "_acdfg.bin")
-      protobuf.writeTo(output.asInstanceOf[CodedOutputStream])
+      protobuf.protobuf.writeTo(output)
       output.close()
     }
     System.out.println("Done")
