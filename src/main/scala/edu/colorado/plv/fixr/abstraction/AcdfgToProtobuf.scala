@@ -1,6 +1,6 @@
 package edu.colorado.plv.fixr.abstraction
 
-import com.google.protobuf.CodedOutputStream
+import com.google.protobuf.{CodedInputStream, CodedOutputStream}
 import edu.colorado.plv.fixr.protobuf.ProtoAcdfg
 
 /**

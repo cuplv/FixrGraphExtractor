@@ -1,6 +1,6 @@
 package edu.colorado.plv.fixr
 
-import java.io.FileOutputStream
+import java.io.{FileInputStream, FileOutputStream}
 
 import com.google.protobuf.CodedOutputStream
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
@@ -61,10 +61,13 @@ object Main {
       System.out.println(acdfg)
       val dotGraph : AcdfgToDotGraph = new AcdfgToDotGraph(acdfg)
       dotGraph.draw().plot(cdfg.getBody.getMethod.getName + "_acdfg.dot")
-      val protobuf = new AcdfgToProtobuf(acdfg)
+      val acdfgToProtobuf = new AcdfgToProtobuf(acdfg)
       val output : FileOutputStream = new FileOutputStream(cdfg.getBody.getMethod.getName + "_acdfg.bin")
-      protobuf.protobuf.writeTo(output)
+      acdfgToProtobuf.protobuf.writeTo(output)
       output.close()
+      val input : FileInputStream = new FileInputStream(cdfg.getBody.getMethod.getName +"_acdfg.bin")
+      val protobuf = edu.colorado.plv.fixr.protobuf.ProtoAcdfg.Acdfg.parseFrom(input)
+      println(protobuf)
     }
     System.out.println("Done")
   }
