@@ -63,3 +63,5 @@ To perform the unit tests, run `gradle test`.
 
 The test uses the jimple representation that can be generated calling soot:
 `java -jar ./lib/soot-2.5.0.jar --f J -src-prec java -cp <rt.jar>:<full path to FixrGraphExtractor/src/test/resources> slice.TestSlice`.
+
+[![Build Status](https://travis-ci.com/cuplv/FixrGraphExtractor.svg?token=8yApKhj2WXmbEPSYZsqa&branch=feature-acdfg)](https://travis-ci.com/cuplv/FixrGraphExtractor)
