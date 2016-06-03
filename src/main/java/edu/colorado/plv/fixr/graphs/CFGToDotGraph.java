@@ -241,9 +241,9 @@ public class CFGToDotGraph {
     private int getValue(Object o) {
       Object handler = ((ExceptionalGraph.ExceptionDest) o).getHandlerNode();
       if (handler == null) {
-	return Integer.MAX_VALUE;
+	    return Integer.MAX_VALUE;
       } else {
-	return namer.getNumber(handler);
+	    return namer.getNumber(handler);
       }
     }
 
@@ -493,7 +493,8 @@ public class CFGToDotGraph {
 	  } else {
 	    nodeLabel = targetLabel + ": " + printer.toString();
 	  }
-
+	}else if (node instanceof Local) {
+          nodeLabel = nodeLabel + " : " + ((Local) node).getType().toString();
 	} else if (node instanceof Block) {
 	  Iterator units = ((Block) node).iterator();
 	  StringBuffer buffer = new StringBuffer();

@@ -17,5 +17,4 @@ public interface SlicingCriterion {
 	 * @return True if unit is a seed
 	 */
 	public Boolean is_seed(Unit unit);
-	
 }

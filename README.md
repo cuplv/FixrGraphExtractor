@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.com/cuplv/FixrGraphExtractor.svg?token=8yApKhj2WXmbEPSYZsqa&branch=feature-acdfg)](https://travis-ci.com/cuplv/FixrGraphExtractor)
 
-Sergio Mower and Rhys Braginton Pettee Olsen
+Sriram Sankaranarayanan, Sergio Mover and Rhys Braginton Pettee Olsen
 
 University of Colorado at Boulder CUPLV Lab
 
