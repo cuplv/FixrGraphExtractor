@@ -8,6 +8,7 @@ public class slice.TestControlFlowRes extends java.lang.Object
         temp$0 = 0;
         a = temp$0;
         temp$1 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;
     }
 
     public int testSequence02__sliced__()
@@ -18,6 +19,7 @@ public class slice.TestControlFlowRes extends java.lang.Object
         temp$0 = 0;
         a = temp$0;
         temp$2 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;
     }
 
     public int testSequence03__sliced__()
@@ -29,6 +31,7 @@ public class slice.TestControlFlowRes extends java.lang.Object
         b = temp$1;
         a = b;
         temp$2 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;
     }
 
     public int testConditional01__sliced__()
@@ -43,10 +46,13 @@ public class slice.TestControlFlowRes extends java.lang.Object
         if b != 0 goto label0;
 
      label0:
+        nop;
         goto label1;
 
      label1:
+        nop;
         temp$4 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;
     }
 
     public int testConditional02__sliced__()
@@ -63,14 +69,18 @@ public class slice.TestControlFlowRes extends java.lang.Object
         goto label1;
 
      label0:
+        nop;
         goto label2;
 
      label1:
+        nop;
         temp$4 = 0;
         a = temp$4;
 
      label2:
+        nop;
         temp$5 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;
     }    
 
     public int testConditional03__sliced__()
@@ -83,10 +93,13 @@ public class slice.TestControlFlowRes extends java.lang.Object
         if a != 0 goto label0;
 
      label0:
+        nop;
         goto label1;
 
      label1:
+        nop;
         temp$5 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;
     }
 
     public int testLoop01__sliced__()
@@ -98,18 +111,23 @@ public class slice.TestControlFlowRes extends java.lang.Object
         a = temp$2;
 
      label0:
+        nop;
         if a <= 10 goto label1;
 
         goto label2;
 
      label1:
+        nop;
+        nop;
         temp$5 = a;
         temp$6 = temp$5 + 1;
         a = temp$6;
         goto label0;
 
      label2:
+        nop;
         temp$7 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;
     }
 
     public int testLoop02__sliced__()
@@ -123,21 +141,26 @@ public class slice.TestControlFlowRes extends java.lang.Object
         b = temp$2;
 
      label0:
+        nop;
         if b <= 10 goto label1;
 
         goto label2;
 
      label1:
+        nop;
         temp$3 = a;
         temp$4 = temp$3 + 1;
         a = temp$4;
+        nop;
         temp$5 = b;
         temp$6 = temp$5 + 1;
         b = temp$6;
         goto label0;
 
      label2:
+        nop;
         temp$7 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;
     }
 
     public int testLoop03__sliced__()
@@ -151,20 +174,25 @@ public class slice.TestControlFlowRes extends java.lang.Object
         b = temp$2;
 
      label0:
+        nop;
         if b <= 10 goto label1;
 
         goto label2;
 
      label1:
+        nop;
         temp$3 = b;
         temp$4 = temp$3 + 1;
         b = temp$4;
+        nop;
         temp$5 = b;
         temp$6 = temp$5 + 1;
         b = temp$6;
         goto label0;
 
      label2:
+        nop;
         temp$7 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;
     }
 }
