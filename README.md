@@ -61,7 +61,8 @@ Note that running the graph extraction against the Android API requires a copy o
 To test the graph extraction on a rudimentary program (that doesn't use any Android API methods), run `make test`.
 
 ### Unit Tests
-To perform the unit tests, run `gradle test`.
+To perform the unit tests, run `sbt test`.
 
+### Jimple represenation
 The test uses the jimple representation that can be generated calling soot:
 `java -jar ./lib/soot-2.5.0.jar --f J -src-prec java -cp <rt.jar>:<full path to FixrGraphExtractor/src/test/resources> slice.TestSlice`.
