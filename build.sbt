@@ -50,7 +50,8 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.20",
   "org.slf4j" % "slf4j-simple" % "1.7.20",
   "com.github.scopt" %% "scopt" % "3.4.0",
-  "com.lihaoyi" %% "scalatags" % "0.5.5"
+  "com.lihaoyi" %% "scalatags" % "0.5.5",
+  "com.google.googlejavaformat" % "google-java-format" % "1.0"
 )
 
 oneJarSettings

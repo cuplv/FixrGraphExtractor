@@ -2,6 +2,7 @@ package edu.colorado.plv.fixr
 
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.{FileWriter, File, FileInputStream, FileOutputStream}
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -13,6 +14,7 @@ import edu.colorado.plv.fixr.extractors.Extractor
 import edu.colorado.plv.fixr.extractors.ExtractorOptions
 import edu.colorado.plv.fixr.extractors.MultipleExtractor
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
+import edu.colorado.plv.fixr.provenance.Provenance
 import edu.colorado.plv.fixr.slicing.APISlicer
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed
 import edu.colorado.plv.fixr.slicing.SlicingCriterion
@@ -71,8 +73,7 @@ object Main {
       //
       opt[String]('d', "provenance-dir") action { (x, c) =>
       c.copy(outputDir= x) } text("Path of the directory used to store the provenance information.")      
-    }
-    
+    }   
     parser.parse(args, MainOptions()) match {
       case Some(mainopt) => {               
         logger.debug("cp: {}", mainopt.sootClassPath)
@@ -120,7 +121,7 @@ object Main {
 
         System.exit(0)
       }
-      case None => {System.exit(1)}    
+      case None => {System.exit(1)}
     }
     
     logger.info("Terminated extraction...")
