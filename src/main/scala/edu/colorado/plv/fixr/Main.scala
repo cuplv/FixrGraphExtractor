@@ -1,9 +1,10 @@
 package edu.colorado.plv.fixr
 
-import java.io.{FileInputStream, FileOutputStream}
+import java.io.{FileWriter, File, FileInputStream, FileOutputStream}
 
 import com.google.protobuf.CodedOutputStream
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
+import edu.colorado.plv.fixr.provenance.Provenance
 import edu.colorado.plv.fixr.slicing.APISlicer
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed
 import edu.colorado.plv.fixr.slicing.SlicingCriterion
@@ -72,6 +73,11 @@ object Main {
       val input : FileInputStream = new FileInputStream(cdfg.getBody.getMethod.getName +"_acdfg.bin")
       val protobuf = edu.colorado.plv.fixr.protobuf.ProtoAcdfg.Acdfg.parseFrom(input)
       println(protobuf)
+      val html = new Provenance(body, cdfg, acdfg).toHtml
+      val newTextFile : File = new File(cdfg.getBody.getMethod.getName +".html")
+      val fw : FileWriter = new FileWriter(newTextFile)
+      fw.write(html.toString)
+      fw.close()
     }
     System.out.println("Done")
   }
