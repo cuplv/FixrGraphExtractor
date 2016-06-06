@@ -46,5 +46,6 @@ libraryDependencies ++= Seq(
   "org.eclipse.jdt" % "org.eclipse.jdt.core" % "3.10.0",
   "org.scalatest" %% "scalatest" % "2.2.2" % Test,
   "junit" % "junit" % "4.11" % "test",
-  "commons-lang" % "commons-lang" % "2.6"
+  "commons-lang" % "commons-lang" % "2.6",
+  "org.scalaz" %% "scalaz-core" % "7.1.0"
 )
