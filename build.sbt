@@ -36,12 +36,12 @@ javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 
 scalacOptions += "-target:jvm-1.7"
 
-name := "SLF4JTest"
- 
-version := "1.0"
- 
-scalaVersion := "2.10.0"
 
+// Exclude the java file in the test/resources folder from the compilation
+EclipseKeys.classpathTransformerFactories := Seq(ClasspathentryTransformer)
+
+// Remove the parallel execution of tests - soot is not happy with that
+concurrentRestrictions in Global += Tags.limit(Tags.Test, 1)
 
 libraryDependencies ++= Seq(
   "org.eclipse.jdt" % "org.eclipse.jdt.core" % "3.10.0",

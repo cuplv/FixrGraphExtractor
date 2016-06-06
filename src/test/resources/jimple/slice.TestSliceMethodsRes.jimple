@@ -18,6 +18,7 @@ public class slice.TestSliceMethodsRes extends java.lang.Object
         temp$3 = virtualinvoke r.<java.util.Random: int nextInt(int)>(n1);
         temp$5 = (long) n2;
         virtualinvoke r.<java.util.Random: void setSeed(long)>(temp$5);
+        nop;        
     }
 
     public void testSliceMethods02__sliced__()
@@ -33,6 +34,7 @@ public class slice.TestSliceMethodsRes extends java.lang.Object
         temp$1 = new java.util.Random;
         temp$2 = (long) n1;
         specialinvoke temp$1.<java.util.Random: void <init>(long)>(temp$2);
+        nop;        
     }
 
     public void testSliceMethods03__sliced__()
@@ -47,6 +49,7 @@ public class slice.TestSliceMethodsRes extends java.lang.Object
         temp$3 = new java.util.Random;
         temp$4 = (long) n1;
         specialinvoke temp$3.<java.util.Random: void <init>(long)>(temp$4);
+        nop;        
     }
 
     public void testSliceMethods04__sliced__()
@@ -65,15 +68,18 @@ public class slice.TestSliceMethodsRes extends java.lang.Object
         goto label1;
 
      label0:
+        nop;
         temp$2 = n1;
         temp$3 = temp$2 + 1;
         this.<slice.TestSliceMethods: int innerField1> = temp$3;
 
      label1:
+        nop;
         temp$4 = new java.util.Random;
         temp$5 = this.<slice.TestSliceMethods: int innerField1>;
         temp$6 = (long) temp$5;
         specialinvoke temp$4.<java.util.Random: void <init>(long)>(temp$6);
+        nop;        
     }
 
     public void testSliceMethods05__sliced__()
@@ -94,6 +100,7 @@ public class slice.TestSliceMethodsRes extends java.lang.Object
         temp$4 = this.<slice.TestSliceMethods: int innerField1>;
         temp$5 = (long) temp$4;
         specialinvoke temp$3.<java.util.Random: void <init>(long)>(temp$5);
+        nop;        
     }
 
     public void testSliceMethods06__sliced__()
@@ -131,5 +138,6 @@ public class slice.TestSliceMethodsRes extends java.lang.Object
         temp$16 = this.<slice.TestSliceMethods: int innerField1>;
         temp$17 = (long) temp$16;
         specialinvoke temp$15.<java.util.Random: void <init>(long)>(temp$17);
+        nop;        
     }
 }

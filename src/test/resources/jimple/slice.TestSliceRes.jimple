@@ -7,6 +7,7 @@ public class slice.TestSliceRes extends java.lang.Object
 
         a = 0;
         temp$0 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;
     }
 
     public void m2__sliced__()
@@ -17,6 +18,7 @@ public class slice.TestSliceRes extends java.lang.Object
         temp$0 = 0;
         a = temp$0;
         temp$2 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;        
     }
 
     public void m3__sliced__()
@@ -28,6 +30,7 @@ public class slice.TestSliceRes extends java.lang.Object
         b = temp$1;
         a = b;
         temp$2 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;
     }
 
     public void m4__sliced__()
@@ -40,11 +43,14 @@ public class slice.TestSliceRes extends java.lang.Object
         if b == 0 goto label0;
 
      label0:
+        nop;
         goto label1;
 
      label1:
+        nop;
         a = b;
         temp$5 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;
     }
 
     public void m5__sliced__()
@@ -61,14 +67,18 @@ public class slice.TestSliceRes extends java.lang.Object
         goto label1;
 
      label0:
+        nop;
         goto label2;
 
      label1:
+        nop;
         b = a;
 
-     label2:      
+     label2:
+        nop;
         a = b;
         temp$5 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;
     }
 
     public void m6__sliced__()
@@ -85,11 +95,14 @@ public class slice.TestSliceRes extends java.lang.Object
         if b == 0 goto label0;
 
      label0:
+        nop;
         a = c;
         goto label1;
 
      label1:
+        nop;
         temp$3 = staticinvoke <java.lang.Math: int abs(int)>(a);
+        nop;
     }
 
 
@@ -102,14 +115,19 @@ public class slice.TestSliceRes extends java.lang.Object
         i = temp$0;
 
      label0:
+        nop;
         if i <= 10 goto label1;
 
      label1:
+        nop;
         temp$1 = staticinvoke <java.lang.Math: int abs(int)>(i);
+        nop;
         temp$2 = i;
         temp$3 = temp$2 + 1;
         i = temp$3;
         goto label0;
+
+        nop;
     }
 
     public void m8__sliced__()
@@ -123,21 +141,26 @@ public class slice.TestSliceRes extends java.lang.Object
         a = temp$1;
 
      label0:
+        nop;
         if a <= 10 goto label1;
 
         goto label2;
 
      label1:
+        nop;
         temp$2 = a;
         temp$3 = temp$2 + 1;
         a = temp$3;
+        nop;
         temp$4 = a;
         temp$5 = temp$4 + 1;
         a = temp$5;
         goto label0;
 
      label2:
+        nop;
         temp$6 = staticinvoke <java.lang.Math: int abs(int)>(i);
+        nop;
     }
 
     public void <init>()

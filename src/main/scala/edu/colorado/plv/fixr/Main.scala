@@ -45,6 +45,8 @@ object Main {
     Scene.v.addBasicClass(className, SootClass.HIERARCHY)
     Scene.v.loadNecessaryClasses()
     val body: Body = SootHelper.getMethodBody(className, methodName)
+    println(body)
+    System.exit(0);
     val jimpleUnitGraph: EnhancedUnitGraph = new EnhancedUnitGraph(body)
     val slicer: APISlicer = new APISlicer(jimpleUnitGraph, body)
     var sc: SlicingCriterion = null

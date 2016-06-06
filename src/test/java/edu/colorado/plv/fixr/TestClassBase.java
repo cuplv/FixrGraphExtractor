@@ -7,8 +7,6 @@ import soot.SootClass;
 
 public abstract class TestClassBase {
 	protected final String classPath = "src/test/resources/jimple";
-	// protected final String classPath = ".";
-	// protected String classPath = System.getProperty("user.dir");
 
 	protected SootClass testClass = null;
 	protected SootClass resClass = null;
@@ -48,7 +46,7 @@ public abstract class TestClassBase {
 	public abstract String getResClassName();	
 	
 	public String getClassPath() {
-		return classPath;
+		return this.classPath;		
 	}	
 	
 	@Before
