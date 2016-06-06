@@ -21,6 +21,8 @@ JAVA = java
 
 SOOT = ./lib/soot-2.5.0.jar
 
+SLF4J = ./lib/slf4j-api-1.7.21.jar
+
 EXTRACTOR = ./target/scala-2.10/fixrgraphextractor_2.10-0.1-SNAPSHOT.jar
 
 ONEJAR_EXTRACTOR = ./target/scala-2.10/fixrgraphextractor_2.10-0.1-SNAPSHOT-one-jar.jar
@@ -34,6 +36,8 @@ RT = /Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/jre/lib/rt.
 
 # Linux (Tested on Sergio's Machine):
 # RT = /usr/lib/jvm/jdk1.7.0/jre/lib/rt.jar
+
+SLF4J = slf4j-api-1.7.21.jar
 
 TEST = ./src/test/resources
 
@@ -59,8 +63,14 @@ ifndef RT
 $(error RT is not set. Please uncomment or write a suitable assignment of RT to the location of your Java installation\'s rt.jar file)
 endif
 
+all:
+	sbt clean package "run $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)"
+
 android:
-	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR):$(PROTOBUF) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)
+	sbt "run $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)"
+
+android-old:
+	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR):$(PROTOBUF):$(SLF4J) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)
 
 android-slice:
 	$(SCALA) -cp $(SOOT):$(RT):$(EXTRACTOR):$(PROTOBUF) $(MAIN_CLASS) $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD) $(PACKAGE)

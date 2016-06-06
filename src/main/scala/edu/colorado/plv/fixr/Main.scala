@@ -12,6 +12,8 @@ import soot.Body
 import soot.Scene
 import soot.SootClass
 import soot.toolkits.graph.pdg.EnhancedUnitGraph
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 object Main {
   /**
@@ -20,6 +22,8 @@ object Main {
     * @param args classpath, class name (e.g. package.ClassName), method name
     */
   def main(args: Array[String]) {
+    val logger : Logger = LoggerFactory.getLogger(this.getClass)
+
     if (args.length < 3) {
       System.err.println("Missing classpath, class name and method name")
       return
