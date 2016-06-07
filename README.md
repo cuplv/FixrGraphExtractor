@@ -67,3 +67,9 @@ To perform the unit tests, run `sbt test`.
 ### Jimple represenation
 The test uses the jimple representation that can be generated calling soot:
 `java -jar ./lib/soot-2.5.0.jar --f J -src-prec java -cp <rt.jar>:<full path to FixrGraphExtractor/src/test/resources> slice.TestSlice`.
+
+## One-jar
+We can get a single jar file by running `sbt oneJar`
+
+Then, we can run the program as:
+```java -jar ./target/scala-2.10/fixrgraphextractor_2.10-0.1-SNAPSHOT-one-jar.jar  <soot-classpath> slice.TestSlice m1```
