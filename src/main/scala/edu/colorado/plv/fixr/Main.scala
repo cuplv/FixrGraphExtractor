@@ -14,6 +14,11 @@ import soot.SootClass
 import soot.toolkits.graph.pdg.EnhancedUnitGraph
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import edu.colorado.plv.fixr.extractors.ExtractorOptions
+import edu.colorado.plv.fixr.extractors.ExtractorOptions
+import edu.colorado.plv.fixr.extractors.Extractor
+import edu.colorado.plv.fixr.extractors.MethodExtractor
+import edu.colorado.plv.fixr.extractors.MultipleExtractor
 
 object Main {
   /**
@@ -41,6 +46,25 @@ object Main {
     val classPath: String = args(0)
     val className:  String = args(1)
     val methodName: String = args(2)
+    
+    val options : ExtractorOptions = new ExtractorOptions() 
+    options.className = className
+    options.methodName = methodName
+    options.readFromJimple = false
+    options.sliceFilter = filter
+    options.sootClassPath = classPath
+    options.outputDir = "./"
+    options.provenanceDir = "./"
+    options.className = null
+    options.methodName = null
+    options.processDir = List[String]("/home/sergio/works/projects/muse/repos/FixrGraphExtractor/src/test/resources/javasources")
+    
+    //val extractor : Extractor = new MethodExtractor(options)
+    val extractor : Extractor = new MultipleExtractor(options)
+    extractor.extract()
+    
+    System.exit(1)
+    
     SootHelper.configure(classPath, false)
     Scene.v.addBasicClass(className, SootClass.HIERARCHY)
     Scene.v.loadNecessaryClasses()

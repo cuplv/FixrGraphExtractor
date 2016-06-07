@@ -28,5 +28,10 @@ public class SlicingStmts implements SlicingCriterion {
 	public Boolean is_seed(Unit unit) {		
 		return this.stmts.contains(unit);
 	}
-
+	
+	public String getCriterionDescription() {
+		StringBuffer sBuffer = new StringBuffer("SlicingStmts criterion\n" +
+				"The seed are all the statements\n");		
+    return sBuffer.toString();
+	}
 }
