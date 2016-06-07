@@ -68,5 +68,15 @@ public class MethodPackageSeed implements SlicingCriterion {
 		
 		return false;
 	}
-
+	
+	public String getCriterionDescription() {
+		StringBuffer sBuffer = new StringBuffer("MethodPacakgeSeed criterion\n" +
+				"The seed are all the method invocation that belongs to the " +
+				"following packages:\n");
+		for (String packageName : this.packagePrefixes) {
+			sBuffer.append(packageName + "\n");
+		}
+    return sBuffer.toString();
+	}
+	
 }

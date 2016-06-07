@@ -17,4 +17,11 @@ public interface SlicingCriterion {
 	 * @return True if unit is a seed
 	 */
 	public Boolean is_seed(Unit unit);
+	
+	/**
+	 * Returns a string representation of the criterion.
+	 * Used for debug purposes.
+	 * @return a string that describes the slicing criterion
+	 */
+	public String getCriterionDescription();
 }
