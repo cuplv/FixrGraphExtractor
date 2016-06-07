@@ -1,5 +1,5 @@
 // import com.trueaccord.scalapb.{ScalaPbPlugin => PB}
-import com.github.retronym.SbtOneJar
+import com.github.retronym.SbtOneJar._
 
 import sbtprotobuf.{ProtobufPlugin=>PB}
 
@@ -7,13 +7,10 @@ seq(PB.protobufSettings: _*)
 
 javaSource in PB.protobufConfig <<= (sourceManaged in Compile)
 
-com.github.retronym.SbtOneJar.oneJarSettings
-
 lazy val commonSettings =
-  com.github.retronym.SbtOneJar.oneJarSettings ++
   Seq(
     organization := "edu.colorado.plv.fixr",
-	  version := "0.1.0",
+    version := "0.1.0",
     scalaVersion := "2.10.2",
     name := "FixrGraphExtractor",
     javaOptions += "-Xmx2G",
@@ -51,4 +48,6 @@ libraryDependencies ++= Seq(
   "org.slf4j" % "slf4j-api" % "1.7.20",
   "org.slf4j" % "slf4j-simple" % "1.7.20",
   "com.github.scopt" %% "scopt" % "3.4.0"
-) 
+)
+
+oneJarSettings
