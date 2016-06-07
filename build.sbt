@@ -49,5 +49,6 @@ libraryDependencies ++= Seq(
   "junit" % "junit" % "4.11" % Test,
   "commons-lang" % "commons-lang" % "2.6",
   "org.slf4j" % "slf4j-api" % "1.7.20",
-  "org.slf4j" % "slf4j-simple" % "1.7.20"
-)
+  "org.slf4j" % "slf4j-simple" % "1.7.20",
+  "com.github.scopt" %% "scopt" % "3.4.0"
+) 
