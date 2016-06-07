@@ -86,7 +86,7 @@ object Main {
         
         if (null != mainopt.processDir &&
             (null != mainopt.className || null != mainopt.methodName)) {
-           logger.error("The porcess-dir option is mutually exclusive " +
+           logger.error("The process-dir option is mutually exclusive " +
                "with the class-name and method-name options");
            System.exit(1)
         }
@@ -105,7 +105,7 @@ object Main {
         options.sliceFilter = mainopt.sliceFilter;
         options.sootClassPath = mainopt.sootClassPath;
         options.outputDir = mainopt.outputDir;
-        options.provenanceDir = mainopt.processDir;        
+        options.provenanceDir = mainopt.provenanceDir;               
                 
         if (null != mainopt.processDir) {
           //List[String]("/home/sergio/works/projects/muse/repos/FixrGraphExtractor/src/test/resources/javasources")/
