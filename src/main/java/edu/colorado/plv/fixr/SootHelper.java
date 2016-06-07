@@ -20,12 +20,19 @@ public class SootHelper {
 	}
 	
 	public static void configure(String classpath, boolean readFromJimple) {
+		configure(classpath, readFromJimple, null);
+	}
+	
+	public static void configure(String classpath, boolean readFromJimple, java.util.List<String> processDir) {
 		Options.v().set_verbose(false);
 		Options.v().set_keep_line_number(true);
 		Options.v().set_src_prec(Options.src_prec_class);
-		//Options.v().set_soot_classpath("/usr/lib/jvm/jdk1.7.0/jre/lib/rt.jar:/home/sergio/works/projects/muse/repos/FixrGraphExtractor/src/test/resources");
 		Options.v().set_soot_classpath(classpath);		
 		Options.v().set_prepend_classpath(true);	
+		
+		if (null != processDir) {
+			Options.v().set_process_dir(processDir);
+		}
 		
 		PhaseOptions.v().setPhaseOption("jb", "enabled:false");
 		/* We want to parse the code from source
