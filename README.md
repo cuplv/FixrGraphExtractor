@@ -49,8 +49,25 @@ To clean the environment, run `sbt clean`.
 To compile and generate the .jar files needed for execution, run `sbt package`.
 
 ### Execution
+The extractor has two modes of execution.
 
-Executing the extractor involves setting two classpaths, one for the .jar itself and one for the files being extracted, as well as class name and the name of the Android method being sliced over. The extractor generates the CDFG for the method specified followed by the ACDFG before creating a dot file named <method_name>_<sliced>.dot that represents the CDFG.
+In the first mode, the tool expects as input a class name and a method name (relative to the class).
+
+The output of the extraction is an ACDFG saved in the output folder in protobuf format (with the naming convention <class_name>_<method_name>.acdfg.bin
+
+An example of run in these settings through sbt is:
+`sbt  "run -l /usr/lib/jvm/jdk1.7.0/jre/lib/rt.jar:./src/test/resources/javasources -c slice.TestSlice -m m1 -f java.lang.Math -o ./"`
+
+Dot representation on of the cdfg and of the intermediate results is produced in the provenance-dir, if this parameter is given as input.
+
+The classpath argument ('-l') must contain the source file of the class and method of interest.
+
+In the second mode the extractor is run on all the classes and methods found in the subfolder of a specific path (set with the `-p` option).
+
+In this case, the extractor generates a file per class,method pair.
+
+To run the extraction of all the classes and methods in a specific path run (note that the filter here is on android classes, by default):
+`sbt  "run -l /usr/lib/jvm/jdk1.7.0/jre/lib/rt.jar:./src/test/resources/libs/android-17.jar:./src/test/resources/javasources  -p ./src/test/resources/javasources  -o ./"`
 
 Execution is simplifed by invoking commands in the Makefile, which can be referenced and extended for writing new invokations.
 
@@ -59,6 +76,7 @@ To perform the graph extraction on a test Android method, run `make`.
 Note that running the graph extraction against the Android API requires a copy of `android.jar`, which can be obtained from `http://repository.grepcode.com/java/ext/com/google/android/android/4.4.2_r1/android-4.4.2_r1.jar` or by downloading the Android SDK.
 
 To test the graph extraction on a rudimentary program (that doesn't use any Android API methods), run `make test`.
+
 
 ### Unit Tests
 To perform the unit tests, run `sbt test`.
