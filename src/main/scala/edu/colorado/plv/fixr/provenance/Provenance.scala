@@ -26,9 +26,12 @@ class Provenance(body : Body, cdfg : UnitCdfgGraph, acdfg : Acdfg) {
           }
         )
         */
+        scalatags.Text.all.h2("Java Source"),
+        scalatags.Text.all.pre(scalatags.Text.all.code()),
+        scalatags.Text.all.h2("Generated Jimple"),
         scalatags.Text.all.pre(scalatags.Text.all.code(body.toString)),
-        scalatags.Text.all.p("This is my first paragraph"),
-        scalatags.Text.all.p("This is my second paragraph")
+        scalatags.Text.all.h2("Control Data Flow Graph (CDFG)"),
+        scalatags.Text.all.h2("Abstract Control Data Flow Graph (ACDFG)")
       )
     )
   }
