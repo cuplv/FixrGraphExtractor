@@ -424,7 +424,7 @@ public class CFGToDotGraph {
    * to strings identifying the corresponding nodes in generated dot
    * source.
    */
-  protected static class DotNamer extends HashMap {
+  protected static class DotNamer extends HashMap<Object, Object> {
     private int nodecount = 0;
 
     DotNamer(int initialCapacity, float loadFactor) {

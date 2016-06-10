@@ -24,12 +24,9 @@ import soot.SootClass
 import soot.toolkits.graph.pdg.EnhancedUnitGraph
 import edu.colorado.plv.fixr.extractors.MethodExtractor
 
-
-
-
 object Main {
   val logger : Logger = LoggerFactory.getLogger(this.getClass)
-  
+
   case class MainOptions(
     sootClassPath : String = null,
     readFromJimple : Boolean = false,
@@ -39,7 +36,7 @@ object Main {
     methodName : String = null,
     outputDir : String = null,
     provenanceDir : String = null)
-    
+
   /**
     * Now the program takes as input the classpath, the class name and the method name for which we have to build the graph
     *
@@ -69,36 +66,35 @@ object Main {
       c.copy(methodName = x) } text("Name of the method to be processed.")
       //
       opt[String]('o', "output-dir") action { (x, c) =>
-      c.copy(outputDir= x) } text("Path of the output directory for the ACDFG.")
+      c.copy(outputDir = x) } text("Path of the output directory for the ACDFG.")
       //
       opt[String]('d', "provenance-dir") action { (x, c) =>
-      c.copy(outputDir= x) } text("Path of the directory used to store the provenance information.")      
-    }   
+      c.copy(provenanceDir = x) } text("Path of the directory used to store the provenance information.")
+    }
     parser.parse(args, MainOptions()) match {
-      case Some(mainopt) => {               
+      case Some(mainopt) => {
         logger.debug("cp: {}", mainopt.sootClassPath)
         logger.debug("read-from-jimpl: {}", mainopt.readFromJimple)
         logger.debug("slice-filter: {}", mainopt.sliceFilter)
         logger.debug("process-dir: {}", mainopt.processDir)
         logger.debug("class-name: {}", mainopt.className)
-        logger.debug("method-name: {}", mainopt.methodName)                
+        logger.debug("method-name: {}", mainopt.methodName)
         logger.debug("output-dir: {}", mainopt.outputDir)
-        logger.debug("provenance-dir: {}\n", mainopt.provenanceDir)        
-        
+        logger.debug("provenance-dir: {}\n", mainopt.provenanceDir)
+
         if (null != mainopt.processDir &&
             (null != mainopt.className || null != mainopt.methodName)) {
            logger.error("The process-dir option is mutually exclusive " +
                "with the class-name and method-name options");
            System.exit(1)
         }
-        
         if ( (null != mainopt.className && null == mainopt.methodName) ||
           (null == mainopt.className && null != mainopt.methodName)) {
           logger.error("The options class-name and method-name " +
               "must be specified together")
-           System.exit(1)              
+           System.exit(1)
         }
-        
+
         val options : ExtractorOptions = new ExtractorOptions() 
         options.className = mainopt.className;
         options.methodName = mainopt.methodName;
@@ -106,24 +102,24 @@ object Main {
         options.sliceFilter = mainopt.sliceFilter;
         options.sootClassPath = mainopt.sootClassPath;
         options.outputDir = mainopt.outputDir;
-        options.provenanceDir = mainopt.provenanceDir;               
-                
+        options.provenanceDir = mainopt.provenanceDir
+
         if (null != mainopt.processDir) {
           //List[String]("/home/sergio/works/projects/muse/repos/FixrGraphExtractor/src/test/resources/javasources")/
-          val myArray : Array[String] = mainopt.processDir.split(":");           
+          val myArray : Array[String] = mainopt.processDir.split(":")
           options.processDir = myArray.toList
         }
-        
-        val extractor : Extractor = 
+
+        val extractor : Extractor =
           if (options.processDir == null) new MethodExtractor(options)
-          else new MultipleExtractor(options)     
+          else new MultipleExtractor(options)
         extractor.extract()
 
         System.exit(0)
       }
       case None => {System.exit(1)}
     }
-    
+
     logger.info("Terminated extraction...")
   }
 }

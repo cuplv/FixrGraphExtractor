@@ -7,19 +7,20 @@ import edu.colorado.plv.fixr.slicing.SlicingCriterion
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
 import edu.colorado.plv.fixr.abstraction.AcdfgToProtobuf
 import edu.colorado.plv.fixr.slicing.APISlicer
-import java.io.FileOutputStream
+import java.io.{IOException, Writer, _}
+
 import soot.SootMethod
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed
 import soot.toolkits.graph.pdg.EnhancedUnitGraph
 import edu.colorado.plv.fixr.abstraction.Acdfg
 import soot.Body
-import java.io.PrintWriter
-import java.io.OutputStream
 import soot.Printer
-import java.io.OutputStreamWriter
 import java.nio.file.Paths
+
 import soot.toolkits.graph.UnitGraph
 import edu.colorado.plv.fixr.SootHelper
+import edu.colorado.plv.fixr.provenance.Provenance
+
 import scala.collection.JavaConversions.seqAsJavaList
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
@@ -108,18 +109,27 @@ abstract class Extractor(options : ExtractorOptions) {
       slicedBody : Body,      
       cfg : UnitGraph) : Unit = {
     val currentDir = System.getProperty("user.dir")
-    val outputDir = if (null == options.outputDir) currentDir else options.outputDir    
-    
-    logger.debug("Writing ACDFG data to: {}", outputDir)    
-    
+    val outputDir = if (null == options.outputDir) currentDir else options.outputDir
+
+    logger.debug("Writing ACDFG data to: {}", outputDir)
+
     // Write the acdfg
     val acdfgFileName : String = Paths.get(outputDir,
-        outFileNamePrefix + ".acdfg.bin").toString();
-    val output : FileOutputStream = new FileOutputStream(acdfgFileName)
-    val acdfgToProtobuf = new AcdfgToProtobuf(acdfg)    
+      outFileNamePrefix + ".acdfg.bin").toString();
+    val acdfgFile : File = new File(acdfgFileName);
+
+    if (!acdfgFile.getParentFile.exists) {
+      acdfgFile.getParentFile.mkdir
+    }
+    if (!acdfgFile.exists) {
+      acdfgFile.createNewFile
+    }
+
+    val output : FileOutputStream = new FileOutputStream(acdfgFile)
+    val acdfgToProtobuf = new AcdfgToProtobuf(acdfg)
     acdfgToProtobuf.protobuf.writeTo(output)
-    output.close()    
-    
+    output.close()
+
     // Write the povenance information
     if (options.provenanceDir != null) {
       logger.debug("Writing provenance data to: {}", options.provenanceDir)
@@ -128,18 +138,55 @@ abstract class Extractor(options : ExtractorOptions) {
       val acdfg_dot : String = filePrefix + ".acdfg.dot";
       val dotGraph : AcdfgToDotGraph = new AcdfgToDotGraph(acdfg)
       dotGraph.draw().plot(acdfg_dot)
-      
+
+      // CFG
+      SootHelper.dumpToDot(cfg, cfg.getBody(), filePrefix + ".cfg.dot")
+
       // CDFG
       SootHelper.dumpToDot(cdfg, cdfg.getBody(), filePrefix + ".cdfg.dot")
-            
+
       // JIMPLE
       val jimpleFileName: String = filePrefix + ".jimple";
       writeJimple(body, jimpleFileName)
-      // CFG             
-      SootHelper.dumpToDot(cdfg, cfg.getBody(), filePrefix + ".cfg.dot")
+
       // SLICED JIMPLE
       val slicedJimpleName : String = filePrefix + ".sliced.jimple";
-      writeJimple(slicedBody, slicedJimpleName)           
-    }                  
+      writeJimple(slicedBody, slicedJimpleName)
+
+      val provenance : Provenance = new Provenance(
+        null,
+        body,
+        slicedBody,
+        outFileNamePrefix,
+        cfg,
+        cdfg,
+        acdfg
+      )
+
+      try {
+        val provFileName : String = filePrefix + ".html"
+        val provFile : File = new File(provFileName);
+        if (!provFile.getParentFile.exists) {
+          provFile.getParentFile.mkdir
+        }
+        if (!provFile.exists) {
+          provFile.createNewFile
+        }
+
+        val writer: Writer = new BufferedWriter(
+          new OutputStreamWriter(
+            new FileOutputStream(provFile),
+            "utf-8"
+          )
+        )
+        writer.write(provenance.toHtml.toString)
+        writer.close
+      }
+      catch {
+        case ex: Exception => {
+          logger.error("Unable to write to " + filePrefix + ".html")
+        }
+      }
+    }
   }
 }
