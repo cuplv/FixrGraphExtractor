@@ -31,21 +31,21 @@ import org.slf4j.Logger
  */
 abstract class Extractor(options : ExtractorOptions) {
   val logger : Logger = LoggerFactory.getLogger(this.getClass())  
-  initExtractor()   
+  initExtractor()
   
   /**
    * Extract the ACDFG - implement the right iteration
    */
-  def extract() : Unit;  
+  def extract() : Unit
   
   private def initExtractor() : Unit = {
     logger.debug("Initializing soot...")
     if (null == options.processDir) { 
       SootHelper.configure(options.sootClassPath, options.readFromJimple)
-    }    
+    }
     else {
       SootHelper.configure(options.sootClassPath, options.readFromJimple, options.processDir)      
-    }    
+    }
   }
   
   protected def extractMethod(sootClass : SootClass, sootMethod : SootMethod) : Unit = {
@@ -71,7 +71,7 @@ abstract class Extractor(options : ExtractorOptions) {
         sootClass.getName(), sootMethod.getName(), "")
       logger.warn("Empty slice for - class {} - method: {}\nFilter: {}\nBody:\n{}\n",
         sootClass.getName(), sootMethod.getName(), sc.getCriterionDescription(),
-        body.toString())      
+        body.toString())
     }
     else {
     	logger.debug("CDFG construction...")    
@@ -87,7 +87,7 @@ abstract class Extractor(options : ExtractorOptions) {
     	writeData(name, acdfg, cdfg, body, slicedJimple, slicer.getCfg());    
     	logger.info("Created graph for - class {} - method: {}{}",
     			sootClass.getName(), sootMethod.getName(), "")      
-    }            
+    }
   }
   
   protected def writeJimple(body : Body, fileName : String) : Unit = {
