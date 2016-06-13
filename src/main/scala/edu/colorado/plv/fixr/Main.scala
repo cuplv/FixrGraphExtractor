@@ -49,32 +49,32 @@ object Main {
       head("GraphExtractor", "0.1")
       //
       opt[String]('l', "cp") action { (x, c) =>
-      c.copy(sootClassPath = x) } text("cp is the soot classpath")
+      c.copy(sootClassPath = x) } text "cp is the soot classpath"
       //
       opt[Boolean]('j', "read-from-jimple") action { (x, c) =>
-      c.copy(readFromJimple = x) } text("Set to true to use Jimple as input")
+      c.copy(readFromJimple = x) } text "Set to true to use Jimple as input"
       //
       opt[String]('f', "slice-filter") action { (x, c) =>
-      c.copy(sliceFilter = x) } text("Package prefix to use as seed for slicing")
+      c.copy(sliceFilter = x) } text "Package prefix to use as seed for slicing"
       //
       opt[String]('p', "process-dir") action { (x, c) =>
-      c.copy(processDir = x) } text("Comma (:) separated list of input directories to process")
+      c.copy(processDir = x) } text "Comma (:) separated list of input directories to process"
       //
       opt[String]('c', "class-name") action { (x, c) =>
-      c.copy(className = x) } text("Name of the class to be processed.")
+      c.copy(className = x) } text "Name of the class to be processed."
       //
       opt[String]('m', "method-name") action { (x, c) =>
-      c.copy(methodName = x) } text("Name of the method to be processed.")
+      c.copy(methodName = x) } text "Name of the method to be processed."
       //
       opt[String]('o', "output-dir") action { (x, c) =>
-      c.copy(outputDir= x) } text("Path of the output directory for the ACDFG.")
+      c.copy(outputDir= x) } text "Path of the output directory for the ACDFG."
       //
       opt[String]('d', "provenance-dir") action { (x, c) =>
-      c.copy(outputDir= x) } text("Path of the directory used to store the provenance information.")      
+      c.copy(outputDir= x) } text "Path of the directory used to store the provenance information."
     }
     
     parser.parse(args, MainOptions()) match {
-      case Some(mainopt) => {               
+      case Some(mainopt) =>
         logger.debug("cp: {}", mainopt.sootClassPath)
         logger.debug("read-from-jimpl: {}", mainopt.readFromJimple)
         logger.debug("slice-filter: {}", mainopt.sliceFilter)
@@ -87,7 +87,7 @@ object Main {
         if (null != mainopt.processDir &&
             (null != mainopt.className || null != mainopt.methodName)) {
            logger.error("The process-dir option is mutually exclusive " +
-               "with the class-name and method-name options");
+               "with the class-name and method-name options")
            System.exit(1)
         }
         
@@ -99,28 +99,28 @@ object Main {
         }
         
         val options : ExtractorOptions = new ExtractorOptions() 
-        options.className = mainopt.className;
-        options.methodName = mainopt.methodName;
-        options.readFromJimple = mainopt.readFromJimple;
-        options.sliceFilter = mainopt.sliceFilter;
-        options.sootClassPath = mainopt.sootClassPath;
-        options.outputDir = mainopt.outputDir;
-        options.provenanceDir = mainopt.provenanceDir;               
-                
+        options.className = mainopt.className
+        options.methodName = mainopt.methodName
+        options.readFromJimple = mainopt.readFromJimple
+        options.sliceFilter = mainopt.sliceFilter
+        options.sootClassPath = mainopt.sootClassPath
+        options.outputDir = mainopt.outputDir
+        options.provenanceDir = mainopt.provenanceDir
+
         if (null != mainopt.processDir) {
           //List[String]("/home/sergio/works/projects/muse/repos/FixrGraphExtractor/src/test/resources/javasources")/
-          val myArray : Array[String] = mainopt.processDir.split(":");           
+          val myArray : Array[String] = mainopt.processDir.split(":")
           options.processDir = myArray.toList
         }
-        
+
         val extractor : Extractor = 
           if (options.processDir == null) new MethodExtractor(options)
-          else new MultipleExtractor(options)     
+          else new MultipleExtractor(options)
         extractor.extract()
 
         System.exit(0)
-      }
-      case None => {System.exit(1)}    
+
+      case None => System.exit(1)
     }
     
     logger.info("Terminated extraction...")

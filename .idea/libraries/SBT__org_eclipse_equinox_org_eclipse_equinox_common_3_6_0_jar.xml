@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.eclipse.equinox:org.eclipse.equinox.common:3.6.0:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.equinox/org.eclipse.equinox.common/jars/org.eclipse.equinox.common-3.6.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.equinox/org.eclipse.equinox.common/srcs/org.eclipse.equinox.common-3.6.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

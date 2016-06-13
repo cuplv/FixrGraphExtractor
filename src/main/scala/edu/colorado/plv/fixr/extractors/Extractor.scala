@@ -116,9 +116,10 @@ abstract class Extractor(options : ExtractorOptions) {
     val acdfgFileName : String = Paths.get(outputDir,
         outFileNamePrefix + ".acdfg.bin").toString();
     val output : FileOutputStream = new FileOutputStream(acdfgFileName)
-    val acdfgToProtobuf = new AcdfgToProtobuf(acdfg)    
-    acdfgToProtobuf.protobuf.writeTo(output)
-    output.close()    
+    // val acdfgToProtobuf = new AcdfgToProtobuf(acdfg)
+    // acdfgToProtobuf.protobuf.writeTo(output)
+    acdfg.toProtobuf.writeTo(output)
+    output.close()
     
     // Write the povenance information
     if (options.provenanceDir != null) {
