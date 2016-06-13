@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory
 
 import edu.colorado.plv.fixr.abstraction.Acdfg
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
-import edu.colorado.plv.fixr.abstraction.AcdfgToProtobuf
 import edu.colorado.plv.fixr.extractors.Extractor
 import edu.colorado.plv.fixr.extractors.ExtractorOptions
 import edu.colorado.plv.fixr.extractors.MultipleExtractor
