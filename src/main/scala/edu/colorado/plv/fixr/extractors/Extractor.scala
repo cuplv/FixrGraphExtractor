@@ -5,7 +5,6 @@ import soot.SootClass
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
 import edu.colorado.plv.fixr.slicing.SlicingCriterion
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
-import edu.colorado.plv.fixr.abstraction.AcdfgToProtobuf
 import edu.colorado.plv.fixr.slicing.APISlicer
 import java.io.{IOException, Writer, _}
 
@@ -115,21 +114,11 @@ abstract class Extractor(options : ExtractorOptions) {
 
     // Write the acdfg
     val acdfgFileName : String = Paths.get(outputDir,
-      outFileNamePrefix + ".acdfg.bin").toString();
-    val acdfgFile : File = new File(acdfgFileName);
-
-    if (!acdfgFile.getParentFile.exists) {
-      acdfgFile.getParentFile.mkdir
-    }
-    if (!acdfgFile.exists) {
-      acdfgFile.createNewFile
-    }
-
-    val output : FileOutputStream = new FileOutputStream(acdfgFile)
-    val acdfgToProtobuf = new AcdfgToProtobuf(acdfg)
-    acdfgToProtobuf.protobuf.writeTo(output)
+        outFileNamePrefix + ".acdfg.bin").toString();
+    val output : FileOutputStream = new FileOutputStream(acdfgFileName)
+    acdfg.toProtobuf.writeTo(output)
     output.close()
-
+    
     // Write the povenance information
     if (options.provenanceDir != null) {
       logger.debug("Writing provenance data to: {}", options.provenanceDir)

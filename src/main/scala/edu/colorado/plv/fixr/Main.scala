@@ -9,12 +9,10 @@ import org.slf4j.LoggerFactory
 
 import edu.colorado.plv.fixr.abstraction.Acdfg
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
-import edu.colorado.plv.fixr.abstraction.AcdfgToProtobuf
 import edu.colorado.plv.fixr.extractors.Extractor
 import edu.colorado.plv.fixr.extractors.ExtractorOptions
 import edu.colorado.plv.fixr.extractors.MultipleExtractor
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
-import edu.colorado.plv.fixr.provenance.Provenance
 import edu.colorado.plv.fixr.slicing.APISlicer
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed
 import edu.colorado.plv.fixr.slicing.SlicingCriterion
