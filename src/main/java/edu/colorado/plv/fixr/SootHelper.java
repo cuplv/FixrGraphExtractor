@@ -13,6 +13,8 @@ import soot.toolkits.graph.DirectedGraph;
 import soot.util.cfgcmd.CFGToDotGraph;
 import soot.util.dot.DotGraph;
 
+import java.io.*;
+
 public class SootHelper {
 	
 	public static void reset() {
