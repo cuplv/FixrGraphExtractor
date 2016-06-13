@@ -134,6 +134,18 @@ abstract class Extractor(options : ExtractorOptions) {
     if (options.provenanceDir != null) {
       logger.debug("Writing provenance data to: {}", options.provenanceDir)
       val filePrefix : String = Paths.get(options.provenanceDir, outFileNamePrefix).toString();
+
+      try {
+        val provFile : File = new File(filePrefix)
+        if (!provFile.getParentFile.exists) {
+          provFile.getParentFile.mkdir
+        }
+      }
+      catch {
+        case ex: Exception =>
+          logger.error("Unable to create required new provenance directory")
+      }
+
       // ACDFG DOT
       val acdfg_dot : String = filePrefix + ".acdfg.dot";
       val dotGraph : AcdfgToDotGraph = new AcdfgToDotGraph(acdfg)
@@ -165,14 +177,7 @@ abstract class Extractor(options : ExtractorOptions) {
 
       try {
         val provFileName : String = filePrefix + ".html"
-        val provFile : File = new File(provFileName);
-        if (!provFile.getParentFile.exists) {
-          provFile.getParentFile.mkdir
-        }
-        if (!provFile.exists) {
-          provFile.createNewFile
-        }
-
+        val provFile : File = new File(provFileName)
         val writer: Writer = new BufferedWriter(
           new OutputStreamWriter(
             new FileOutputStream(provFile),
@@ -180,12 +185,11 @@ abstract class Extractor(options : ExtractorOptions) {
           )
         )
         writer.write(provenance.toHtml.toString)
-        writer.close
+        writer.close()
       }
       catch {
-        case ex: Exception => {
+        case ex: Exception =>
           logger.error("Unable to write to " + filePrefix + ".html")
-        }
       }
     }
   }

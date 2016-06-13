@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: com.google.googlejavaformat:google-java-format:1.0:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.google.googlejavaformat/google-java-format/jars/google-java-format-1.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/com.google.googlejavaformat/google-java-format/srcs/google-java-format-1.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

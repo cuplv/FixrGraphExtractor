@@ -66,7 +66,6 @@ class Provenance(
           "acdfgReq.open('GET', '" + prefix + ".acdfg.dot', true);\n" +
           "acdfgReq.send();\n" +
           "acdfgReq.onload = function() {\n" +
-          "  console.log('Hoogabooga!');\n" +
           "  var acdfgText = acdfgReq.responseText;\n" +
           "  var acdfgContainer = document.getElementById('acdfg');\n" +
           "  var acdfg = Viz(acdfgText, options={ format: 'svg', engine: 'dot' });\n" +
