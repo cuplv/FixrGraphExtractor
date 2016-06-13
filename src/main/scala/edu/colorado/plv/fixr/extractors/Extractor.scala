@@ -5,7 +5,6 @@ import soot.SootClass
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
 import edu.colorado.plv.fixr.slicing.SlicingCriterion
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
-import edu.colorado.plv.fixr.abstraction.AcdfgToProtobuf
 import edu.colorado.plv.fixr.slicing.APISlicer
 import java.io.FileOutputStream
 import soot.SootMethod
