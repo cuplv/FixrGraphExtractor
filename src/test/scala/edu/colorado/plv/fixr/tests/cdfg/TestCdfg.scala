@@ -1,4 +1,4 @@
-package edu.colorado.plv.fixr.tests.cdfg;
+package edu.colorado.plv.fixr.tests.cdfg
 
 import scala.collection.JavaConversions.seqAsJavaList
 

@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.eclipse.core:org.eclipse.core.runtime:3.7.0:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.core/org.eclipse.core.runtime/jars/org.eclipse.core.runtime-3.7.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.core/org.eclipse.core.runtime/srcs/org.eclipse.core.runtime-3.7.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

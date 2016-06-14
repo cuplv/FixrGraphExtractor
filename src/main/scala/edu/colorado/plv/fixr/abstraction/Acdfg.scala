@@ -152,14 +152,6 @@ class Acdfg(cdfg : UnitCdfgGraph, protobuf : ProtoAcdfg.Acdfg) {
   protected[fixr] var edges = scala.collection.mutable.HashMap[Long, Edge]()
   protected[fixr] var nodes = scala.collection.mutable.HashMap[Long, Node]()
 
-  // the following are used to make lookup more efficient
-  private var unitToId     = scala.collection.mutable.HashMap[soot.Unit, Long]()
-  private var localToId    = scala.collection.mutable.HashMap[soot.Local, Long]()
-  private var edgePairToId = scala.collection.mutable.HashMap[(Long, Long), Long]()
-
-  val defEdges = cdfg.defEdges()
-  val useEdges = cdfg.useEdges()
-
   object MinOrder extends Ordering[Int] {
     def compare(x:Int, y:Int) = y compare x
   }
@@ -195,28 +187,6 @@ class Acdfg(cdfg : UnitCdfgGraph, protobuf : ProtoAcdfg.Acdfg) {
     (id, node)
   }
 
-  // for Protobuf
-  def addDataNode(
-    id : Long,
-    name : String,
-    datatype : String
-  ) = {
-    val node = new DataNode(id, name, datatype)
-    addNode(id, node)
-  }
-
-  // for CDFG
-  def addDataNode(
-    local : soot.Local,
-    name : String,
-    datatype : String
-  ) = {
-    val id = getNewId
-    val node = new DataNode(id, name, datatype)
-    localToId += ((local,id))
-    addNode(id, node)
-  }
-
   def removeEdge(to : Long, from : Long) = {
     val id = edges.find {pair => (pair._2.from == from) && (pair._2.to == to) }.get._1
     edges.remove(id)
@@ -241,151 +211,6 @@ class Acdfg(cdfg : UnitCdfgGraph, protobuf : ProtoAcdfg.Acdfg) {
     removeId(id)
   }
 
-  // CDFG
-  def addMethodNode(
-      unit : soot.Unit,
-      assignee : Option[String],
-      invokee : Option[Long],
-      name : String,
-      argumentStrings : Array[String]
-  ) : (Long, this.Node) = {
-    val id   = getNewId
-    val node = new MethodNode(
-      id,
-      assignee,
-      invokee,
-      name,
-      new Array[Long](argumentStrings.length),
-      argumentStrings
-    )
-    addNode(id, node)
-    unitToId += ((unit, id))
-    (id, node)
-  }
-
-  // Protobuf
-  def addMethodNode(
-    id : Long,
-    invokee : Option[Long],
-    name : String,
-    arguments : Array[Long]
-  ): (Long, this.Node) = {
-    val node = new MethodNode(
-      id,
-      null,
-      invokee,
-      name,
-      arguments,
-      null
-    )
-    addNode(id, node)
-    (id, node)
-  }
-
-  // CDFG
-  def addMiscNode(
-    unit : soot.Unit
-  ) : (Long, this.Node) = {
-    val id = getNewId
-    val node = new MiscNode(id)
-    addNode(id, node)
-    unitToId += ((unit, id))
-    (id, node)
-  }
-
-  // Protobuf
-  def addMiscNode(
-    id : Long
-  ) : (Long, this.Node) = {
-    val node = new MiscNode(id)
-    addNode(id, node)
-    (id, node)
-  }
-
-  // CDFG
-  def addDefEdge(fromId : Long, toId : Long): Unit = {
-    val id = getNewId
-    val edge = new DefEdge(id, fromId, toId)
-    edges += ((id, edge))
-    edgePairToId += (((fromId, toId), id))
-  }
-
-  // Protobuf
-  def addDefEdge(id : Long, from : Long, to : Long): Unit = {
-    val edge = new DefEdge(id, from, to)
-    edges += ((id, edge))
-  }
-
-  // CDFG
-  def addUseEdge(fromId : Long, toId : Long): Unit = {
-    val id = getNewId
-    val edge = new UseEdge(id, fromId, toId)
-    edges += ((id, edge))
-    edgePairToId += (((fromId, toId), id))
-  }
-
-  // Protobuf
-  def addUseEdge(id : Long, from : Long, to : Long): Unit = {
-    val edge = new UseEdge(id, from, to)
-    edges += ((id, edge))
-  }
-
-  // CDFG
-  def addControlEdge(fromId : Long, toId : Long): Unit = {
-    val id = getNewId
-    val edge = new ControlEdge(id, fromId, toId)
-    edges += ((id, edge))
-    edgePairToId += (((fromId, toId), id))
-  }
-
-  // Protobuf
-  def addControlEdge(id : Long, from : Long, to : Long): Unit = {
-    val edge = new ControlEdge(id, from, to)
-    edges += ((id, edge))
-  }
-
-  def addDefEdges(unit : soot.Unit, unitId : Long): Unit = {
-    if (!defEdges.containsKey(unit)) {
-      return
-      // defensive programming; don't know if defEdges has a value for every unit
-    }
-    val localIds : Array[Long] = defEdges.get(unit).iterator().map({local : soot.Local =>
-      localToId(local)
-    }).toArray
-    localIds.foreach({localId : Long => addDefEdge(unitId, localId)
-    })
-  }
-
-  def addUseEdges(local : soot.Local, localId : Long): Unit = {
-    if (!useEdges.containsKey(local)) {
-      return
-      // defensive programming; don't know if useEdges has a value for every local
-    }
-    val unitIds : Array[Long] = useEdges.get(local).iterator().map({unit : soot.Unit =>
-      unitToId(unit)
-    }).toArray
-    unitIds.foreach({unitId : Long => addUseEdge(localId, unitId)
-    })
-  }
-
-  def addControlEdges(unit : soot.Unit, unitId : Long): Unit = {
-    // add predecessor edges, if not extant
-    val unitId = unitToId(unit)
-    cdfg.getPredsOf(unit).iterator().foreach{ (predUnit) =>
-      val predUnitId = unitToId(predUnit)
-      if (!edgePairToId.contains(predUnitId, unitId)) {
-        addControlEdge(predUnitId, unitId)
-      }
-    }
-    // add succesor edges, if not extant
-    cdfg.getSuccsOf(unit).iterator().foreach{ (succUnit) =>
-      val succUnitId = unitToId(succUnit)
-      if (!edgePairToId.contains(unitId, succUnitId)) {
-        addControlEdge(unitId, succUnitId)
-      }
-    }
-  }
-
   override def toString = {
     var output : String = "ACDFG:" + "\n"
     output += ("  " + "Nodes:\n")
@@ -399,6 +224,136 @@ class Acdfg(cdfg : UnitCdfgGraph, protobuf : ProtoAcdfg.Acdfg) {
   def toProtobuf = pb
 
   if (cdfg != null) {
+
+  }
+  else if (protobuf != null) {
+
+  }
+
+  // unary argument constructors
+
+  def this(cdfg : UnitCdfgGraph) = {
+    this(cdfg, null)
+
+    // the following are used to make lookup more efficient
+    var unitToId     = scala.collection.mutable.HashMap[soot.Unit, Long]()
+    var localToId    = scala.collection.mutable.HashMap[soot.Local, Long]()
+    var edgePairToId = scala.collection.mutable.HashMap[(Long, Long), Long]()
+
+    val defEdges = cdfg.defEdges()
+    val useEdges = cdfg.useEdges()
+
+    def addDataNode(
+                     local : soot.Local,
+                     name : String,
+                     datatype : String
+                   ) = {
+      val id = getNewId
+      val node = new DataNode(id, name, datatype)
+      localToId += ((local,id))
+      addNode(id, node)
+    }
+
+    def addMethodNode(
+                       unit : soot.Unit,
+                       assignee : Option[String],
+                       invokee : Option[Long],
+                       name : String,
+                       argumentStrings : Array[String]
+                     ) : (Long, this.Node) = {
+      val id   = getNewId
+      val node = new MethodNode(
+        id,
+        assignee,
+        invokee,
+        name,
+        new Array[Long](argumentStrings.length),
+        argumentStrings
+      )
+      addNode(id, node)
+      unitToId += ((unit, id))
+      (id, node)
+    }
+
+    def addMiscNode(
+                     unit : soot.Unit
+                   ) : (Long, this.Node) = {
+      val id = getNewId
+      val node = new MiscNode(id)
+      addNode(id, node)
+      unitToId += ((unit, id))
+      (id, node)
+    }
+
+    // CDFG
+    def addDefEdge(fromId : Long, toId : Long): Unit = {
+      val id = getNewId
+      val edge = new DefEdge(id, fromId, toId)
+      edges += ((id, edge))
+      edgePairToId += (((fromId, toId), id))
+    }
+
+
+    // CDFG
+    def addUseEdge(fromId : Long, toId : Long): Unit = {
+      val id = getNewId
+      val edge = new UseEdge(id, fromId, toId)
+      edges += ((id, edge))
+      edgePairToId += (((fromId, toId), id))
+    }
+
+
+    // CDFG
+    def addControlEdge(fromId : Long, toId : Long): Unit = {
+      val id = getNewId
+      val edge = new ControlEdge(id, fromId, toId)
+      edges += ((id, edge))
+      edgePairToId += (((fromId, toId), id))
+    }
+
+
+    def addDefEdges(unit : soot.Unit, unitId : Long): Unit = {
+      if (!defEdges.containsKey(unit)) {
+        return
+        // defensive programming; don't know if defEdges has a value for every unit
+      }
+      val localIds : Array[Long] = defEdges.get(unit).iterator().map({local : soot.Local =>
+        localToId(local)
+      }).toArray
+      localIds.foreach({localId : Long => addDefEdge(unitId, localId)
+      })
+    }
+
+    def addUseEdges(local : soot.Local, localId : Long): Unit = {
+      if (!useEdges.containsKey(local)) {
+        return
+        // defensive programming; don't know if useEdges has a value for every local
+      }
+      val unitIds : Array[Long] = useEdges.get(local).iterator().map({unit : soot.Unit =>
+        unitToId(unit)
+      }).toArray
+      unitIds.foreach({unitId : Long => addUseEdge(localId, unitId)
+      })
+    }
+
+    def addControlEdges(unit : soot.Unit, unitId : Long): Unit = {
+      // add predecessor edges, if not extant
+      val unitId = unitToId(unit)
+      cdfg.getPredsOf(unit).iterator().foreach{ (predUnit) =>
+        val predUnitId = unitToId(predUnit)
+        if (!edgePairToId.contains(predUnitId, unitId)) {
+          addControlEdge(predUnitId, unitId)
+        }
+      }
+      // add succesor edges, if not extant
+      cdfg.getSuccsOf(unit).iterator().foreach{ (succUnit) =>
+        val succUnitId = unitToId(succUnit)
+        if (!edgePairToId.contains(unitId, succUnitId)) {
+          addControlEdge(unitId, succUnitId)
+        }
+      }
+    }
+
     logger.debug("### Adding local/data nodes...")
     cdfg.localsIter().foreach {
       case n =>
@@ -557,7 +512,65 @@ class Acdfg(cdfg : UnitCdfgGraph, protobuf : ProtoAcdfg.Acdfg) {
         case _ => Nil
       }}
   }
-  else if (protobuf != null) {
+
+  def this(protobuf : ProtoAcdfg.Acdfg) = {
+    this(null, protobuf)
+
+    // for Protobuf
+    def addDataNode(
+                     id : Long,
+                     name : String,
+                     datatype : String
+                   ) = {
+      val node = new DataNode(id, name, datatype)
+      addNode(id, node)
+    }
+
+    // Protobuf
+    def addMethodNode(
+                       id : Long,
+                       invokee : Option[Long],
+                       name : String,
+                       arguments : Array[Long]
+                     ): (Long, this.Node) = {
+      val node = new MethodNode(
+        id,
+        null,
+        invokee,
+        name,
+        arguments,
+        null
+      )
+      addNode(id, node)
+      (id, node)
+    }
+
+    // Protobuf
+    def addMiscNode(
+                     id : Long
+                   ) : (Long, this.Node) = {
+      val node = new MiscNode(id)
+      addNode(id, node)
+      (id, node)
+    }
+
+    // Protobuf
+    def addDefEdge(id : Long, from : Long, to : Long): Unit = {
+      val edge = new DefEdge(id, from, to)
+      edges += ((id, edge))
+    }
+
+    // Protobuf
+    def addUseEdge(id : Long, from : Long, to : Long): Unit = {
+      val edge = new UseEdge(id, from, to)
+      edges += ((id, edge))
+    }
+
+    // Protobuf
+    def addControlEdge(id : Long, from : Long, to : Long): Unit = {
+      val edge = new ControlEdge(id, from, to)
+      edges += ((id, edge))
+    }
     // add data nodes
     protobuf.getDataNodeList.foreach { dataNode =>
       addDataNode(dataNode.getId, dataNode.getName, dataNode.getType)
@@ -595,15 +608,4 @@ class Acdfg(cdfg : UnitCdfgGraph, protobuf : ProtoAcdfg.Acdfg) {
       addDefEdge(defEdge.getId, defEdge.getFrom, defEdge.getTo)
     }
   }
-
-  // unary argument constructors
-
-  def this(cdfg : UnitCdfgGraph) {
-    this(cdfg, null)
-  }
-
-  def this(protobuf : ProtoAcdfg.Acdfg) {
-    this(null, protobuf)
-  }
-
 }

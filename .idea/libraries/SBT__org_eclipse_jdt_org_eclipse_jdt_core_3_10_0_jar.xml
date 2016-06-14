@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="SBT: org.eclipse.jdt:org.eclipse.jdt.core:3.10.0:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.jdt/org.eclipse.jdt.core/jars/org.eclipse.jdt.core-3.10.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/org.eclipse.jdt/org.eclipse.jdt.core/srcs/org.eclipse.jdt.core-3.10.0-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
