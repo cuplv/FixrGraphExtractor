@@ -16,9 +16,9 @@ class MultipleExtractor(options : ExtractorOptions) extends Extractor(options) {
   
 
   def extract() : Unit = {
-    assert(null != options.processDir)
-    assert(null == options.methodName)
-    assert(null == options.className)    
+    assert(null != options.processDir || null != options.className)
+    assert(null == options.processDir || null == options.className)    
+    assert(null == options.methodName)       
 
     def processDirs(dirs : List[String], classList : List[SootClass]) : List[SootClass] = {
       def processClasses(classesNames : List[String], classList : List[SootClass]) : List[SootClass] = {
@@ -43,7 +43,15 @@ class MultipleExtractor(options : ExtractorOptions) extends Extractor(options) {
       }
     }
     
-    val sootClasses : List[SootClass] = processDirs(options.processDir, List[SootClass]())
+    val sootClasses : List[SootClass] =
+      if (null != options.processDir) {
+        processDirs(options.processDir, List[SootClass]())
+      }
+      else {
+        Scene.v().addBasicClass(options.className, SootClass.HIERARCHY);
+        val sootClass : SootClass = Scene.v().loadClassAndSupport(options.className);
+        List(sootClass)
+      } 
         
     // Process each method 
     sootClasses.foreach { sootClass => {

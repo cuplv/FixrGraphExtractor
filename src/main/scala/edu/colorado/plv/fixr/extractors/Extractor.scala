@@ -84,11 +84,17 @@ abstract class Extractor(options : ExtractorOptions) {
     	val name : String = sootClass.getName() + "_" +
     			sootMethod.getName();
 
-    	logger.info("Writing data for - class {} - method: {}{}",
-    			sootClass.getName(), sootMethod.getName(), "")
-    	writeData(name, acdfg, cdfg, body, slicedJimple, slicer.getCfg());    
-    	logger.info("Created graph for - class {} - method: {}{}",
-    			sootClass.getName(), sootMethod.getName(), "")      
+    	if (null != options.outputDir) {
+    		logger.info("Writing data for - class {} - method: {}{}",
+    				sootClass.getName(), sootMethod.getName(), "")
+    		writeData(name, acdfg, cdfg, body, slicedJimple, slicer.getCfg());    
+    		logger.info("Created graph for - class {} - method: {}{}",
+    				sootClass.getName(), sootMethod.getName(), "")
+    	}
+    	else {
+    		logger.warn("Disabled data writing for - class {} - method: {}{}",
+    				sootClass.getName(), sootMethod.getName(), "")    	  
+    	}
     }            
   }
   
