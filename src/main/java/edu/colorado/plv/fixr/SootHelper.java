@@ -38,7 +38,8 @@ public class SootHelper {
 			Options.v().set_process_dir(processDir);
 		}
 
-		PhaseOptions.v().setPhaseOption("jb", "enabled:false");
+                /* Jimple body creation - neeed when processing classes */
+		PhaseOptions.v().setPhaseOption("jb", "enabled:true");
 		/* We want to parse the code from source
 		 * Phase
      * jj Creates a JimpleBody for each method directly from source
