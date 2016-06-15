@@ -13,19 +13,17 @@ import soot.toolkits.graph.DirectedGraph;
 import soot.util.cfgcmd.CFGToDotGraph;
 import soot.util.dot.DotGraph;
 
-import java.io.*;
-
 public class SootHelper {
 	
 	public static void reset() {
 		G.reset();
 	}
 	
-	public static void configure(String classpath, boolean readFromJimple) {
-		configure(classpath, readFromJimple, null);
+	public static void configure(String classpath, boolean readFromSources) {
+		configure(classpath, readFromSources, null);
 	}
 	
-	public static void configure(String classpath, boolean readFromJimple, java.util.List<String> processDir) {
+	public static void configure(String classpath, boolean readFromSources, java.util.List<String> processDir) {
 		Options.v().set_verbose(false);
 		Options.v().set_keep_line_number(true);
 		Options.v().set_src_prec(Options.src_prec_class);
@@ -38,39 +36,75 @@ public class SootHelper {
 			Options.v().set_process_dir(processDir);
 		}
 
-		PhaseOptions.v().setPhaseOption("jb", "enabled:false");
-		/* We want to parse the code from source
-		 * Phase
-     * jj Creates a JimpleBody for each method directly from source
-     *
-     * Subphases
-     * jj.ls        Local splitter: one local per DU-UD web 
-     * jj.a        Aggregator: removes some unnecessary copies 
-     * jj.ule      Unused local eliminator 
-     * jj.tr       Assigns types to locals 
-     * jj.ulp      Local packer: minimizes number of locals 
-     * jj.lns      Local name standardizer 
-     * jj.cp       Copy propagator 
-     * jj.dae      Dead assignment eliminator
-     * jj.cp-ule   Post-copy propagation unused local eliminator 
-     * jj.lp       Local packer: minimizes number of locals 
-     * jj.ne       Nop eliminator 
-     * jj.uce      Unreachable code eliminator  
-     */		
-		PhaseOptions.v().setPhaseOption("jj", "use-original-names:true");
-		//PhaseOptions.v().setPhaseOption("jj", "enabled:true");
-		PhaseOptions.v().setPhaseOption("jj.ls", "enabled:false");
-		PhaseOptions.v().setPhaseOption("jj.a", "enabled:true");
-		PhaseOptions.v().setPhaseOption("jj.ule", "enabled:true");
-		PhaseOptions.v().setPhaseOption("jj.tr", "enabled:true");
-		PhaseOptions.v().setPhaseOption("jj.ulp", "enabled:true");
-		PhaseOptions.v().setPhaseOption("jj.lns", "enabled:true");
-		PhaseOptions.v().setPhaseOption("jj.cp", "enabled:true");
-		PhaseOptions.v().setPhaseOption("jj.dae", "enabled:true");
-		PhaseOptions.v().setPhaseOption("jj.cp-ule", "enabled:true");
-		PhaseOptions.v().setPhaseOption("jj.lp", "enabled:true");
-		PhaseOptions.v().setPhaseOption("jj.ne", "enabled:true");
-		PhaseOptions.v().setPhaseOption("jj.uce", "enabled:true");
+		if (readFromSources) {
+			/* We want to parse the code from source
+			 * Phase
+			 * jj Creates a JimpleBody for each method directly from source
+			 *
+			 * Subphases
+			 * jj.ls        Local splitter: one local per DU-UD web 
+			 * jj.a        Aggregator: removes some unnecessary copies 
+			 * jj.ule      Unused local eliminator 
+			 * jj.tr       Assigns types to locals 
+			 * jj.ulp      Local packer: minimizes number of locals 
+			 * jj.lns      Local name standardizer 
+			 * jj.cp       Copy propagator 
+			 * jj.dae      Dead assignment eliminator
+			 * jj.cp-ule   Post-copy propagation unused local eliminator 
+			 * jj.lp       Local packer: minimizes number of locals 
+			 * jj.ne       Nop eliminator 
+			 * jj.uce      Unreachable code eliminator  
+			 */		
+			PhaseOptions.v().setPhaseOption("jb", "enabled:false");
+			PhaseOptions.v().setPhaseOption("jj", "use-original-names:true");
+			//PhaseOptions.v().setPhaseOption("jj", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jj.ls", "enabled:false");
+			PhaseOptions.v().setPhaseOption("jj.a", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jj.ule", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jj.tr", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jj.ulp", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jj.lns", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jj.cp", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jj.dae", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jj.cp-ule", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jj.lp", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jj.ne", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jj.uce", "enabled:true");
+		}
+		else {
+//			PhaseOptions.v().setPhaseOption("jj", "use-original-names:true");
+//			//PhaseOptions.v().setPhaseOption("jj", "enabled:true");
+//			PhaseOptions.v().setPhaseOption("jj.ls", "enabled:false");
+//			PhaseOptions.v().setPhaseOption("jj.a", "enabled:true");
+//			PhaseOptions.v().setPhaseOption("jj.ule", "enabled:true");
+//			PhaseOptions.v().setPhaseOption("jj.tr", "enabled:true");
+//			PhaseOptions.v().setPhaseOption("jj.ulp", "enabled:true");
+//			PhaseOptions.v().setPhaseOption("jj.lns", "enabled:true");
+//			PhaseOptions.v().setPhaseOption("jj.cp", "enabled:true");
+//			PhaseOptions.v().setPhaseOption("jj.dae", "enabled:true");
+//			PhaseOptions.v().setPhaseOption("jj.cp-ule", "enabled:true");
+//			PhaseOptions.v().setPhaseOption("jj.lp", "enabled:true");
+//			PhaseOptions.v().setPhaseOption("jj.ne", "enabled:true");
+//			PhaseOptions.v().setPhaseOption("jj.uce", "enabled:true");
+			
+			/* Jimple body creation - neeed when processing classes */
+			PhaseOptions.v().setPhaseOption("jb", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jb", "use-original-names:true");
+			// jb.ls is enabled, otherwise soot raises 
+			// the exception java.lang.Exception: null typing passed to useChecker
+			PhaseOptions.v().setPhaseOption("jb.ls", "enabled:true"); 
+			PhaseOptions.v().setPhaseOption("jb.a", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jb.ule", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jb.tr", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jb.ulp", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jb.lns", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jb.cp", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jb.dae", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jb.cp-ule", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jb.lp", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jb.ne", "enabled:true");
+			PhaseOptions.v().setPhaseOption("jb.uce", "enabled:true");				
+		}
 		
 		PhaseOptions.v().setPhaseOption("cg", "enabled:false");
 		PhaseOptions.v().setPhaseOption("wjtp", "enabled:false");
@@ -82,10 +116,12 @@ public class SootHelper {
 		PhaseOptions.v().setPhaseOption("jop", "enabled:false");
 		PhaseOptions.v().setPhaseOption("jap", "enabled:false");
 		
-		PhaseOptions.v().setPhaseOption("bb", "enabled:false");
-		if (readFromJimple) {
-			PhaseOptions.v().setPhaseOption("wjpp", "enabled:true");
-		}
+		PhaseOptions.v().setPhaseOption("bb", "enabled:false");	
+		/* This pack is empty in an unmodified copy of soot.
+		 * It can be used to add our own transformations (we don't use it 
+		 * though).
+		 * */
+		PhaseOptions.v().setPhaseOption("wjpp", "enabled:true");		
 		PhaseOptions.v().setPhaseOption("wspp", "enabled:false");
 		PhaseOptions.v().setPhaseOption("wstp", "enabled:false");
 		PhaseOptions.v().setPhaseOption("wsop", "enabled:false");

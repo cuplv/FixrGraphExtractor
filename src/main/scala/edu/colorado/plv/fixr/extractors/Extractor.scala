@@ -41,10 +41,10 @@ abstract class Extractor(options : ExtractorOptions) {
   private def initExtractor() : Unit = {
     logger.debug("Initializing soot...")
     if (null == options.processDir) { 
-      SootHelper.configure(options.sootClassPath, options.readFromJimple)
+      SootHelper.configure(options.sootClassPath, options.readFromSources)
     }    
     else {
-      SootHelper.configure(options.sootClassPath, options.readFromJimple, options.processDir)      
+      SootHelper.configure(options.sootClassPath, options.readFromSources, options.processDir)      
     }    
   }
   
