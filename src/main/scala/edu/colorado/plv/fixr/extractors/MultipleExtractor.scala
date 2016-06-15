@@ -48,7 +48,15 @@ class MultipleExtractor(options : ExtractorOptions) extends Extractor(options) {
     // Process each method 
     sootClasses.foreach { sootClass => {
       val methodSeq : Seq[SootMethod] = sootClass.getMethods()      
-      methodSeq.foreach { sootMethod => {extractMethod(sootClass, sootMethod)}}      
+      methodSeq.foreach { sootMethod => {
+      	if (sootMethod.isConcrete()) {    
+      		extractMethod(sootClass, sootMethod)
+      	}
+      	else {
+      		logger.warn("Skipped non-concrete method {} of class {}{}",
+      				sootMethod.getName(), sootClass.getName(), "")
+      	}
+      }} // end of methodSeq.foreach      
     }}
   }   
 }
