@@ -64,7 +64,10 @@ $(error RT is not set. Please uncomment or write a suitable assignment of RT to 
 endif
 
 all:
-	sbt clean package "run $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)"
+sbt "run  -l ./src/test/resources/javasources/ -c slice.TestSlice -m m1 -f java.Math"
+
+#all:
+#	sbt clean package "run $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)"
 
 android:
 	sbt "run $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)"
