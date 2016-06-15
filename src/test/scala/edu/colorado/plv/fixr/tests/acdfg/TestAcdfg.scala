@@ -59,10 +59,13 @@ abstract class TestAcdfg(classPath : String, testClassName : String,
       viewgraph.plot("/tmp/test_cdfg.dot")
       // ACDFG
       val acdfg: Acdfg = new Acdfg(cdfg)
-      logger.error("ACDFG: " + acdfg.toString)
-      logger.error("Protobuf: " + acdfg.toProtobuf.toString)
-      logger.error("Recovered ACDFG: " + new Acdfg(acdfg.toProtobuf).toString)
-      assert(acdfg == new Acdfg(acdfg.toProtobuf))
+      // logger.debug("ACDFG: " + acdfg.toString)
+      // logger.debug("Protobuf: " + acdfg.toProtobuf.toString)
+      // logger.debug("Recovered ACDFG: " + new Acdfg(acdfg.toProtobuf).toString)
+      val newAcdfg = new Acdfg(acdfg.toProtobuf)
+      // logger.error("ACDFG: " + acdfg.toString)
+      info(acdfg.disjointUnion(newAcdfg).toString())
+      assert(acdfg.==(newAcdfg))
 
       /*
       val filePrefix: String = "/tmp/"
