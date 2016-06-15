@@ -32,24 +32,6 @@ abstract class TestCdfg(classPath : String, testClassName : String,
   	val jimpleUnitGraph : EnhancedUnitGraph = new EnhancedUnitGraph(body);
   	val slicer : APISlicer = new APISlicer(jimpleUnitGraph, body);
    	val slicedJimple : Body = slicer.slice(new MethodPackageSeed(getPackages()));   	
-  	val cdfg : UnitCdfgGraph = new UnitCdfgGraph(slicedJimple);
-  	
-  	// DEBUG - Print all the meaningful graphs
-  	// Original CFG
-  	SootHelper.dumpToDot(jimpleUnitGraph, jimpleUnitGraph.getBody(), "/tmp/cfg.dot");
-  	// Sliced CFG
-  	SootHelper.dumpToDot(new EnhancedUnitGraph(slicedJimple),
-  			slicedJimple, "/tmp/sliced_cfg.dot");
-  	// PDG
-  	SootHelper.dumpToDot(slicer.getPdg(),
-  			slicer.getCfg().getBody(), "/tmp/pdg.dot");  	
-  	// DDG
-  	SootHelper.dumpToDot(slicer.getDdg(),
-  			slicer.getCfg().getBody(), "/tmp/ddg.dot");  	
-  	// CDFG
-  	val toDot : CDFGToDotGraph = new CDFGToDotGraph(); 
-  	val viewgraph : DotGraph = toDot.drawCFG(cdfg, cdfg.getBody()); 	     	
-  	viewgraph.plot("/tmp/test_cdfg.dot");  	
+  	val cdfg : UnitCdfgGraph = new UnitCdfgGraph(slicedJimple);  	 
 	}
-	
 }
