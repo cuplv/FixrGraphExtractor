@@ -8,7 +8,7 @@ package edu.colorado.plv.fixr.extractors
 class ExtractorOptions {
   // Soot options
   var sootClassPath : String = null;
-  var readFromJimple : Boolean = true;
+  var readFromSources : Boolean = true;
 
   // slicing options
   var sliceFilter : String = null;
