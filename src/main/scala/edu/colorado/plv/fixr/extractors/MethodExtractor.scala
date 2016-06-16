@@ -17,6 +17,13 @@ class MethodExtractor(options : ExtractorOptions) extends Extractor(options) {
     Scene.v().addBasicClass(options.className, SootClass.HIERARCHY)    
     val sootClass : SootClass = Scene.v().loadClassAndSupport(options.className);    
     val sootMethod : SootMethod = sootClass.getMethodByName(options.methodName);
-    extractMethod(sootClass, sootMethod)
+    
+    if (sootMethod.isConcrete()) {    
+      extractMethod(sootClass, sootMethod)
+    }
+    else {
+      logger.warn("Skipped non-concrete method {} of class {}{}",
+          sootMethod.getName(), sootClass.getName(), "")
+    }
   }
 }
