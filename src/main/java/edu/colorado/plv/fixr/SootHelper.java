@@ -32,7 +32,7 @@ public class SootHelper {
 		Options.v().set_soot_classpath(classpath);		
 
 		Options.v().set_prepend_classpath(true);	
-		Options.v().set_allow_phantom_refs(true);
+		//Options.v().set_allow_phantom_refs(true);
                 
 		if (null != processDir) {
 			Options.v().set_process_dir(processDir);

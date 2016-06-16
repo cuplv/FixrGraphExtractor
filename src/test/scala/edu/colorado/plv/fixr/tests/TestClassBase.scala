@@ -48,12 +48,14 @@ class TestClassBase(classPath : String, testClassName : String,
 		
 		if (null != testClassName) {	  
 		  testClass = Scene.v().tryLoadClass(testClassName, SootClass.BODIES);
-		  assert(testClass != null)
+		  assert(! testClass.isPhantom());
+		  assert(testClass != null);
 		}
 		
 		if (null != resClassName) {	
 		  resClass = Scene.v().tryLoadClass(resClassName, SootClass.BODIES);
-		  assert(resClass != null)
+		  assert(! resClass.isPhantom());
+		  assert(resClass != null);
 		}
  	} 	 	
 }
