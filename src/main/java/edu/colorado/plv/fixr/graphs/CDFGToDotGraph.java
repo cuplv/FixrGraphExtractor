@@ -39,15 +39,6 @@ public class CDFGToDotGraph extends CFGToDotGraph {
 		for (Iterator<Local> iterLocals = graph.localsIter(); iterLocals.hasNext(); ) {
 			Local var = iterLocals.next();
 			namer.getName(var);
-			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			System.out.println("Data node name: " + namer.getName(var));
-			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-			System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 			Object b = canvas.drawNode(namer.getName(var));
 			varNodes.add(b);
 		}
@@ -93,11 +84,9 @@ public class CDFGToDotGraph extends CFGToDotGraph {
 			((DotGraphNode) b).setAttribute("shape", "ellipse");
 		}
 		for (Object b : useEdges) {
-			// ((DotGraphEdge) b).setStyle(DotGraphConstants.EDGE_STYLE_DOTTED);
 			((DotGraphEdge) b).setAttribute("color","red");
 		}
 		for (Object b : defEdges) {
-			// ((DotGraphEdge) b).setAttribute("style","dashed");
 			((DotGraphEdge) b).setAttribute("color","blue");
 		}
 
