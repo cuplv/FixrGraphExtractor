@@ -26,45 +26,47 @@ import org.slf4j.Logger
 
 /**
  * Base class that extracts an ACDFG from source code
- * 
+ *
  * @author Sergio Mover
  */
 abstract class Extractor(options : ExtractorOptions) {
-  val logger : Logger = LoggerFactory.getLogger(this.getClass())  
+  val logger : Logger = LoggerFactory.getLogger(this.getClass())
   initExtractor()
-  
+
   /**
    * Extract the ACDFG - implement the right iteration
    */
   def extract() : Unit
-  
+
   private def initExtractor() : Unit = {
     logger.debug("Initializing soot...")
-    if (null == options.processDir) { 
-      SootHelper.configure(options.sootClassPath, options.readFromJimple)
+    if (null == options.processDir) {
+      SootHelper.configure(options.sootClassPath, options.readFromSources)
     }
     else {
-      SootHelper.configure(options.sootClassPath, options.readFromJimple, options.processDir)      
+      SootHelper.configure(options.sootClassPath, options.readFromSources, options.processDir)
     }
   }
-  
+
   protected def extractMethod(sootClass : SootClass, sootMethod : SootMethod) : Unit = {
     logger.info("Extracting graph for - class {} - method: {}{}",
-        sootClass.getName(), sootMethod.getName(), "")    
-    
+        sootClass.getName(), sootMethod.getName(), "")
+
+    assert(sootMethod.isConcrete());
+
     val body: Body = sootMethod.retrieveActiveBody()
     val jimpleUnitGraph: EnhancedUnitGraph = new EnhancedUnitGraph(body)
     val slicer: APISlicer = new APISlicer(jimpleUnitGraph, body)
-        
+
     var sc: SlicingCriterion = null
     if (null == options.sliceFilter)
-      sc = MethodPackageSeed.createAndroidSeed() 
+      sc = MethodPackageSeed.createAndroidSeed()
     else
       sc = new MethodPackageSeed(options.sliceFilter)
-    
+
     logger.debug("Slicing...")
     val slicedJimple: Body = slicer.slice(sc)
-    
+
     if (null == slicedJimple) {
       /* Do not print the graph for empty slices */
       logger.warn("Empty slice for - class {} - method: {}{}",
@@ -74,7 +76,7 @@ abstract class Extractor(options : ExtractorOptions) {
         body.toString())
     }
     else {
-    	logger.debug("CDFG construction...")    
+    	logger.debug("CDFG construction...")
     	val cdfg: UnitCdfgGraph = new UnitCdfgGraph(slicedJimple)
     	logger.debug("ACDFG construction...")
     	val acdfg : Acdfg = new Acdfg(cdfg)
@@ -82,22 +84,28 @@ abstract class Extractor(options : ExtractorOptions) {
     	val name : String = sootClass.getName() + "_" +
     			sootMethod.getName();
 
-    	logger.info("Writing data for - class {} - method: {}{}",
-    			sootClass.getName(), sootMethod.getName(), "")
-    	writeData(name, acdfg, cdfg, body, slicedJimple, slicer.getCfg());    
-    	logger.info("Created graph for - class {} - method: {}{}",
-    			sootClass.getName(), sootMethod.getName(), "")      
+    	if (null != options.outputDir) {
+    		logger.info("Writing data for - class {} - method: {}{}",
+    				sootClass.getName(), sootMethod.getName(), "")
+    		writeData(name, acdfg, cdfg, body, slicedJimple, slicer.getCfg());
+    		logger.info("Created graph for - class {} - method: {}{}",
+    				sootClass.getName(), sootMethod.getName(), "")
+    	}
+    	else {
+    		logger.warn("Disabled data writing for - class {} - method: {}{}",
+    				sootClass.getName(), sootMethod.getName(), "")
+    	}
     }
   }
-  
+
   protected def writeJimple(body : Body, fileName : String) : Unit = {
-    val streamOut : OutputStream = new FileOutputStream(fileName); 
-    val writerOut : PrintWriter = new PrintWriter(new OutputStreamWriter(streamOut));
-    Printer.v().printTo(body, writerOut);
-    writerOut.flush();
-    streamOut.close();    
+    val streamOut : OutputStream = new FileOutputStream(fileName)
+    val writerOut : PrintWriter = new PrintWriter(new OutputStreamWriter(streamOut))
+    Printer.v().printTo(body, writerOut)
+    writerOut.flush()
+    streamOut.close()
   }
-  
+
   /**
    * Write the data to the output folder
    */
@@ -105,7 +113,7 @@ abstract class Extractor(options : ExtractorOptions) {
       acdfg : Acdfg,
       cdfg : UnitCdfgGraph,
       body : Body,
-      slicedBody : Body,      
+      slicedBody : Body,
       cfg : UnitGraph) : Unit = {
     val currentDir = System.getProperty("user.dir")
     val outputDir = if (null == options.outputDir) currentDir else options.outputDir
@@ -118,7 +126,7 @@ abstract class Extractor(options : ExtractorOptions) {
     val output : FileOutputStream = new FileOutputStream(acdfgFileName)
     acdfg.toProtobuf.writeTo(output)
     output.close()
-    
+
     // Write the povenance information
     if (options.provenanceDir != null) {
       logger.debug("Writing provenance data to: {}", options.provenanceDir)
