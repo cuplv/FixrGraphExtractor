@@ -282,30 +282,28 @@ public class CFGToDotGraph {
     // in the iterator, rather than the order that they appear in the
     // graph traversal (so that corresponding nodes are more likely
     // to have the same label in different graphs of a given method).
+
     for (Iterator nodesIt = graph.iterator(); nodesIt.hasNext(); ) {
       String junk = namer.getName(nodesIt.next());
     }
-
     for (Iterator nodesIt = graph.iterator(); nodesIt.hasNext(); ) {
       Object node = nodesIt.next();
       canvas.drawNode(namer.getName(node));
       for (Iterator succsIt = sortedIterator(graph.getSuccsOf(node), comparator);
-	   succsIt.hasNext(); ) {
+           succsIt.hasNext(); ) {
 	Object succ = succsIt.next();
 	canvas.drawEdge(namer.getName(node), namer.getName(succ));
       }
     }
     setStyle(graph.getHeads(), canvas, namer,
-	     DotGraphConstants.NODE_STYLE_FILLED, headAttr);
+	  DotGraphConstants.NODE_STYLE_FILLED, headAttr);
     setStyle(graph.getTails(), canvas, namer, 
-	     DotGraphConstants.NODE_STYLE_FILLED, tailAttr);
+	  DotGraphConstants.NODE_STYLE_FILLED, tailAttr);
     if (! isBrief) {
       formatNodeText(body, canvas, namer);
     }
-
     return canvas;
-  } 
-
+  }
 
   /**
    * Create a <code>DotGraph</code> whose nodes and edges depict the
@@ -454,8 +452,6 @@ public class CFGToDotGraph {
     }
   }
 
-
-
   /**
    * A utility method which formats the text for each node in 
    * a <code>DotGraph</code> representing a CFG.
@@ -494,7 +490,8 @@ public class CFGToDotGraph {
 	    nodeLabel = targetLabel + ": " + printer.toString();
 	  }
 	}else if (node instanceof Local) {
-          nodeLabel = nodeLabel + " : " + ((Local) node).getType().toString();
+          nodeLabel = ((Local) node).getName()
+            + " : " + ((Local) node).getType().toString();
 	} else if (node instanceof Block) {
 	  Iterator units = ((Block) node).iterator();
 	  StringBuffer buffer = new StringBuffer();
@@ -517,7 +514,6 @@ public class CFGToDotGraph {
       dotnode.setLabel(nodeLabel);
     }
   }
-
 
   /**
    * Utility routine for setting some common formatting style for the
