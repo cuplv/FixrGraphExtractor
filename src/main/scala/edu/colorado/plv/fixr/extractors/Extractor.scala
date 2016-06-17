@@ -37,7 +37,7 @@ abstract class Extractor(options : ExtractorOptions) {
     * Extract the ACDFG - implement the right iteration
     */
   def extract() : Unit;
-  
+
   private def initExtractor() : Unit = {
     logger.debug("Initializing soot...")
     if (null == options.processDir) {
