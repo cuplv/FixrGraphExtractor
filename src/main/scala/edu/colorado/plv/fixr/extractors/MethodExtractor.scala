@@ -14,7 +14,7 @@ class MethodExtractor(options : ExtractorOptions) extends Extractor(options) {
     assert(null != options.className)
     assert(null != options.methodName)
     
-    Scene.v().addBasicClass(options.className, SootClass.HIERARCHY)    
+    Scene.v().addBasicClass(options.className, SootClass.HIERARCHY)
     val sootClass : SootClass = Scene.v().loadClassAndSupport(options.className);    
     val sootMethod : SootMethod = sootClass.getMethodByName(options.methodName);
     

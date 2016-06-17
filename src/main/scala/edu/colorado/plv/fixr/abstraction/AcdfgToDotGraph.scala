@@ -26,16 +26,13 @@ class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
     for (n <- acdfg.nodes) {
       var dotNode : DotGraphNode = canvas.drawNode(n._1.toString)
       n match {
-        case n@(id : Long, node : acdfg.DataNode) =>
+        case n@(id : Long, node : DataNode) =>
           dotNode.setLabel("#" + id.toString + ": " + node.datatype.toString + " " + node.name)
           dotNode.setStyle(DotGraphConstants.NODE_STYLE_DASHED)
           dotNode.setAttribute("shape", "ellipse")
-        case n@(id : Long, node : acdfg.MethodNode) =>
+        case n@(id : Long, node : MethodNode) =>
           var name : String = "#" + node.id.toString + ": "
-          if (node.assignee.nonEmpty) {
-            name += (node.assignee.get + " = ")
-          }
-          val arguments = node.argumentNames.zip(node.argumentIds).map { case (name, id) =>
+          val arguments = node.argumentIds.map { case id =>
             if (id == 0) {
               name // + " [string constant]"
             } else {
@@ -48,7 +45,7 @@ class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
           }
           name += "(" + arguments.mkString(",") + ")"
           dotNode.setLabel(name)
-        case n@(id : Long, node : acdfg.MiscNode) =>
+        case n@(id : Long, node : MiscNode) =>
           dotNode.setLabel("#" + id.toString)
         case n => Nil
       }
@@ -56,9 +53,9 @@ class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
     for (e <- acdfg.edges) {
       var dotEdge : DotGraphEdge = canvas.drawEdge(e._2.from.toString, e._2.to.toString)
       e match {
-        case e@(id : Long, edge : acdfg.DefEdge) =>
+        case e@(id : Long, edge : DefEdge) =>
           dotEdge.setAttribute("color", "blue")
-        case e@(id : Long, edge : acdfg.UseEdge) =>
+        case e@(id : Long, edge : UseEdge) =>
           dotEdge.setAttribute("color", "red")
           dotEdge.setAttribute("Damping", "0.7")
         case _ => null

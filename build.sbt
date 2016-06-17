@@ -11,11 +11,13 @@ lazy val commonSettings =
   Seq(
     organization := "edu.colorado.plv.fixr",
     version := "0.1.0",
-    scalaVersion := "2.10.2",
+    scalaVersion := "2.11.8",
     name := "FixrGraphExtractor",
     javaOptions += "-Xmx2G",
     exportJars := true
   )
+
+scalaVersion := "2.11.8"
 
 organization := "edu.colorado.plv.fixr"
 
@@ -34,7 +36,6 @@ resolvers += "Maven Central Repository" at "https://repo1.maven.org/maven2/"
 javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 
 scalacOptions += "-target:jvm-1.7"
-
 
 // Exclude the java file in the test/resources folder from the compilation
 EclipseKeys.classpathTransformerFactories := Seq(ClasspathentryTransformer)
