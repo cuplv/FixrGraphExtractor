@@ -38,10 +38,14 @@ javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 scalacOptions += "-target:jvm-1.7"
 
 // Exclude the java file in the test/resources folder from the compilation
+// //target/scala-2.11/src_managed/main/edu/colorado/plv/fixr/protobuf/ javaSource in PB.protobufConfig
+EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.ManagedClasses
 EclipseKeys.classpathTransformerFactories := Seq(ClasspathentryTransformer)
+EclipseKeys.withJavadoc := true
 
 // Remove the parallel execution of tests - soot is not happy with that
 concurrentRestrictions in Global += Tags.limit(Tags.Test, 1)
+
 
 libraryDependencies ++= Seq(
   "org.eclipse.jdt" % "org.eclipse.jdt.core" % "3.10.0",
@@ -49,10 +53,17 @@ libraryDependencies ++= Seq(
   "junit" % "junit" % "4.11" % Test,
   "commons-lang" % "commons-lang" % "2.6",
   "org.slf4j" % "slf4j-api" % "1.7.20",
-  "org.slf4j" % "slf4j-simple" % "1.7.20",
   "com.github.scopt" %% "scopt" % "3.4.0",
   "com.lihaoyi" %% "scalatags" % "0.5.5",
-  "com.google.googlejavaformat" % "google-java-format" % "1.0"
+  "com.google.googlejavaformat" % "google-java-format" % "1.0",
+  "com.google.guava" %  "guava" % "19.0",
+  "args4j" % "args4j" % "2.0.23",
+  "ch.qos.logback" % "logback-classic" % "1.0.10",
+  "ch.qos.logback" % "logback-core" % "1.0.10",
+  "net.sf.jgrapht" % "jgrapht" % "0.8.3",
+  "org.apache.commons" % "commons-lang3" % "3.1",
+  "com.google.code.findbugs" % "annotations" % "2.0.1",
+  "org.ow2.asm" % "asm-debug-all" % "5.0.3"
 )
 
 oneJarSettings

@@ -9,7 +9,11 @@ class ExtractorOptions {
   // Soot options
   var sootClassPath : String = null;
   var readFromSources : Boolean = true;
-
+  
+  // JPhantom options
+  var useJPhantom : Boolean = false;
+  var outPhantomJar : String = null;
+  
   // slicing options
   var sliceFilter : String = null;
   

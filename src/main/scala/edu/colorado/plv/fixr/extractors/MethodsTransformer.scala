@@ -42,7 +42,16 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
         sootClass.getName() == options.className) ||
       (null == options.methodName && null != options.className) ||
       (null != options.processDir)) {
-      extractMethod(sootClass, method)
+      try {
+        extractMethod(sootClass, method)
+      }
+      catch {
+        case e : Exception => {
+          logger.error("Error processing class {}, method {}{}",
+              sootClass.getName(), method.getName(), "");
+          logger.error("Exception {}:", e)
+        }
+      }
     }
     else {
       if (! method.isConcrete()) {
@@ -59,7 +68,6 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     assert(sootMethod.isConcrete());
     
     val body: Body = sootMethod.retrieveActiveBody()
-    println(body.getClass)
     val jimpleUnitGraph: EnhancedUnitGraph = new EnhancedUnitGraph(body)
     val slicer: APISlicer = new APISlicer(jimpleUnitGraph, body)
     

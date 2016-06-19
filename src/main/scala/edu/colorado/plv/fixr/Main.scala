@@ -28,6 +28,8 @@ object Main {
   case class MainOptions(
     sootClassPath : String = null,
     readFromSources : Boolean = true,
+    useJPhantom : Boolean = false,
+    outPhantomJar : String = null,    
     sliceFilter : String = null,
     processDir : String = null,
     className : String = null,
@@ -49,7 +51,12 @@ object Main {
       c.copy(sootClassPath = x) } text("cp is the soot classpath")
       //
       opt[Boolean]('s', "read-from-sources") action { (x, c) =>
-      c.copy(readFromSources = x) } text("Set to true to use Jimple as input")
+        c.copy(readFromSources = x) } text("Set to true to use Jimple as input")
+      //
+      opt[Boolean]('j', "jphanthom") action { (x, c) =>
+        c.copy(useJPhantom = x) } text("Set to true to use JPhantom")
+      opt[String]('z', "jphantom-folder") action { (x, c) =>
+        c.copy(outPhantomJar = x) } text("Path to the generated JPhantom classes")
       //
       opt[String]('f', "slice-filter") action { (x, c) =>
       c.copy(sliceFilter = x) } text("Package prefix to use as seed for slicing")
@@ -73,6 +80,8 @@ object Main {
       case Some(mainopt) => {
         logger.debug("cp: {}", mainopt.sootClassPath)
         logger.debug("read-from-sources: {}", mainopt.readFromSources)
+        logger.debug("jphantom: {}\n", mainopt.useJPhantom)
+        logger.debug("jphantom-folder: {}\n", mainopt.outPhantomJar)        
         logger.debug("slice-filter: {}", mainopt.sliceFilter)
         logger.debug("process-dir: {}", mainopt.processDir)
         logger.debug("class-name: {}", mainopt.className)
@@ -95,7 +104,9 @@ object Main {
 
         val options : ExtractorOptions = new ExtractorOptions() 
         options.className = mainopt.className;
-        options.methodName = mainopt.methodName;
+        options.methodName = mainopt.methodName
+        options.useJPhantom = mainopt.useJPhantom;
+        options.outPhantomJar = mainopt.outPhantomJar;
         options.readFromSources = mainopt.readFromSources;
         options.sliceFilter = mainopt.sliceFilter;
         options.sootClassPath = mainopt.sootClassPath;
