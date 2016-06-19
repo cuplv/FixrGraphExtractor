@@ -35,7 +35,8 @@ object Main {
     className : String = null,
     methodName : String = null,
     outputDir : String = null,
-    provenanceDir : String = null)
+    provenanceDir : String = null,
+    to : Long = 0)
 
   /**
     * Now the program takes as input the classpath, the class name and the method name for which we have to build the graph
@@ -75,6 +76,9 @@ object Main {
       //
       opt[String]('d', "provenance-dir") action { (x, c) =>
       c.copy(provenanceDir = x) } text("Path of the directory used to store the provenance information.")
+      //
+      opt[Long]('t', "time-out") action { (x, c) =>
+        c.copy(to= x) } text("Set the time out (0 for no time out)")
     }
     parser.parse(args, MainOptions()) match {
       case Some(mainopt) => {
@@ -88,6 +92,7 @@ object Main {
         logger.debug("method-name: {}", mainopt.methodName)
         logger.debug("output-dir: {}", mainopt.outputDir)
         logger.debug("provenance-dir: {}\n", mainopt.provenanceDir)
+        logger.debug("time-out: {}\n", mainopt.to)        
 
         if (null != mainopt.processDir &&
             (null != mainopt.className || null != mainopt.methodName)) {
@@ -112,7 +117,8 @@ object Main {
         options.sootClassPath = mainopt.sootClassPath;
         options.outputDir = mainopt.outputDir;
         options.provenanceDir = mainopt.provenanceDir
-
+        options.to = mainopt.to
+        
         if (null != mainopt.processDir) {
           //List[String]("/home/sergio/works/projects/muse/repos/FixrGraphExtractor/src/test/resources/javasources")/
           val myArray : Array[String] = mainopt.processDir.split(":")

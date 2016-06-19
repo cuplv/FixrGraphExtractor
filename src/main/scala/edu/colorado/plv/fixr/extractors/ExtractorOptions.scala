@@ -25,4 +25,6 @@ class ExtractorOptions {
   // Output options
   var outputDir : String = null;
   var provenanceDir : String = null;
+  
+  var to : Long = 0;
 }
