@@ -1,12 +1,6 @@
 package edu.colorado.plv.fixr;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.util.Date;
-import java.util.Iterator;
 
 import edu.colorado.plv.fixr.graphs.CDFGToDotGraph;
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph;
@@ -20,7 +14,6 @@ import soot.SootClass;
 import soot.SootMethod;
 import soot.Timers;
 import soot.options.Options;
-import soot.toolkits.astmetrics.ClassData;
 import soot.toolkits.graph.DirectedGraph;
 import soot.util.cfgcmd.CFGToDotGraph;
 import soot.util.dot.DotGraph;
