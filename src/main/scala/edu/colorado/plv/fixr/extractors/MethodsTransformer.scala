@@ -27,6 +27,14 @@ import java.io.File
 import soot.BodyTransformer
 import soot.options.Options
 import soot.PhaseOptions
+import java.util.concurrent.Callable
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+
+import java.util.concurrent.Future
+
 
 
 class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
@@ -43,7 +51,32 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       (null == options.methodName && null != options.className) ||
       (null != options.processDir)) {
       try {
-        extractMethod(sootClass, method)
+        if (options.to > 0) {
+          val executor : ExecutorService = Executors.newSingleThreadExecutor(); 
+        	var future : Future[Unit] = executor.submit(new TimeOutExecutor(this,
+        	    sootClass, method));
+
+        	try {
+        	  logger.info("Started thread...");
+        		System.out.println(future.get(options.to, TimeUnit.SECONDS));
+            logger.info("Finished thread...");
+        	} catch {
+        	  case e : TimeoutException => {
+              future.cancel(true);
+              logger.info("Thread timed out.");
+        	  }
+        	  case e : Exception => {
+        	  	logger.error("Error processing class {}, method {}{}",
+        	  			sootClass.getName(), method.getName(), "");
+        	  	logger.error("Exception {}:", e)
+        	  }
+        	}
+        	executor.shutdownNow();
+        }
+        else {
+          // No timeout
+          extractMethod(sootClass, method)
+        }
       }
       catch {
         case e : Exception => {
@@ -61,7 +94,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     }
   }
   
-  protected def extractMethod(sootClass : SootClass, sootMethod : SootMethod) : Unit = {
+  def extractMethod(sootClass : SootClass, sootMethod : SootMethod) : Unit = {
     logger.info("Extracting graph for - class {} - method: {}{}",
       sootClass.getName(), sootMethod.getName(), "")
     
@@ -201,6 +234,19 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
         case ex: Exception =>
           logger.error("Unable to write to " + filePrefix + ".html")
       }
+    }
+  }
+
+
+
+  private class TimeOutExecutor(transformer : MethodsTransformer,
+    sootClass : SootClass, sootMethod : SootMethod)
+      extends Callable[Unit] {
+    
+    @throws(classOf[Exception])
+    override def call() : Unit = {
+      transformer.extractMethod(sootClass, sootMethod);
+      return;
     }
   }
 }
