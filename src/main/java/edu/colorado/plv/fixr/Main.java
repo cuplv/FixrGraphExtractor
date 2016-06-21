@@ -21,7 +21,7 @@ public class Main {
   	
   	Body b = SootHelper.getMethodBody(className, methodName);
   	DirectedGraph g = new BriefUnitGraph(b);
-  	SootHelper.dumpToDot(g, b, "~/test.dot");  	
+  	SootHelper.dumpToDot(g, b, "/tmp/test.dot");  	
   	
   	System.out.println("Done");
   }

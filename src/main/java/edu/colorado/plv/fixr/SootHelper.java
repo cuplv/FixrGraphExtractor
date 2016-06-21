@@ -13,7 +13,7 @@ import soot.util.dot.DotGraph;
 
 public class SootHelper {
 	public static void configure(String classpath) {
-		Options.v().set_verbose(false);
+		Options.v().set_verbose(true);
 		Options.v().set_keep_line_number(true);
 		Options.v().set_src_prec(Options.src_prec_class);
 		Options.v().set_soot_classpath(classpath);
@@ -60,8 +60,8 @@ public class SootHelper {
 	
 	public static void dumpToDot(DirectedGraph g, Body b, String fileName) {
 		  	CFGToDotGraph gr = new CFGToDotGraph();
-  	DotGraph viewgraph = gr.drawCFG(g,b);
-  	viewgraph.plot(fileName);
+			DotGraph viewgraph = gr.drawCFG(g,b);
+			viewgraph.plot(fileName);
 	}
 	
 }
