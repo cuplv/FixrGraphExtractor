@@ -8,22 +8,26 @@ import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
 import java.io.BufferedWriter
 import java.io.PrintWriter
 import java.io.OutputStreamWriter
+
 import edu.colorado.plv.fixr.slicing.SlicingCriterion
-import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
+import edu.colorado.plv.fixr.abstraction.{Acdfg, AcdfgToDotGraph, GitHubRecord}
 import edu.colorado.plv.fixr.slicing.APISlicer
 import java.io.FileOutputStream
+
 import edu.colorado.plv.fixr.provenance.Provenance
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed
 import soot.toolkits.graph.pdg.EnhancedUnitGraph
 import java.nio.file.Paths
+
 import soot.toolkits.graph.UnitGraph
 import org.slf4j.LoggerFactory
 import java.io.Writer
 import java.io.OutputStream
+
 import org.slf4j.Logger
 import soot.Printer
-import edu.colorado.plv.fixr.abstraction.Acdfg
 import java.io.File
+
 import soot.BodyTransformer
 import soot.options.Options
 import soot.PhaseOptions
@@ -32,7 +36,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-
 import java.util.concurrent.Future
 
 
@@ -125,7 +128,9 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       logger.debug("CDFG construction...")
       val cdfg: UnitCdfgGraph = new UnitCdfgGraph(slicedJimple)
       logger.debug("ACDFG construction...")
-      val acdfg : Acdfg = new Acdfg(cdfg)
+      val acdfg : Acdfg = new Acdfg(cdfg, GitHubRecord(
+        options.userName, options.repoName, options.url, options.commitHash
+      ))
 
       val name : String = sootClass.getName() + "_" +
       sootMethod.getName();
