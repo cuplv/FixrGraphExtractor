@@ -58,6 +58,10 @@ class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
         case e@(id : Long, edge : UseEdge) =>
           dotEdge.setAttribute("color", "red")
           dotEdge.setAttribute("Damping", "0.7")
+        case e@(id : Long, edge : TransControlEdge) =>
+          dotEdge.setAttribute("color", "gray58")
+          dotEdge.setAttribute("Damping", "0.7")
+          dotEdge.setAttribute("style", "dotted")
         case _ => null
       }
     }

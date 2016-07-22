@@ -1,16 +1,20 @@
 package edu.colorado.plv.fixr.abstraction
 
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
-import soot.jimple.{IdentityStmt, AssignStmt, InvokeStmt}
+import soot.jimple.{AssignStmt, IdentityStmt, InvokeStmt}
 import soot.jimple.internal.JimpleLocal
+
 import scala.collection.JavaConversions.asScalaIterator
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.Stack
+import scala.collection.mutable.HashMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
 import edu.colorado.plv.fixr.protobuf.ProtoAcdfg
+
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
+import scala.collection.immutable.HashMap
 
 /**
   * Acdfg
@@ -93,6 +97,13 @@ case class ControlEdge(
                         override val to   : Long
                       ) extends Edge
 
+
+case class TransControlEdge(
+                        override val id   : Long,
+                        override val from : Long,
+                        override val to   : Long
+                      ) extends Edge
+
 case class AdjacencyList(Nodes : Vector[Node], Edges : Vector[Edge])
 
 class Acdfg(
@@ -143,6 +154,9 @@ class Acdfg(
         protoUseEdge.setFrom(edge.from)
         protoUseEdge.setTo(edge.to)
         builder.addUseEdge(protoUseEdge)
+      case (id : Long, edge : TransControlEdge) =>
+        _
+        // TODO: add Protobuf output
     }
     nodes.foreach {
       case (id : Long, node : DataNode) =>
@@ -419,6 +433,77 @@ class Acdfg(
       }
     }
 
+    def computeTransClosure(): Unit = {
+      logger.debug("$$$$$$$$$$$$$$$$$$$  ENTRY")
+      val commandNodesMap = nodes.filter(_._2.isInstanceOf[CommandNode])
+      val commandNodes = commandNodesMap.values.toVector
+      val commandNodeCount = commandNodes.size
+      var idToAdjIndex = new scala.collection.mutable.HashMap[Long, Int]
+      commandNodesMap.zipWithIndex.foreach {
+        case (((id : Long, _),index : Int)) =>
+          idToAdjIndex += ((id, index))
+      }
+      var commandAdjMatrix = Array.ofDim[Boolean](commandNodeCount, commandNodeCount)
+      var transAdjMatrix = Array.ofDim[Boolean](commandNodeCount, commandNodeCount)
+      var stack      = new scala.collection.mutable.Stack[Node]
+      var discovered = new scala.collection.mutable.ArrayBuffer[Node]
+
+      //initialize stack
+      logger.debug("Initial command node pushed to stack: " + commandNodes(0))
+      stack.push(commandNodes(0))
+      // assemble adjacency matrix of commands w/out back-edges from DFS
+      while (!stack.isEmpty) {
+        val node = stack.pop()
+
+        logger.debug("Command node popped from stack: " + node.toString)
+        if ((!discovered.contains(node)) && (!stack.contains(node))) {
+          discovered += node
+          edges.filter { case ((id, edge)) =>
+            edge.from == node.id && idToAdjIndex.contains(edge.to)
+          }.foreach { case ((id, edge)) =>
+            val fromId = idToAdjIndex.get(edge.from).get
+            val toId   = idToAdjIndex.get(edge.to).get
+            commandAdjMatrix(fromId)(toId) = true
+            logger.debug(commandAdjMatrix.toString)
+            val newNode = commandNodes(toId)
+            if (!discovered.contains(newNode)) {
+              stack.push(newNode)
+              logger.debug("Command node pushed to stack: " + node.toString)
+            }
+          }
+        }
+      }
+
+      // assemble adjacency list of transitive closure w/ Floyd-Warshall
+      // O((Vertices) ^ 3)
+      val indices = 0 until commandNodeCount
+      // i,k,j major-to-minor order is best for locality
+      indices.foreach { i =>
+        indices.foreach { k =>
+          indices.foreach { j =>
+            if (
+              (commandAdjMatrix(i)(k) || transAdjMatrix(i)(k)) &&
+                (commandAdjMatrix(k)(j) || transAdjMatrix(k)(j)) &&
+                (!commandAdjMatrix(i)(j))
+            ) {
+              transAdjMatrix(i)(j) = true
+              addTransControlEdge(commandNodes(i).id, commandNodes(j).id)
+              logger.debug("   Adding transitive edge between " +
+                commandNodes(i).id + " and " + commandNodes(j).id
+              )
+            }
+          }
+        }
+      }
+    }
+
+    def addTransControlEdge(fromId : Long, toId : Long): Unit = {
+      val id = getNewId
+      val edge = new TransControlEdge(id, fromId, toId)
+      edges += ((id, edge))
+      edgePairToId += (((fromId, toId), id))
+    }
+
     logger.debug("### Adding local/data nodes...")
     cdfg.localsIter().foreach {
       case n =>
@@ -594,6 +679,11 @@ class Acdfg(
           }
         case _ => Nil
       }}
+
+    logger.debug("### Computing transitive closure down to DFS of command edges...")
+    computeTransClosure()
+
+    logger.debug("### Done")
   }
 
   def this(protobuf : ProtoAcdfg.Acdfg) = {
