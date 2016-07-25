@@ -155,8 +155,12 @@ class Acdfg(
         protoUseEdge.setTo(edge.to)
         builder.addUseEdge(protoUseEdge)
       case (id : Long, edge : TransControlEdge) =>
-        _
-        // TODO: add Protobuf output
+        val protoTransEdge: ProtoAcdfg.Acdfg.TransEdge.Builder =
+          ProtoAcdfg.Acdfg.TransEdge.newBuilder()
+        protoTransEdge.setId(id)
+        protoTransEdge.setFrom(edge.from)
+        protoTransEdge.setTo(edge.to)
+        builder.addTransEdge(protoTransEdge)
     }
     nodes.foreach {
       case (id : Long, node : DataNode) =>
@@ -434,7 +438,6 @@ class Acdfg(
     }
 
     def computeTransClosure(): Unit = {
-      logger.debug("$$$$$$$$$$$$$$$$$$$  ENTRY")
       val commandNodesMap = nodes.filter(_._2.isInstanceOf[CommandNode])
       val commandNodes = commandNodesMap.values.toVector
       val commandNodeCount = commandNodes.size
@@ -449,12 +452,25 @@ class Acdfg(
       var discovered = new scala.collection.mutable.ArrayBuffer[Node]
 
       //initialize stack
-      logger.debug("Initial command node pushed to stack: " + commandNodes(0))
-      stack.push(commandNodes(0))
-      // assemble adjacency matrix of commands w/out back-edges from DFS
-      while (!stack.isEmpty) {
-        val node = stack.pop()
+      // add all non-dominated nodes to work list
+      commandNodes.filter {node => true
+        /*
+        edges.values.toSet.contains {
+          edge : Edge =>
 
+            edge : Edge => edge.from == node.id
+          }  &&
+          !edges.values.toSet.contains {
+            edge : Edge => edge.to   == node.id
+          }
+          */
+      }.foreach{ n =>
+        logger.debug("Starting node " + n.toString + " found.")
+        stack.push(n)
+      }
+      // assemble adjacency matrix of commands w/out back-edges from DFS
+      while (stack.nonEmpty) {
+        val node = stack.pop()
         logger.debug("Command node popped from stack: " + node.toString)
         if ((!discovered.contains(node)) && (!stack.contains(node))) {
           discovered += node
@@ -477,15 +493,23 @@ class Acdfg(
       // assemble adjacency list of transitive closure w/ Floyd-Warshall
       // O((Vertices) ^ 3)
       val indices = 0 until commandNodeCount
-      // i,k,j major-to-minor order is best for locality
-      indices.foreach { i =>
-        indices.foreach { k =>
+
+      /*
+       * NOTE: k,i,j major-to-minor order required;
+       * although i,k,j major-to-minor order is best for locality,
+       * a data dependency requires k,i,j order
+       * to maintain the dynamic programming invariant
+       */
+
+      indices.foreach { k =>
+        indices.foreach { i =>
           indices.foreach { j =>
             if (
               (commandAdjMatrix(i)(k) || transAdjMatrix(i)(k)) &&
                 (commandAdjMatrix(k)(j) || transAdjMatrix(k)(j)) &&
-                (!commandAdjMatrix(i)(j))
+                (!commandAdjMatrix(i)(j)) && (!transAdjMatrix(i)(j))
             ) {
+              //changed = true
               transAdjMatrix(i)(j) = true
               addTransControlEdge(commandNodes(i).id, commandNodes(j).id)
               logger.debug("   Adding transitive edge between " +
