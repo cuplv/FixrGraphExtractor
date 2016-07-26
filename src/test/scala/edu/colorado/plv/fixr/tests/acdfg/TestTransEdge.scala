@@ -10,11 +10,12 @@ import org.slf4j.{Logger, LoggerFactory}
 import soot.Body
 import soot.toolkits.graph.pdg.EnhancedUnitGraph
 import soot.util.dot.DotGraph
+import scala.collection.JavaConversions._
 
 /**
   * Created by cuplv on 7/25/16.
   */
-class TestTransEdge(classPath : String, testClassName : String,
+abstract class TestTransEdge(classPath : String, testClassName : String,
                     resClassName : String)
   extends TestClassBase(classPath, testClassName, resClassName) {
 
