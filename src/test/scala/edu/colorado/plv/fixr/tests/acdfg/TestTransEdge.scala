@@ -1,7 +1,7 @@
 package edu.colorado.plv.fixr.tests.acdfg
 
 import edu.colorado.plv.fixr.SootHelper
-import edu.colorado.plv.fixr.abstraction.{Acdfg, ControlEdge, Edge, TransControlEdge}
+import edu.colorado.plv.fixr.abstraction._
 import edu.colorado.plv.fixr.graphs.{CDFGToDotGraph, UnitCdfgGraph}
 import edu.colorado.plv.fixr.slicing.APISlicer
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed
@@ -10,6 +10,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import soot.Body
 import soot.toolkits.graph.pdg.EnhancedUnitGraph
 import soot.util.dot.DotGraph
+
 import scala.collection.JavaConversions._
 
 /**
@@ -50,7 +51,7 @@ abstract class TestTransEdge(classPath : String, testClassName : String,
     val viewgraph : DotGraph = toDot.drawCFG(cdfg, cdfg.getBody())
     viewgraph.plot("/tmp/test_cdfg.dot")
     // ACDFG
-    val acdfg: Acdfg = new Acdfg(cdfg)
+    val acdfg: Acdfg = new Acdfg(cdfg, GitHubRecord("a", "b", "c", "d"))
     // logger.debug("ACDFG: " + acdfg.toString)
     // logger.debug("Protobuf: " + acdfg.toProtobuf.toString)
     // logger.debug("Recovered ACDFG: " + new Acdfg(acdfg.toProtobuf).toString)

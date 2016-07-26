@@ -21,6 +21,10 @@ class ExtractorOptions {
   var processDir : List[String] = null;
   var className : String = null;
   var methodName : String = null;
+  var userName : String = null;
+  var repoName : String = null;
+  var url : String = null;
+  var commitHash : String = null;
    
   // Output options
   var outputDir : String = null;

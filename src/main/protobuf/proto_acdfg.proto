@@ -1,6 +1,13 @@
 package edu.colorado.plv.fixr.protobuf;
 
 message Acdfg {
+  message RepoTag {
+    optional string repo_name   = 1;
+    optional string user_name   = 2;
+    optional string url         = 3;
+    optional string commit_hash = 4;
+  }
+
   message DataNode {
     required uint64 id   = 1;
     required string name = 2;
@@ -36,7 +43,6 @@ message Acdfg {
     required uint64 to   = 3;
   }
 
-
   message TransEdge {
     required uint64 id   = 1;
     required uint64 from = 2;
@@ -50,4 +56,5 @@ message Acdfg {
   repeated DefEdge     def_edge     = 5;
   repeated UseEdge     use_edge     = 6;
   repeated TransEdge   trans_edge   = 7;
+  optional RepoTag     repo_tag     = 8;
 }

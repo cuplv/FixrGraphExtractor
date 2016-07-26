@@ -12,6 +12,8 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import edu.colorado.plv.fixr.protobuf.ProtoAcdfg
 
+import edu.colorado.plv.fixr.protobuf.ProtoAcdfg.Acdfg.RepoTag
+
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
 import scala.collection.immutable.HashMap
@@ -86,31 +88,40 @@ case class DefEdge(
 ) extends Edge
 
 case class UseEdge(
-                    override val id   : Long,
-                    override val from : Long,
-                    override val to   : Long
-                  ) extends Edge
+  override val id   : Long,
+  override val from : Long,
+  override val to   : Long
+) extends Edge
 
 case class ControlEdge(
-                        override val id   : Long,
-                        override val from : Long,
-                        override val to   : Long
-                      ) extends Edge
+  override val id   : Long,
+  override val from : Long,
+  override val to   : Long
+) extends Edge
 
 
 case class TransControlEdge(
-                        override val id   : Long,
-                        override val from : Long,
-                        override val to   : Long
-                      ) extends Edge
+  override val id   : Long,
+  override val from : Long,
+  override val to   : Long
+) extends Edge
 
-case class AdjacencyList(Nodes : Vector[Node], Edges : Vector[Edge])
+case class GitHubRecord(
+  userName   : String,
+  repoName   : String,
+  url        : String,
+  commitHash : String
+)
+
+case class AdjacencyList(nodes : Vector[Node], edges : Vector[Edge])
 
 class Acdfg(
   adjacencyList: AdjacencyList,
   cdfg : UnitCdfgGraph,
-  protobuf : ProtoAcdfg.Acdfg
+  protobuf : ProtoAcdfg.Acdfg,
+  gitHubRecord : GitHubRecord
 ) {
+  private lazy val ghr = gitHubRecord
 
   val logger : Logger = LoggerFactory.getLogger(classOf[Acdfg])
 
@@ -186,6 +197,14 @@ class Acdfg(
         protoMethodNode.setName(node.name)
         builder.addMethodNode(protoMethodNode)
     }
+
+    val protoRepoTag = ProtoAcdfg.Acdfg.RepoTag.newBuilder()
+    protoRepoTag.setUserName(this.gitHubRecord.userName)
+    protoRepoTag.setRepoName(this.gitHubRecord.repoName)
+    protoRepoTag.setUrl(this.gitHubRecord.url)
+    protoRepoTag.setCommitHash(this.gitHubRecord.commitHash)
+    builder.setRepoTag(protoRepoTag)
+
     builder.build()
   }
 
@@ -231,7 +250,8 @@ class Acdfg(
 
   def equals(that : Acdfg) : Boolean = {
     val du = this +| that
-    du.Nodes.isEmpty && du.Edges.isEmpty
+    du.nodes.isEmpty && du.edges.isEmpty &&
+      this.ghr == that.ghr
   }
 
   def ==(that : Acdfg) : Boolean =
@@ -302,22 +322,26 @@ class Acdfg(
 
   def toProtobuf = pb
 
+  def getGitHubRecord = ghr
+
   // unary argument constructors
 
-  def this(adjacencyList: AdjacencyList) = {
-    this(adjacencyList, null, null)
+  def this(adjacencyList: AdjacencyList, gitHubRecord: GitHubRecord) = {
+    this(adjacencyList, null, null, gitHubRecord)
+    assert(this.gitHubRecord == gitHubRecord)
 
-    adjacencyList.Nodes.foreach {node =>
+    adjacencyList.nodes.foreach {node =>
       nodes += ((node.id, node))
     }
 
-    adjacencyList.Edges.foreach {edge =>
+    adjacencyList.edges.foreach {edge =>
       edges += ((edge.id, edge))
     }
   }
 
-  def this(cdfg : UnitCdfgGraph) = {
-    this(null, cdfg, null)
+  def this(cdfg : UnitCdfgGraph, gitHubRecord: GitHubRecord) = {
+    this(null, cdfg, null, gitHubRecord)
+    assert(this.gitHubRecord == gitHubRecord)
 
     // the following are used to make lookup more efficient
     var unitToId       = scala.collection.mutable.HashMap[soot.Unit, Long]()
@@ -711,7 +735,21 @@ class Acdfg(
   }
 
   def this(protobuf : ProtoAcdfg.Acdfg) = {
-    this(null, null, protobuf)
+    this(
+      null,
+      null,
+      protobuf,
+      GitHubRecord(
+        if (protobuf.getRepoTag.hasUserName())
+          protobuf.getRepoTag.getUserName else "",
+        if (protobuf.getRepoTag.hasRepoName())
+          protobuf.getRepoTag.getRepoName else "",
+        if (protobuf.getRepoTag.hasUrl())
+          protobuf.getRepoTag.getUrl else "",
+        if (protobuf.getRepoTag.hasCommitHash())
+          protobuf.getRepoTag.getCommitHash else ""
+      )
+    )
 
     // for Protobuf
     def addDataNode(
