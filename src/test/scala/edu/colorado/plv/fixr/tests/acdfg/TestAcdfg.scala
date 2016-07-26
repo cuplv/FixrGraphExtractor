@@ -1,6 +1,6 @@
 package edu.colorado.plv.fixr.tests.acdfg
 
-import edu.colorado.plv.fixr.abstraction.Acdfg
+import edu.colorado.plv.fixr.abstraction.{Acdfg, ControlEdge, Edge, TransControlEdge}
 
 import scala.collection.JavaConversions.seqAsJavaList
 import edu.colorado.plv.fixr.SootHelper

@@ -6,8 +6,8 @@ class TestAcdfgSamples extends TestAcdfg("./src/test/resources/jimple:./src/test
   override def getPackages() : List[String] =
     List[String]("android.")
 
-  test("update") {testAcdfg("update")}
-  test("deleteRow") {testAcdfg("deleteRow")}
+  test("update")       {testAcdfg("update")}
+  test("deleteRow")    {testAcdfg("deleteRow")}
   test("deleteNUsers") {testAcdfg("deleteNUsers")}
   test("retrieveData") {testAcdfg("retrieveData")}
 }

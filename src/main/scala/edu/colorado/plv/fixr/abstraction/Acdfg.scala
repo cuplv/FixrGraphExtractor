@@ -766,6 +766,13 @@ class Acdfg(
       val edge = new ControlEdge(id, from, to)
       edges += ((id, edge))
     }
+
+    // Protobuf
+    def addTransControlEdge(id : Long, from : Long, to : Long): Unit = {
+      val edge = new TransControlEdge(id, from, to)
+      edges += ((id, edge))
+    }
+
     // add data nodes
     protobuf.getDataNodeList.foreach { dataNode =>
       addDataNode(dataNode.getId, dataNode.getName, dataNode.getType)
@@ -801,6 +808,10 @@ class Acdfg(
 
     protobuf.getDefEdgeList.foreach { defEdge =>
       addDefEdge(defEdge.getId, defEdge.getFrom, defEdge.getTo)
+    }
+
+    protobuf.getTransEdgeList.foreach { transEdge =>
+      addTransControlEdge(transEdge.getId, transEdge.getFrom, transEdge.getTo)
     }
   }
 }
