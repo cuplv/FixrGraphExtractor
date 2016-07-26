@@ -62,9 +62,9 @@ abstract class TestTransEdge(classPath : String, testClassName : String,
 
     acdfg.edges.filter { case (id : Long, edge: Edge) =>
       edge.isInstanceOf[TransControlEdge]
-    }.foreach { case (id : Long, edge: Edge) =>
+    }.foreach { case (id : Long, edge: TransControlEdge) =>
       val ctrl = acdfg.edges.filter { case (id : Long, ctrl_edge: Edge) =>
-        ctrl_edge.isInstanceOf[ControlEdge]
+        ctrl_edge.isInstanceOf[ControlEdge] || ctrl_edge.isInstanceOf[TransControlEdge]
       }
       assert(ctrl.exists { case (id : Long, from_edge: Edge) =>
         from_edge.from == edge.from
