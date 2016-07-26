@@ -6,13 +6,17 @@ import soot.jimple.internal.JimpleLocal
 
 import scala.collection.JavaConversions.asScalaIterator
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.Stack
+import scala.collection.mutable.HashMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import edu.colorado.plv.fixr.protobuf.ProtoAcdfg
+
 import edu.colorado.plv.fixr.protobuf.ProtoAcdfg.Acdfg.RepoTag
 
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
+import scala.collection.immutable.HashMap
 
 /**
   * Acdfg
@@ -96,6 +100,12 @@ case class ControlEdge(
 ) extends Edge
 
 
+case class TransControlEdge(
+  override val id   : Long,
+  override val from : Long,
+  override val to   : Long
+) extends Edge
+
 case class GitHubRecord(
   userName   : String,
   repoName   : String,
@@ -103,11 +113,7 @@ case class GitHubRecord(
   commitHash : String
 )
 
-case class AdjacencyList(
-  nodes : Vector[Node],
-  edges : Vector[Edge]
-)
-
+case class AdjacencyList(nodes : Vector[Node], edges : Vector[Edge])
 
 class Acdfg(
   adjacencyList: AdjacencyList,
@@ -159,6 +165,13 @@ class Acdfg(
         protoUseEdge.setFrom(edge.from)
         protoUseEdge.setTo(edge.to)
         builder.addUseEdge(protoUseEdge)
+      case (id : Long, edge : TransControlEdge) =>
+        val protoTransEdge: ProtoAcdfg.Acdfg.TransEdge.Builder =
+          ProtoAcdfg.Acdfg.TransEdge.newBuilder()
+        protoTransEdge.setId(id)
+        protoTransEdge.setFrom(edge.from)
+        protoTransEdge.setTo(edge.to)
+        builder.addTransEdge(protoTransEdge)
     }
     nodes.foreach {
       case (id : Long, node : DataNode) =>
@@ -448,6 +461,97 @@ class Acdfg(
       }
     }
 
+    def computeTransClosure(): Unit = {
+      val commandNodesMap = nodes.filter(_._2.isInstanceOf[CommandNode])
+      val commandNodes = commandNodesMap.values.toVector
+      val commandNodeCount = commandNodes.size
+      var idToAdjIndex = new scala.collection.mutable.HashMap[Long, Int]
+      commandNodesMap.zipWithIndex.foreach {
+        case (((id : Long, _),index : Int)) =>
+          idToAdjIndex += ((id, index))
+      }
+      var commandAdjMatrix = Array.ofDim[Boolean](commandNodeCount, commandNodeCount)
+      var transAdjMatrix = Array.ofDim[Boolean](commandNodeCount, commandNodeCount)
+      var stack      = new scala.collection.mutable.Stack[Node]
+      var discovered = new scala.collection.mutable.ArrayBuffer[Node]
+
+      //initialize stack
+      // add all non-dominated nodes to work list
+      commandNodes.filter {node => true
+        /*
+        edges.values.toSet.contains {
+          edge : Edge =>
+
+            edge : Edge => edge.from == node.id
+          }  &&
+          !edges.values.toSet.contains {
+            edge : Edge => edge.to   == node.id
+          }
+          */
+      }.foreach{ n =>
+        logger.debug("Starting node " + n.toString + " found.")
+        stack.push(n)
+      }
+      // assemble adjacency matrix of commands w/out back-edges from DFS
+      while (stack.nonEmpty) {
+        val node = stack.pop()
+        logger.debug("Command node popped from stack: " + node.toString)
+        if ((!discovered.contains(node)) && (!stack.contains(node))) {
+          discovered += node
+          edges.filter { case ((id, edge)) =>
+            edge.from == node.id && idToAdjIndex.contains(edge.to)
+          }.foreach { case ((id, edge)) =>
+            val fromId = idToAdjIndex.get(edge.from).get
+            val toId   = idToAdjIndex.get(edge.to).get
+            commandAdjMatrix(fromId)(toId) = true
+            logger.debug(commandAdjMatrix.toString)
+            val newNode = commandNodes(toId)
+            if (!discovered.contains(newNode)) {
+              stack.push(newNode)
+              logger.debug("Command node pushed to stack: " + node.toString)
+            }
+          }
+        }
+      }
+
+      // assemble adjacency list of transitive closure w/ Floyd-Warshall
+      // O((Vertices) ^ 3)
+      val indices = 0 until commandNodeCount
+
+      /*
+       * NOTE: k,i,j major-to-minor order required;
+       * although i,k,j major-to-minor order is best for locality,
+       * a data dependency requires k,i,j order
+       * to maintain the dynamic programming invariant
+       */
+
+      indices.foreach { k =>
+        indices.foreach { i =>
+          indices.foreach { j =>
+            if (
+              (commandAdjMatrix(i)(k) || transAdjMatrix(i)(k)) &&
+                (commandAdjMatrix(k)(j) || transAdjMatrix(k)(j)) &&
+                (!commandAdjMatrix(i)(j)) && (!transAdjMatrix(i)(j))
+            ) {
+              //changed = true
+              transAdjMatrix(i)(j) = true
+              addTransControlEdge(commandNodes(i).id, commandNodes(j).id)
+              logger.debug("   Adding transitive edge between " +
+                commandNodes(i).id + " and " + commandNodes(j).id
+              )
+            }
+          }
+        }
+      }
+    }
+
+    def addTransControlEdge(fromId : Long, toId : Long): Unit = {
+      val id = getNewId
+      val edge = new TransControlEdge(id, fromId, toId)
+      edges += ((id, edge))
+      edgePairToId += (((fromId, toId), id))
+    }
+
     logger.debug("### Adding local/data nodes...")
     cdfg.localsIter().foreach {
       case n =>
@@ -623,6 +727,11 @@ class Acdfg(
           }
         case _ => Nil
       }}
+
+    logger.debug("### Computing transitive closure down to DFS of command edges...")
+    computeTransClosure()
+
+    logger.debug("### Done")
   }
 
   def this(protobuf : ProtoAcdfg.Acdfg) = {
@@ -695,6 +804,13 @@ class Acdfg(
       val edge = new ControlEdge(id, from, to)
       edges += ((id, edge))
     }
+
+    // Protobuf
+    def addTransControlEdge(id : Long, from : Long, to : Long): Unit = {
+      val edge = new TransControlEdge(id, from, to)
+      edges += ((id, edge))
+    }
+
     // add data nodes
     protobuf.getDataNodeList.foreach { dataNode =>
       addDataNode(dataNode.getId, dataNode.getName, dataNode.getType)
@@ -730,6 +846,10 @@ class Acdfg(
 
     protobuf.getDefEdgeList.foreach { defEdge =>
       addDefEdge(defEdge.getId, defEdge.getFrom, defEdge.getTo)
+    }
+
+    protobuf.getTransEdgeList.foreach { transEdge =>
+      addTransControlEdge(transEdge.getId, transEdge.getFrom, transEdge.getTo)
     }
   }
 }
