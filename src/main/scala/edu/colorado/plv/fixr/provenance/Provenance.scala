@@ -53,16 +53,28 @@ class Provenance(
         scalatags.Text.all.pre(scalatags.Text.all.code(slicedBody.toString)),
         scalatags.Text.all.h2("Control Flow Graph (CFG)"),
         scalatags.Text.all.div(id := "cfg",
-          img("")
+          scalatags.Text.all.img(src := "slice.TestSlice_m1.cfg.dot.svg")
         ),
         scalatags.Text.all.h2("Control Data Flow Graph (CDFG)"),
         scalatags.Text.all.div(id := "cdfg",
-          scalatags.Text.all.img(src := "")
+          scalatags.Text.all.img(src := "slice.TestSlice_m1.cdfg.dot.svg")
         ),
         scalatags.Text.all.h2("Abstract Control Data Flow Graph (ACDFG)"),
         scalatags.Text.all.div(id := "acdfg",
-
-        )
+          scalatags.Text.all.img(src := "slice.TestSlice_m1.acdfg.dot.svg")
+        ),
+        scalatags.Text.all.p(scalatags.Text.all.em(
+          "University of Colorado at Boulder"
+        )),
+        scalatags.Text.all.p(scalatags.Text.all.em(
+          "CUPLV Lab"
+        )),
+        scalatags.Text.all.p(scalatags.Text.all.em(
+          "DARPA MUSE Round II, Fixr 2016"
+        )),
+        scalatags.Text.all.p(scalatags.Text.all.em(
+          "Sergio Mover, Rhys Braginton Pettee Olsen, Sriram Sankaranarayanan (PI)"
+        ))
       )
     )
   }
