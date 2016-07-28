@@ -55,26 +55,28 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       (null != options.processDir)) {
       try {
         if (options.to > 0) {
-          val executor : ExecutorService = Executors.newSingleThreadExecutor(); 
-        	var future : Future[Unit] = executor.submit(new TimeOutExecutor(this,
-        	    sootClass, method));
+          val executor : ExecutorService = Executors.newSingleThreadExecutor()
+          var future : Future[Unit] = null
+          
 
-        	try {
-        	  logger.info("Started thread...");
-        		System.out.println(future.get(options.to, TimeUnit.SECONDS));
-            logger.info("Finished thread...");
-        	} catch {
-        	  case e : TimeoutException => {
-              future.cancel(true);
-              logger.info("Thread timed out.");
-        	  }
-        	  case e : Exception => {
-        	  	logger.error("Error processing class {}, method {}{}",
-        	  			sootClass.getName(), method.getName(), "");
-        	  	logger.error("Exception {}:", e)
-        	  }
-        	}
-        	executor.shutdownNow();
+          try {
+            future = executor.submit(new TimeOutExecutor(this, sootClass, method))
+            logger.info("Started thread...")
+            System.out.println(future.get(options.to, TimeUnit.SECONDS))
+            logger.info("Finished thread...")
+          } catch {
+            case e : TimeoutException => {
+              logger.info("Thread timed out.")
+            }
+            case e : Exception => {
+              logger.error("Error processing class {}, method {}{}",
+        	sootClass.getName(), method.getName(), "");
+              logger.error("Exception {}:", e)
+            }
+          } finally {
+            future.cancel(true)
+            executor.shutdownNow()
+          }
         }
         else {
           // No timeout
@@ -84,7 +86,12 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       catch {
         case e : Exception => {
           logger.error("Error processing class {}, method {}{}",
-              sootClass.getName(), method.getName(), "");
+            sootClass.getName(), method.getName(), "");
+          logger.error("Exception {}:", e)
+        }
+        case e : StackOverflowError => {
+          logger.error("StackOverflowError processing class {}, method {}{}",
+            sootClass.getName(), method.getName(), "");
           logger.error("Exception {}:", e)
         }
       }
@@ -250,7 +257,16 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     
     @throws(classOf[Exception])
     override def call() : Unit = {
-      transformer.extractMethod(sootClass, sootMethod);
+      try {
+        transformer.extractMethod(sootClass, sootMethod);
+      }
+      catch {
+        case e : StackOverflowError => {
+          logger.error("StackOverflowError processing class {}, method {}{}", sootClass.getName(), sootMethod.getName(), "")
+          logger.error("Exception {}:", e)
+        }
+      }
+      
       return;
     }
   }
