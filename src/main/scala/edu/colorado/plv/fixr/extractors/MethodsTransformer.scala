@@ -42,9 +42,10 @@ import java.util.concurrent.Future
 
 class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
   val logger : Logger = LoggerFactory.getLogger(this.getClass())
-  
-  override protected def internalTransform(body : Body, phase : String, transformOpt :
-      java.util.Map[_,_] ) : Unit = {
+
+  override protected def internalTransform(body : Body,
+      phase : String,
+      transformOpt : java.util.Map[String,String] ) : Unit = {
     val method : SootMethod = body.getMethod()
     val sootClass : SootClass = method.getDeclaringClass()
     
