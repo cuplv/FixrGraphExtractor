@@ -191,5 +191,6 @@ object Main {
     }
 
     logger.info("Terminated extraction...")
+    System.exit(0)
   }
 }
