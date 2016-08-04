@@ -12,8 +12,9 @@ public class Simple {
       }
       else {
         cvar = cvar;
-        b = a;        
+        b = a;
       }
+      java.lang.Math.abs(a + b);
     }
 
 }

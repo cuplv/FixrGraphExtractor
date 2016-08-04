@@ -31,7 +31,8 @@ abstract class TestCdfg(classPath : String, testClassName : String,
 
   	val jimpleUnitGraph : EnhancedUnitGraph = new EnhancedUnitGraph(body);
   	val slicer : APISlicer = new APISlicer(jimpleUnitGraph, body);
-   	val slicedJimple : Body = slicer.slice(new MethodPackageSeed(getPackages()));   	
-  	val cdfg : UnitCdfgGraph = new UnitCdfgGraph(slicedJimple);  	 
+   	val slicedJimple : Body = slicer.slice(new MethodPackageSeed(getPackages()));
+   	assert(null != slicedJimple)
+  	val cdfg : UnitCdfgGraph = new UnitCdfgGraph(slicedJimple);
 	}
 }

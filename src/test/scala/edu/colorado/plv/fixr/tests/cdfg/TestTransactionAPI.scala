@@ -9,5 +9,5 @@ class TestTransactionAPI extends TestCdfg("./src/test/resources/jimple:./src/tes
   
   test("syncUsers") {testCdfg("syncUsers")}
   test("wrongTransaction") {testCdfg("wrongTransaction")}
-  test("rightTransaction") {testCdfg("rightTransaction")}    
+  test("rightTransaction") {testCdfg("rightTransaction")}
 }
