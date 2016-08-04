@@ -151,7 +151,7 @@ public class RVDomain implements FlowSet {
 	}
 
 	@Override
-	public Object emptySet() {
+	public FlowSet emptySet() {
 		RVDomain rv = new RVDomain();
 		return rv;
 	}
@@ -280,6 +280,13 @@ public class RVDomain implements FlowSet {
 		}		
 	}
 
+	@Override
+	public boolean isSubSet(FlowSet other) {
+		// TODO Auto-generated method stub
+		assert false;
+		return false;
+	}	
+	
 	/* (non-Javadoc)
 	 * @see java.lang.Object#hashCode()
 	 */
@@ -320,6 +327,5 @@ public class RVDomain implements FlowSet {
 
 		return str;
 	}
-	
-	
+
 }

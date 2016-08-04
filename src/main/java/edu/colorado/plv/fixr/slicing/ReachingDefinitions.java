@@ -17,9 +17,9 @@ import soot.jimple.AssignStmt;
 import soot.jimple.InstanceFieldRef;
 import soot.toolkits.graph.DirectedGraph;
 import soot.toolkits.graph.UnitGraph;
+import soot.toolkits.scalar.AbstractBoundedFlowSet;
 import soot.toolkits.scalar.ArrayFlowUniverse;
 import soot.toolkits.scalar.ArrayPackedSet;
-import soot.toolkits.scalar.ArraySparseSet;
 import soot.toolkits.scalar.FlowSet;
 import soot.toolkits.scalar.FlowUniverse;
 import soot.toolkits.scalar.ForwardFlowAnalysis;
@@ -35,7 +35,8 @@ public class ReachingDefinitions extends ForwardFlowAnalysis<Unit, FlowSet> {
 	private Map<Unit, Set<Local>> underUnit2LocalsMap;	
 	private Map<Unit, FlowSet> kill;
 	private Map<Unit, FlowSet> gen;
-	FlowUniverse<Unit> defsUniverse; 
+	private AbstractBoundedFlowSet baseSet;
+	 
 	
 	public ReachingDefinitions(DirectedGraph<Unit> graph) {
 		super(graph); 
@@ -62,8 +63,12 @@ public class ReachingDefinitions extends ForwardFlowAnalysis<Unit, FlowSet> {
 			if (u.getDefBoxes().size() > 0) {
 				defUnit.add(u);
 			}
-		}		
+		}	
+
+		FlowUniverse<Unit> defsUniverse;
 		defsUniverse = new ArrayFlowUniverse<Unit>(defUnit.toArray(new Unit[defUnit.size()]));
+		baseSet = new ArrayPackedSet(defsUniverse);
+		
 		for (Unit u : defUnit) {
 			computeSets(u);
 		}		
@@ -97,7 +102,7 @@ public class ReachingDefinitions extends ForwardFlowAnalysis<Unit, FlowSet> {
 	@Override
 	protected FlowSet entryInitialFlow() {
 		/* We start with an empty set, adding variables on the way */		
-		return new ArrayPackedSet(defsUniverse);		
+		return baseSet.emptySet();		
 	}
 
 	@Override
@@ -109,8 +114,8 @@ public class ReachingDefinitions extends ForwardFlowAnalysis<Unit, FlowSet> {
 
 	@Override
 	protected FlowSet newInitialFlow() {
-		/* We start with an empty set, adding variables on the way */					
-		return new ArrayPackedSet(defsUniverse);		
+		/* We start with an empty set, adding variables on the way */
+		return baseSet.emptySet();
 	}
 
 	protected FlowSet getKill(Unit u) {
@@ -122,12 +127,12 @@ public class ReachingDefinitions extends ForwardFlowAnalysis<Unit, FlowSet> {
 	}
 	
 	protected void computeSets(Unit u) {
-		FlowSet killSet = new ArrayPackedSet(defsUniverse);
-		FlowSet genSet = new ArrayPackedSet(defsUniverse);
+		FlowSet killSet = baseSet.emptySet();
+		FlowSet genSet = baseSet.emptySet();
 
 		/* get the set of units that declare */
 		for (Local l : getDefLocals(u, false)) {
-			for (Iterator<Unit> unitIter = this.defsUniverse.iterator();
+			for (Iterator<Unit> unitIter = baseSet.topSet().iterator();
 					unitIter.hasNext();) {
 				Unit u2 = unitIter.next();
 				if (u2 != u && getDefLocals(u2, false).contains(l)) {
