@@ -1,6 +1,6 @@
 package edu.colorado.plv.fixr.tests.acdfg
 
-import edu.colorado.plv.fixr.abstraction.Acdfg
+import edu.colorado.plv.fixr.abstraction.{Acdfg, GitHubRecord, ControlEdge, Edge, TransControlEdge}
 
 import scala.collection.JavaConversions.seqAsJavaList
 import edu.colorado.plv.fixr.SootHelper
@@ -58,7 +58,7 @@ abstract class TestAcdfg(classPath : String, testClassName : String,
       val viewgraph : DotGraph = toDot.drawCFG(cdfg, cdfg.getBody())
       viewgraph.plot("/tmp/test_cdfg.dot")
       // ACDFG
-      val acdfg: Acdfg = new Acdfg(cdfg)
+      val acdfg: Acdfg = new Acdfg(cdfg, GitHubRecord("a", "b", "c", "d"))
       // logger.debug("ACDFG: " + acdfg.toString)
       // logger.debug("Protobuf: " + acdfg.toProtobuf.toString)
       // logger.debug("Recovered ACDFG: " + new Acdfg(acdfg.toProtobuf).toString)

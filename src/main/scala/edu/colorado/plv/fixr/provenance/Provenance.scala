@@ -24,19 +24,8 @@ class Provenance(
   acdfg : Acdfg
 ) {
   def toHtml = {
-    /*
-    var cfgOut = new ByteArrayOutputStream()
-    new CFGToDotGraph().drawCFG(cfg.asInstanceOf[DirectedGraph[_]], body).render(cfgOut, 2)
-    val cfgDotString = cfgOut.toString
+    val ghr = acdfg.getGitHubRecord
 
-    var cdfgOut = new ByteArrayOutputStream()
-    new CDFGToDotGraph().drawCFG(cdfg.asInstanceOf[UnitCdfgGraph], body).render(cdfgOut, 2)
-    val cdfgDotString = cdfgOut.toString
-
-    var acdfgOut = new ByteArrayOutputStream()
-    new AcdfgToDotGraph(acdfg).draw().render(acdfgOut, 2)
-    val acdfgDotString = acdfgOut.toString
-    */
     scalatags.Text.all.html(
       scalatags.Text.all.head(
         // scalatags.Text.all.script(src:="http://requirejs.org/docs/release/2.2.0/minified/require.js"),
@@ -72,22 +61,18 @@ class Provenance(
           "  acdfgContainer.innerHTML = acdfg;\n" +
           "};\n"
         )
-        // scalatags.Text.all.script(src:="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/highlight.min.js"),
-        /*
-        scalatags.Text.all.link(
-          href:="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/styles/default.min.css"
-        )
-        */
       ),
       scalatags.Text.all.body(
         scalatags.Text.all.h1(cdfg.getBody.getMethod.getName + " Provenance Information"),
-        /*
         scalatags.Text.all.div(
-          body.toString.split("\n").iterator.toArray.map { a =>
-            scalatags.Text.all.p(scalatags.Text.all.code(a))
-          }
-        )
-        */
+          scalatags.Text.all.p(ghr.userName),
+          scalatags.Text.all.p(ghr.repoName),
+          scalatags.Text.all.a(
+            href := ghr.url + "/commit/" + ghr.commitHash,
+            ghr.url
+          ),
+          scalatags.Text.all.code(ghr.commitHash)
+        ),
         scalatags.Text.all.h2("Java Source"),
         if (source != null) {
           scalatags.Text.all.pre(scalatags.Text.all.code(source))
