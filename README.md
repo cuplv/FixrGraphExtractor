@@ -91,3 +91,7 @@ We can get a single jar file by running `sbt oneJar`
 
 Then, we can run the program as:
 ```java -jar ./target/scala-2.10/fixrgraphextractor_2.10-0.1-SNAPSHOT-one-jar.jar  <soot-classpath> slice.TestSlice m1```
+
+
+## SOOT issues
+We use the commit version fe313b0 of soot to avoid later bugs still not solved (https://github.com/Sable/soot/issues/618)
