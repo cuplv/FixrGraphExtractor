@@ -5,11 +5,7 @@
 
 Sriram Sankaranarayanan, Sergio Mover and Rhys Braginton Pettee Olsen
 
-<<<<<<< HEAD
-java -cp lib/soot-2.5.0.jar:repos/FixrGraphExtractor-1.0.jar edu.colorado.plv.fixr.Main /Library/Java/JavaVirtualMachines/jdk1.8.0_60.jdk/Contents/Home/jre/lib/rt.jar:./src/test/resources simple.Simple main
-=======
 University of Colorado at Boulder CUPLV Lab
->>>>>>> 510c60ed9d5f7b277bd8b5996a9e17721e8f1009
 
 Boulder, Colorado
 
