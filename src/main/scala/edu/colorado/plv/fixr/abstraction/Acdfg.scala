@@ -12,8 +12,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import edu.colorado.plv.fixr.protobuf.ProtoAcdfg
 
-import edu.colorado.plv.fixr.protobuf.ProtoAcdfg.Acdfg.RepoTag
-
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
 import scala.collection.immutable.HashMap
