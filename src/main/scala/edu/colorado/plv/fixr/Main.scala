@@ -180,7 +180,6 @@ object Main {
         }
 
         if (null != mainopt.processDir) {
-          //List[String]("/home/sergio/works/projects/muse/repos/FixrGraphExtractor/src/test/resources/javasources")/
           val myArray : Array[String] = mainopt.processDir.split(":")
           options.processDir = myArray.toList
         }
