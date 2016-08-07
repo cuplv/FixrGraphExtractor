@@ -17,7 +17,7 @@ class TestBug22 extends FunSuite with BeforeAndAfter {
       options.className = className;
       options.methodName = null;
       options.readFromSources = true;
-      options.sliceFilter = "";
+      options.sliceFilter = List("");
       options.sootClassPath = classPath;
       options.outputDir = null;
       options.provenanceDir = null;
