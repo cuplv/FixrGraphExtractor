@@ -166,7 +166,6 @@ object Main {
         options.useJPhantom = mainopt.useJPhantom
         options.outPhantomJar = mainopt.outPhantomJar
         options.readFromSources = mainopt.readFromSources
-        options.sliceFilter = mainopt.sliceFilter
         options.sootClassPath = mainopt.sootClassPath
         options.outputDir = mainopt.outputDir
         options.provenanceDir = mainopt.provenanceDir
@@ -176,6 +175,10 @@ object Main {
         options.url = mainopt.url
         options.commitHash = mainopt.commitHash
         
+        if (null != mainopt.sliceFilter) {
+          options.sliceFilter = mainopt.sliceFilter.split(":").toList
+        }
+
         if (null != mainopt.processDir) {
           //List[String]("/home/sergio/works/projects/muse/repos/FixrGraphExtractor/src/test/resources/javasources")/
           val myArray : Array[String] = mainopt.processDir.split(":")

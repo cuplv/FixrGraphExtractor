@@ -38,6 +38,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
+import scala.collection.JavaConversions._
 
 
 class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {

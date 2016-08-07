@@ -15,7 +15,7 @@ class ExtractorOptions {
   var outPhantomJar : String = null;
   
   // slicing options
-  var sliceFilter : String = null;
+  var sliceFilter : List[String] = null;
   
   // Input options  
   var processDir : List[String] = null;
