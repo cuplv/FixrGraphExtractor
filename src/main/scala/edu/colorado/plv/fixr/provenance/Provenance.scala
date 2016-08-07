@@ -28,39 +28,6 @@ class Provenance(
 
     scalatags.Text.all.html(
       scalatags.Text.all.head(
-        // scalatags.Text.all.script(src:="http://requirejs.org/docs/release/2.2.0/minified/require.js"),
-        scalatags.Text.all.script(src:="https://github.com/mdaines/viz.js/releases/download/v1.3.0/viz.js"),
-        scalatags.Text.all.script(
-          "var cfgReq = new XMLHttpRequest();\n" +
-          "cfgReq.open('GET', '" + prefix + ".cfg.dot', true);\n" +
-          "cfgReq.send();\n" +
-          "cfgReq.onload = function() {\n" +
-          "  console.log('Hoogabooga!');\n" +
-          "  var cfgText = cfgReq.responseText;\n" +
-          "  var cfgContainer = document.getElementById('cfg');\n" +
-          "  var cfg = Viz(cfgText, options={ format: 'svg', engine: 'dot' });\n" +
-          "  cfgContainer.innerHTML = cfg;\n" +
-          "};\n" +
-          "var cdfgReq = new XMLHttpRequest();\n" +
-          "cdfgReq.open('GET', '" + prefix + ".cdfg.dot', true);\n" +
-          "cdfgReq.send();\n" +
-          "cdfgReq.onload = function() {\n" +
-          "  console.log('Hoogabooga!');\n" +
-          "  var cdfgText = cdfgReq.responseText;\n" +
-          "  var cdfgContainer = document.getElementById('cdfg');\n" +
-          "  var cdfg = Viz(cdfgText, options={ format: 'svg', engine: 'dot' });\n" +
-          "  cdfgContainer.innerHTML = cdfg;\n" +
-          "};\n" +
-          "var acdfgReq = new XMLHttpRequest();\n" +
-          "acdfgReq.open('GET', '" + prefix + ".acdfg.dot', true);\n" +
-          "acdfgReq.send();\n" +
-          "acdfgReq.onload = function() {\n" +
-          "  var acdfgText = acdfgReq.responseText;\n" +
-          "  var acdfgContainer = document.getElementById('acdfg');\n" +
-          "  var acdfg = Viz(acdfgText, options={ format: 'svg', engine: 'dot' });\n" +
-          "  acdfgContainer.innerHTML = acdfg;\n" +
-          "};\n"
-        )
       ),
       scalatags.Text.all.body(
         scalatags.Text.all.h1(cdfg.getBody.getMethod.getName + " Provenance Information"),
@@ -85,11 +52,29 @@ class Provenance(
         scalatags.Text.all.h2("Sliced Jimple"),
         scalatags.Text.all.pre(scalatags.Text.all.code(slicedBody.toString)),
         scalatags.Text.all.h2("Control Flow Graph (CFG)"),
-        scalatags.Text.all.div(id := "cfg"),
+        scalatags.Text.all.div(id := "cfg",
+          scalatags.Text.all.img(src := "slice.TestSlice_m1.cfg.dot.svg")
+        ),
         scalatags.Text.all.h2("Control Data Flow Graph (CDFG)"),
-        scalatags.Text.all.div(id := "cdfg"),
+        scalatags.Text.all.div(id := "cdfg",
+          scalatags.Text.all.img(src := "slice.TestSlice_m1.cdfg.dot.svg")
+        ),
         scalatags.Text.all.h2("Abstract Control Data Flow Graph (ACDFG)"),
-        scalatags.Text.all.div(id := "acdfg")
+        scalatags.Text.all.div(id := "acdfg",
+          scalatags.Text.all.img(src := "slice.TestSlice_m1.acdfg.dot.svg")
+        ),
+        scalatags.Text.all.p(scalatags.Text.all.em(
+          "University of Colorado at Boulder"
+        )),
+        scalatags.Text.all.p(scalatags.Text.all.em(
+          "CUPLV Lab"
+        )),
+        scalatags.Text.all.p(scalatags.Text.all.em(
+          "DARPA MUSE Round II, Fixr 2016"
+        )),
+        scalatags.Text.all.p(scalatags.Text.all.em(
+          "Sergio Mover, Rhys Braginton Pettee Olsen, Sriram Sankaranarayanan (PI)"
+        ))
       )
     )
   }
