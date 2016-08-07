@@ -147,6 +147,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       if (null != options.outputDir) {
     	logger.info("Writing data for - class {} - method: {}{}",
     	  sootClass.getName(), sootMethod.getName(), "")
+
     	writeData(name, acdfg, cdfg, body, slicedJimple, slicer.getCfg());
     	logger.info("Created graph for - class {} - method: {}{}",
     	  sootClass.getName(), sootMethod.getName(), "")
@@ -183,7 +184,18 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     // Write the acdfg
     val acdfgFileName : String = Paths.get(outputDir,
       outFileNamePrefix + ".acdfg.bin").toString();
-    val output : FileOutputStream = new FileOutputStream(acdfgFileName)
+    val outputFile : File = new File(acdfgFileName)
+    try {
+      if (! outputFile.getParentFile.exists) {
+        outputFile.getParentFile.mkdir
+      }
+    }
+    catch {
+      case ex: Exception =>
+        logger.error("Unable to create required new output directory")
+        throw ex
+    }
+    val output : FileOutputStream = new FileOutputStream(outputFile)
     acdfg.toProtobuf.writeTo(output)
     output.close()
     
@@ -194,13 +206,14 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
 
       try {
         val provFile : File = new File(filePrefix)
-        if (!provFile.getParentFile.exists) {
+        if (! provFile.getParentFile.exists) {
           provFile.getParentFile.mkdir
         }
       }
       catch {
         case ex: Exception =>
           logger.error("Unable to create required new provenance directory")
+          throw ex
       }
 
       // ACDFG DOT
