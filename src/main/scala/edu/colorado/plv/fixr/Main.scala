@@ -2,11 +2,11 @@ package edu.colorado.plv.fixr
 
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.{FileWriter, File, FileInputStream, FileOutputStream}
+import java.io.{File, FileInputStream, FileOutputStream, FileWriter}
+import java.nio.file.Paths
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
 import edu.colorado.plv.fixr.abstraction.Acdfg
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
 import edu.colorado.plv.fixr.extractors.Extractor
@@ -21,11 +21,13 @@ import soot.Scene
 import soot.SootClass
 import soot.toolkits.graph.pdg.EnhancedUnitGraph
 import edu.colorado.plv.fixr.extractors.MethodExtractor
+import edu.colorado.plv.fixr.visualization.Visualizer
 
 object Main {
   val logger : Logger = LoggerFactory.getLogger(this.getClass)
 
   case class MainOptions(
+    visualize : Boolean = false,
     sootClassPath : String = null,
     readFromSources : Boolean = true,
     useJPhantom : Boolean = false,
@@ -36,6 +38,9 @@ object Main {
     methodName : String = null,
     outputDir : String = null,
     provenanceDir : String = null,
+    graph1 : String = null,
+    graph2 : String = null,
+    iso : String = null,
     var userName : String = null,
     var repoName : String = null,
     var url : String = null,
@@ -51,6 +56,18 @@ object Main {
     val parser = new scopt.OptionParser[MainOptions]("scopt") {
       head("GraphExtractor", "0.1")
       //
+      opt[Boolean]('v', "visualize-iso") action { (x, c) =>
+        c.copy(visualize = x) } text("Set to true to visualize an embedding/isomorphism")
+
+      opt[String]("graph1") action { (x, c) =>
+        c.copy(graph1 = x) } text("Path to first ACDFG protobuf")
+
+      opt[String]("graph2") action { (x, c) =>
+        c.copy(graph1 = x) } text("Path to second ACDFG protobuf")
+
+      opt[String]('i', "graph2") action { (x, c) =>
+        c.copy(iso = x) } text("Path to embedding/isomorphism protobuf")
+
       opt[String]('l', "cp") action { (x, c) =>
       c.copy(sootClassPath = x) } text("cp is the soot classpath")
       //
@@ -91,9 +108,40 @@ object Main {
         c.copy(url = x) } text("URL of the git repo; should be of the form `https://github.com/user_name/repo_name`.")
       opt[String]('h', "commit-hash") action { (x, c) =>
         c.copy(commitHash = x) } text("SHA-1 hash of the commit being ingested.")
+
     }
     parser.parse(args, MainOptions()) match {
-      case Some(mainopt) => {
+      case Some(mainopt) if mainopt.visualize => {
+        if (null == mainopt.graph1) {
+          logger.error("Embedder is set to visualize an embedding/isomorphism " +
+            "but first path to ACDFG protobuf was not specified")
+          System.exit(1)
+        } else if (null == mainopt.graph2) {
+          logger.error("Embedder is set to visualize an embedding/isomorphism " +
+            "but second path to ACDFG protobuf was not specified")
+          System.exit(1)
+        } else if (null == mainopt.iso) {
+          logger.error("Embedder is set to visualize an embedding/isomorphism " +
+            "but second path to embedding/isomorphism protobuf was not specified")
+          System.exit(1)
+        } else if (null == mainopt.outputDir) {
+          logger.error("Embedder is set to visualize an embedding/isomorphism " +
+            "but output directory was not specified")
+          System.exit(1)
+        }
+        val graph1FileSt = new FileInputStream(new File(mainopt.graph1))
+        val graph2FileSt = new FileInputStream(new File(mainopt.graph2))
+        val isoFileSt    = new FileInputStream(new File(mainopt.iso))
+
+        val visualizer = new Visualizer(graph1FileSt, graph2FileSt, isoFileSt)
+
+        val graph1Id = visualizer.protoIso.getGraph1Id
+        val graph2Id = visualizer.protoIso.getGraph2Id
+        val outputName = graph1Id + "_" + graph2Id + ".iso.dot"
+
+        visualizer.draw().plot(Paths.get(mainopt.outputDir, outputName).toString())
+      }
+      case Some(mainopt) if !mainopt.visualize => {
         logger.debug("cp: {}", mainopt.sootClassPath)
         logger.debug("read-from-sources: {}", mainopt.readFromSources)
         logger.debug("jphantom: {}\n", mainopt.useJPhantom)

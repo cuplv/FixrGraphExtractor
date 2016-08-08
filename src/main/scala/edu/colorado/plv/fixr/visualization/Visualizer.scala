@@ -23,19 +23,19 @@ class Visualizer(
     graph2Stream : FileInputStream,
     isoStream : FileInputStream
   ) extends CFGToDotGraph {
-    val ProtoGraph1 : Acdfg = ProtoAcdfg.Acdfg.parseFrom(graph1Stream)
-    val ProtoGraph2 : Acdfg = ProtoAcdfg.Acdfg.parseFrom(graph2Stream)
+    val protoGraph1 : Acdfg = ProtoAcdfg.Acdfg.parseFrom(graph1Stream)
+    val protoGraph2 : Acdfg = ProtoAcdfg.Acdfg.parseFrom(graph2Stream)
     val protoIso : Iso = Iso.parseFrom(isoStream)
-    val graph1 : abstraction.Acdfg = new abstraction.Acdfg(ProtoGraph1)
-    val graph2 : abstraction.Acdfg = new abstraction.Acdfg(ProtoGraph2)
+    val graph1 : abstraction.Acdfg = new abstraction.Acdfg(protoGraph1)
+    val graph2 : abstraction.Acdfg = new abstraction.Acdfg(protoGraph2)
 
   def draw() : DotGraph = {
 
     var canvas : DotGraph = initDotGraph(null)
 
     canvas.setGraphLabel("ACDFG")
-    var canvas1 = canvas.createSubGraph("ACDFG 1")
-    var canvas2 = canvas.createSubGraph("ACDFG 2")
+    var canvas1 = canvas.createSubGraph("ACDFG 1: " + protoIso.getGraph1Id)
+    var canvas2 = canvas.createSubGraph("ACDFG 2: " + protoIso.getGraph2Id)
 
     // add contents of graph 1
     for (n <- graph1.nodes) {
