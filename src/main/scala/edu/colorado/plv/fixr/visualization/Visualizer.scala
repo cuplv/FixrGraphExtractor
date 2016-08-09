@@ -37,6 +37,9 @@ class Visualizer(
     var canvas1 = canvas.createSubGraph("ACDFG 1: " + protoIso.getGraph1Id)
     var canvas2 = canvas.createSubGraph("ACDFG 2: " + protoIso.getGraph2Id)
 
+    canvas1.setGraphAttribute("rank", "same")
+    canvas2.setGraphAttribute("rank", "same")
+
     // add contents of graph 1
     for (n <- graph1.nodes) {
       var dotNode : DotGraphNode = canvas1.drawNode("1_" + n._1.toString)
