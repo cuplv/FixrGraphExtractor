@@ -84,7 +84,7 @@ class Visualizer(
     }
 
     // add contents of graph 1
-    for (n <- graph1.nodes) {
+    for (n <- graph2.nodes) {
       var dotNode : DotGraphNode = canvas2.drawNode("2_" + n._1.toString)
       n match {
         case n@(id : Long, node : DataNode) =>
@@ -111,7 +111,7 @@ class Visualizer(
         case n => Nil
       }
     }
-    for (e <- graph1.edges) {
+    for (e <- graph2.edges) {
       var dotEdge : DotGraphEdge = canvas2.drawEdge(
         "2_" + e._2.from.toString, "2_" +  e._2.to.toString
       )
@@ -133,7 +133,7 @@ class Visualizer(
       "1_" + e.getId1.toString,
       "2_" + e.getId2.toString
       )
-      dotEdge.setAttribute("color", "olive")
+      dotEdge.setAttribute("color", "green")
       dotEdge.setAttribute("Damping", "0.8")
       dotEdge.setAttribute("style", "dotted")
     }

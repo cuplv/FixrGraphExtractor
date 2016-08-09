@@ -59,11 +59,11 @@ object Main {
       opt[Boolean]('v', "visualize-iso") action { (x, c) =>
         c.copy(visualize = x) } text("Set to true to visualize an embedding/isomorphism")
 
-      opt[String]("graph1") action { (x, c) =>
+      opt[String]('1', "graph1") action { (x, c) =>
         c.copy(graph1 = x) } text("Path to first ACDFG protobuf")
 
-      opt[String]("graph2") action { (x, c) =>
-        c.copy(graph1 = x) } text("Path to second ACDFG protobuf")
+      opt[String]('2', "graph2") action { (x, c) =>
+        c.copy(graph2 = x) } text("Path to second ACDFG protobuf")
 
       opt[String]('i', "graph2") action { (x, c) =>
         c.copy(iso = x) } text("Path to embedding/isomorphism protobuf")
@@ -116,15 +116,18 @@ object Main {
           logger.error("Embedder is set to visualize an embedding/isomorphism " +
             "but first path to ACDFG protobuf was not specified")
           System.exit(1)
-        } else if (null == mainopt.graph2) {
+        }
+        if (null == mainopt.graph2) {
           logger.error("Embedder is set to visualize an embedding/isomorphism " +
             "but second path to ACDFG protobuf was not specified")
           System.exit(1)
-        } else if (null == mainopt.iso) {
+        }
+        if (null == mainopt.iso) {
           logger.error("Embedder is set to visualize an embedding/isomorphism " +
-            "but second path to embedding/isomorphism protobuf was not specified")
+            "but path to embedding/isomorphism protobuf was not specified")
           System.exit(1)
-        } else if (null == mainopt.outputDir) {
+        }
+        if (null == mainopt.outputDir) {
           logger.error("Embedder is set to visualize an embedding/isomorphism " +
             "but output directory was not specified")
           System.exit(1)
