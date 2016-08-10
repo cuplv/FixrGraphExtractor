@@ -207,6 +207,11 @@ class Acdfg(
     protoRepoTag.setCommitHash(this.gitHubRecord.commitHash)
     builder.setRepoTag(protoRepoTag)
 
+    // add bag of methods
+    val protoMethodBag = ProtoAcdfg.Acdfg.MethodBag.newBuilder()
+    methodBag.sorted.foreach(protoMethodBag.addMethod)
+    builder.setMethodBag(protoMethodBag)
+
     builder.build()
   }
 
