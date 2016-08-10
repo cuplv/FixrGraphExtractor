@@ -49,6 +49,10 @@ message Acdfg {
     required uint64 to   = 3;
   }
 
+  message MethodBag {
+    repeated string method = 1;
+  }
+
   repeated DataNode    data_node    = 1;
   repeated MiscNode    misc_node    = 2;
   repeated MethodNode  method_node  = 3;
@@ -57,5 +61,5 @@ message Acdfg {
   repeated UseEdge     use_edge     = 6;
   repeated TransEdge   trans_edge   = 7;
   optional RepoTag     repo_tag     = 8;
-  repeated string      method_bag   = 9;
+  repeated MethodBag   method_bag   = 9;
 }
