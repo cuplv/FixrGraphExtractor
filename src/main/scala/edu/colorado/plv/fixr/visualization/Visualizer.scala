@@ -6,10 +6,9 @@ import edu.colorado.plv.fixr.abstraction.{TransControlEdge, _}
 import edu.colorado.plv.fixr.protobuf.ProtoAcdfg
 import edu.colorado.plv.fixr.protobuf.ProtoIso.Iso
 import edu.colorado.plv.fixr.protobuf.ProtoAcdfg.Acdfg
-import soot.util.dot.{DotGraph, DotGraphConstants, DotGraphEdge, DotGraphNode}
-
+import soot.util.dot._
 import edu.colorado.plv.fixr.graphs.CFGToDotGraph.{DotNamer, NodeComparator}
-import edu.colorado.plv.fixr.graphs.{UnitCdfgGraph, CFGToDotGraph}
+import edu.colorado.plv.fixr.graphs.{CFGToDotGraph, UnitCdfgGraph}
 
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
@@ -29,6 +28,60 @@ class Visualizer(
     val graph1 : abstraction.Acdfg = new abstraction.Acdfg(protoGraph1)
     val graph2 : abstraction.Acdfg = new abstraction.Acdfg(protoGraph2)
 
+  def drawEdge(e : (Long, Edge), canvas : DotGraph, graphNum : Int) = {
+    println("$$$ edge " + graphNum.toString + " id: " + e._2.id.toString)
+    println("$$$   edge " + graphNum.toString + " from: " + e._2.from.toString)
+    println("$$$   edge " + graphNum.toString + " to: " + e._2.to.toString)
+    var dotEdge : DotGraphEdge = canvas.drawEdge(
+      graphNum.toString + "_" + e._2.from.toString,
+      graphNum.toString + "_" +  e._2.to.toString
+    )
+    e match {
+      case e@(id : Long, edge : DefEdge) =>
+        dotEdge.setAttribute("color", "blue")
+      case e@(id : Long, edge : UseEdge) =>
+        dotEdge.setAttribute("color", "red")
+      case e@(id : Long, edge : TransControlEdge) =>
+        dotEdge.setAttribute("color", "gray58")
+        dotEdge.setAttribute("Damping", "0.5")
+        dotEdge.setAttribute("style", "dotted")
+      case _ => null
+    }
+  }
+
+  def drawNode(n : (Long, Node), canvas : DotGraph, graphNum : Int) = {
+    println("$$$ node " + graphNum.toString + "  id: " + n._2.id.toString)
+    var dotNode : DotGraphNode = canvas.drawNode(graphNum.toString + "_" + n._1.toString)
+    n match {
+      case n@(id : Long, node : DataNode) =>
+        dotNode.setLabel("#" + id.toString + ": " + node.datatype.toString + " " + node.name)
+        dotNode.setStyle(DotGraphConstants.NODE_STYLE_DASHED)
+        dotNode.setAttribute("shape", "ellipse")
+        println("$$$   node " + graphNum.toString + " name: " + "#" + id.toString + ": " +
+          node.datatype.toString + " " + node.name)
+      case n@(id : Long, node : MethodNode) =>
+        var name : String = "#" + node.id.toString + ": "
+        val arguments = node.argumentIds.map { case id =>
+          if (id == 0) {
+            name // + " [string constant]"
+          } else {
+            name + " [#" + id.toString + "]"
+          }
+        }
+        name += node.name
+        if (node.invokee.isDefined) {
+          name += "[#" + node.invokee.get + "]"
+        }
+        name += "(" + arguments.mkString(",") + ")"
+        dotNode.setLabel(name)
+        println("$$$   node " + graphNum.toString + " name: " + name)
+      case n@(id : Long, node : MiscNode) =>
+        dotNode.setLabel("#" + id.toString)
+        println("$$$   node " + graphNum.toString + " name: #" + id.toString)
+      case n => Nil
+    }
+  }
+
   def draw() : DotGraph = {
 
     var canvas : DotGraph = initDotGraph(null)
@@ -41,95 +94,12 @@ class Visualizer(
     canvas2.setGraphAttribute("rank", "same")
 
     // add contents of graph 1
-    for (n <- graph1.nodes) {
-      var dotNode : DotGraphNode = canvas1.drawNode("1_" + n._1.toString)
-      n match {
-        case n@(id : Long, node : DataNode) =>
-          dotNode.setLabel("#" + id.toString + ": " + node.datatype.toString + " " + node.name)
-          dotNode.setStyle(DotGraphConstants.NODE_STYLE_DASHED)
-          dotNode.setAttribute("shape", "ellipse")
-        case n@(id : Long, node : MethodNode) =>
-          var name : String = "#" + node.id.toString + ": "
-          val arguments = node.argumentIds.map { case id =>
-            if (id == 0) {
-              name // + " [string constant]"
-            } else {
-              name + " [#" + id.toString + "]"
-            }
-          }
-          name += node.name
-          if (node.invokee.isDefined) {
-            name += "[#" + node.invokee.get + "]"
-          }
-          name += "(" + arguments.mkString(",") + ")"
-          dotNode.setLabel(name)
-        case n@(id : Long, node : MiscNode) =>
-          dotNode.setLabel("#" + id.toString)
-        case n => Nil
-      }
-    }
-    for (e <- graph1.edges) {
-      var dotEdge : DotGraphEdge = canvas1.drawEdge(
-        "1_" + e._2.from.toString, "1_" +  e._2.to.toString
-      )
-      e match {
-        case e@(id : Long, edge : DefEdge) =>
-          dotEdge.setAttribute("color", "blue")
-        case e@(id : Long, edge : UseEdge) =>
-          dotEdge.setAttribute("color", "red")
-          dotEdge.setAttribute("Damping", "0.7")
-        case e@(id : Long, edge : TransControlEdge) =>
-          dotEdge.setAttribute("color", "gray58")
-          dotEdge.setAttribute("Damping", "0.7")
-          dotEdge.setAttribute("style", "dotted")
-        case _ => null
-      }
-    }
+    graph1.nodes.foreach {n => drawNode(n, canvas1, 1)}
+    graph1.edges.foreach {e => drawEdge(e, canvas1, 1)}
 
-    // add contents of graph 1
-    for (n <- graph2.nodes) {
-      var dotNode : DotGraphNode = canvas2.drawNode("2_" + n._1.toString)
-      n match {
-        case n@(id : Long, node : DataNode) =>
-          dotNode.setLabel("#" + id.toString + ": " + node.datatype.toString + " " + node.name)
-          dotNode.setStyle(DotGraphConstants.NODE_STYLE_DASHED)
-          dotNode.setAttribute("shape", "ellipse")
-        case n@(id : Long, node : MethodNode) =>
-          var name : String = "#" + node.id.toString + ": "
-          val arguments = node.argumentIds.map { case id =>
-            if (id == 0) {
-              name // + " [string constant]"
-            } else {
-              name + " [#" + id.toString + "]"
-            }
-          }
-          name += node.name
-          if (node.invokee.isDefined) {
-            name += "[#" + node.invokee.get + "]"
-          }
-          name += "(" + arguments.mkString(",") + ")"
-          dotNode.setLabel(name)
-        case n@(id : Long, node : MiscNode) =>
-          dotNode.setLabel("#" + id.toString)
-        case n => Nil
-      }
-    }
-    for (e <- graph2.edges) {
-      var dotEdge : DotGraphEdge = canvas2.drawEdge(
-        "2_" + e._2.from.toString, "2_" +  e._2.to.toString
-      )
-      e match {
-        case e@(id : Long, edge : DefEdge) =>
-          dotEdge.setAttribute("color", "blue")
-        case e@(id : Long, edge : UseEdge) =>
-          dotEdge.setAttribute("color", "red")
-        case e@(id : Long, edge : TransControlEdge) =>
-          dotEdge.setAttribute("color", "gray58")
-          dotEdge.setAttribute("Damping", "0.5")
-          dotEdge.setAttribute("style", "dotted")
-        case _ => null
-      }
-    }
+    // add contents of graph 2
+    graph2.nodes.foreach {n => drawNode(n, canvas2, 2)}
+    graph2.edges.foreach {e => drawEdge(e, canvas2, 2)}
 
     for (e <- protoIso.getMapNodeList) {
       var dotEdge : DotGraphEdge = canvas.drawEdge(
