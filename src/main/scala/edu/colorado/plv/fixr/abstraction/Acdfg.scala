@@ -171,6 +171,8 @@ class Acdfg(
         protoTransEdge.setTo(edge.to)
         builder.addTransEdge(protoTransEdge)
     }
+    var methodBag : scala.collection.mutable.ArrayBuffer[String] =
+      new scala.collection.mutable.ArrayBuffer[String]()
     nodes.foreach {
       case (id : Long, node : DataNode) =>
         val protoDataNode : ProtoAcdfg.Acdfg.DataNode.Builder =
@@ -194,6 +196,8 @@ class Acdfg(
         node.argumentIds.foreach(protoMethodNode.addArgument)
         protoMethodNode.setName(node.name)
         builder.addMethodNode(protoMethodNode)
+        // add method to bag of methods representation
+        methodBag.append(node.name)
     }
 
     val protoRepoTag = ProtoAcdfg.Acdfg.RepoTag.newBuilder()
