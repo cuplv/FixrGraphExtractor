@@ -6,15 +6,12 @@ import soot.jimple.internal.JimpleLocal
 
 import scala.collection.JavaConversions.asScalaIterator
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.Stack
-import scala.collection.mutable.HashMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import edu.colorado.plv.fixr.protobuf.ProtoAcdfg
 
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
-import scala.collection.immutable.HashMap
 
 /**
   * Acdfg
@@ -141,7 +138,7 @@ class Acdfg(
   var methodBag = new scala.collection.mutable.ArrayBuffer[String]()
 
   def prepareMethodBag() = {
-    nodes.filter(_.isInstanceOf[MethodNode]).foreach { node =>
+    nodes.filter(_._2.isInstanceOf[MethodNode]).foreach { node =>
       methodBag.append(node.asInstanceOf[MethodNode].name)
     }
     methodBag = methodBag.sorted
@@ -760,13 +757,13 @@ class Acdfg(
       null,
       protobuf,
       GitHubRecord(
-        if (protobuf.getRepoTag.hasUserName())
+        if (protobuf.getRepoTag.hasUserName)
           protobuf.getRepoTag.getUserName else "",
-        if (protobuf.getRepoTag.hasRepoName())
+        if (protobuf.getRepoTag.hasRepoName)
           protobuf.getRepoTag.getRepoName else "",
-        if (protobuf.getRepoTag.hasUrl())
+        if (protobuf.getRepoTag.hasUrl)
           protobuf.getRepoTag.getUrl else "",
-        if (protobuf.getRepoTag.hasCommitHash())
+        if (protobuf.getRepoTag.hasCommitHash)
           protobuf.getRepoTag.getCommitHash else ""
       )
     )
