@@ -103,8 +103,8 @@ class Visualizer(
 
     for (e <- protoIso.getMapNodeList) {
       var dotEdge : DotGraphEdge = canvas.drawEdge(
-      "1_" + e.getId1.toString,
-      "2_" + e.getId2.toString
+        "1_" + e.getId1.toString,
+        "2_" + e.getId2.toString
       )
       dotEdge.setAttribute("color", "green")
       dotEdge.setAttribute("Damping", "0.8")
