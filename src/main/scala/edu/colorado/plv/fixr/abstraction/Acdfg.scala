@@ -138,6 +138,15 @@ class Acdfg(
   protected[fixr] var edges = scala.collection.mutable.HashMap[Long, Edge]()
   protected[fixr] var nodes = scala.collection.mutable.HashMap[Long, Node]()
 
+  var methodBag = new scala.collection.mutable.ArrayBuffer[String]()
+
+  def prepareMethodBag() = {
+    nodes.filter(_.isInstanceOf[MethodNode]).foreach { node =>
+      methodBag.append(node.asInstanceOf[MethodNode].name)
+    }
+    methodBag = methodBag.sorted
+  }
+
   /* Internal Protobuf value generated as needed */
   private lazy val pb : ProtoAcdfg.Acdfg = {
     var builder : ProtoAcdfg.Acdfg.Builder = ProtoAcdfg.Acdfg.newBuilder()
@@ -344,6 +353,7 @@ class Acdfg(
     adjacencyList.edges.foreach {edge =>
       edges += ((edge.id, edge))
     }
+    prepareMethodBag()
   }
 
   def this(cdfg : UnitCdfgGraph, gitHubRecord: GitHubRecord) = {
@@ -738,6 +748,9 @@ class Acdfg(
     logger.debug("### Computing transitive closure down to DFS of command edges...")
     computeTransClosure()
 
+    logger.debug("### Preparing bag of methods...")
+    prepareMethodBag()
+
     logger.debug("### Done")
   }
 
@@ -857,6 +870,17 @@ class Acdfg(
 
     protobuf.getTransEdgeList.foreach { transEdge =>
       addTransControlEdge(transEdge.getId, transEdge.getFrom, transEdge.getTo)
+    }
+
+    if (
+      (!protobuf.getMethodBag.isInitialized) ||
+        (protobuf.getMethodBag.getMethodCount == 0)
+    ) {
+      prepareMethodBag()
+    } else {
+      protobuf.getMethodBag.getMethodList.foreach {method =>
+        methodBag.append(method)
+      }
     }
   }
 }
