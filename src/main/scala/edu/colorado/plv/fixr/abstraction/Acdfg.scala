@@ -138,7 +138,7 @@ class Acdfg(
   var methodBag = new scala.collection.mutable.ArrayBuffer[String]()
 
   def prepareMethodBag() = {
-    nodes.filter(_._2.isInstanceOf[MethodNode]).foreach { node =>
+    nodes.filter(_._2.isInstanceOf[MethodNode]).foreach { case (_, node) =>
       methodBag.append(node.asInstanceOf[MethodNode].name)
     }
     methodBag = methodBag.sorted
