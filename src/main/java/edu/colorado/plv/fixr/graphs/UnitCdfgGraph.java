@@ -94,7 +94,7 @@ public class UnitCdfgGraph extends BriefUnitGraph {
 				Collection<Local> defsInPred = defEdges.get(pred);
 				if (null != defsInPred) {
 					for (Local l : defsInPred) {
-						useEdges.get(l).add(u);					
+						useEdges.get(l).add(u);
 					}
 				}
 			}			
@@ -109,61 +109,6 @@ public class UnitCdfgGraph extends BriefUnitGraph {
 //		}
 	}
 	
-	/**
-	 * Generates the data flow graph
-	 */
-	private void addDataDependentNodesOld()
-	{
-		assert useEdges == null && defEdges == null;
-		
-		SimpleLocalDefs defs = new SimpleLocalDefs(this);		
-
-		/* scan the dependency graph to get the dependencies */
-		useEdges = new HashMap<Local, List<Unit>>();
-		defEdges = new HashMap<Unit, List<Local>>();
-		
-		localsList = new ArrayList<Local>();
-		for (Local l : this.getBody().getLocals()) {
-			localsList.add(l);
-			assert ! useEdges.containsKey(l);
-			useEdges.put(l, new ArrayList<Unit>());
-		}
-
-		for (Iterator<Unit> unitIter = unitIterator(); unitIter.hasNext(); ) {
-			Unit unit = unitIter.next();
-		
-			/* Defs list */
-			List<Local> defsList = new ArrayList<Local>();
-			defEdges.put(unit, defsList);			
-			for (ValueBox b : unit.getDefBoxes()) {
-				Value v = b.getValue();
-				if (v instanceof Local) defsList.add((Local) v);
-			}
-			
-			/* use list.
-			 * 
-			 * TODO: change the implementation, it will not scale now. 
-			 * 
-			 * */
-			for (ValueBox b : unit.getUseBoxes()) {
-				Value v = b.getValue();
-				if (v instanceof Local) {
-					for (Unit dstUnit : defs.getDefsOfAt((Local) v, unit)) {
-						for (ValueBox dstB : dstUnit.getDefBoxes()) {
-							Value dstV = dstB.getValue();							
-							/* dstV is used by this unit */
-							if (dstV instanceof Local) {
-								List<Unit> dstEdges = useEdges.get(dstV);
-								assert dstEdges != null;								
-								dstEdges.add(dstUnit);
-							}
-						}													
-					}
-				}
-			}
-		}				
-	}
-
 	public Iterator<Local> localsIter()
 	{
 		return localsList.iterator();		

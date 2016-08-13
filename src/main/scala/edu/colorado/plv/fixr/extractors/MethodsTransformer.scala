@@ -115,7 +115,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     val body: Body = sootMethod.retrieveActiveBody()
     val jimpleUnitGraph: EnhancedUnitGraph = new EnhancedUnitGraph(body)
     val slicer: APISlicer = new APISlicer(jimpleUnitGraph, body)
-    
+
     var sc: SlicingCriterion = null
     if (null == options.sliceFilter)
       sc = MethodPackageSeed.createAndroidSeed()
@@ -124,7 +124,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     
     logger.debug("Slicing...")
     val slicedJimple: Body = slicer.slice(sc)
-    
+
     if (null == slicedJimple) {
       /* Do not print the graph for empty slices */
       logger.warn("Empty slice for - class {} - method: {}{}",

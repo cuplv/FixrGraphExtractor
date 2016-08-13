@@ -20,7 +20,7 @@ public class MethodPackageSeed implements SlicingCriterion {
 	public MethodPackageSeed(String packagePrefix) {			
 		Collection<String> packageList = new LinkedList<String>();
 		packageList.add(packagePrefix);
- 
+		
 		this.packagePrefixes = new LinkedList<String>(packageList); 
 	}
 	
@@ -36,7 +36,7 @@ public class MethodPackageSeed implements SlicingCriterion {
 		for (ValueBox valBox : unit.getUseBoxes()) {
 			// DEBUG
 			// System.out.println(valBox + " : " + valBox.getClass());
-			
+
 			Value v = valBox.getValue();			
 			if (v instanceof InvokeExpr) {
 				String declaringClassName = ((InvokeExpr) v).getMethod().getDeclaringClass().getName();
