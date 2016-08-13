@@ -417,6 +417,12 @@ public class APISlicer {
       return this.unitsInSlice[i] && this.unitsInSlice[j];
     }
 
+    private boolean hasEdges(int srcUnitId) {
+      boolean hasEdges = false;
+      for (int j = 0; j < edges.length && ! hasEdges; j++)
+        hasEdges = hasEdges || (edges[srcUnitId][j]);
+      return hasEdges;
+    }
     /**
      * Compute the closure of the transitions among the node not in the slice.
      *
@@ -477,6 +483,11 @@ public class APISlicer {
       Body dstBody = getEmptyDstBody(srcBody);
       PatchingChain<Unit> dstChain = dstBody.getUnits();
 
+      Unit dstFirst = Jimple.v().newNopStmt();
+      Unit dstLast = Jimple.v().newNopStmt();
+      dstChain.addFirst(dstFirst);
+      dstChain.addLast(dstLast);
+
       assert (unitToId.containsKey(srcChain.getFirst()));
       toVisit.push(unitToId.get(srcChain.getFirst()));
 
@@ -502,7 +513,8 @@ public class APISlicer {
           idToDstUnit[srcUnitId] = dstUnit;
           bindings.put(srcUnit, dstUnit);
           dstUnit.addAllTagsOf(srcUnit);
-          dstChain.addLast(dstUnit);
+          dstChain.insertBeforeNoRedirect(dstUnit, dstLast);
+          //insertBefore(dstUnit, dstLast);
 
           /* Schedule the visit of all the children.
              Here we insert as LAST element the next element in the patching
@@ -541,9 +553,15 @@ public class APISlicer {
           System.out.println("Post-visit " + srcUnitId);
           dstUnit = idToDstUnit[srcUnitId];
 
+          /* redirect gotos */
           LabelHandler labelHandler = new LabelHandler(dstUnit);
           Map<Object, List<Unit>> c2t = getConditions2Targets(srcUnitId, idToDstUnit);
           labelHandler.fixGotos(c2t);
+
+          /* redirect to final node */
+          if (! hasEdges(srcUnitId)) {
+            dstChain.insertAfter(Jimple.v().newGotoStmt(dstLast), dstUnit);
+          }
 
           /* Visited in post-order */
           statusMap.put(srcUnit, 2);
