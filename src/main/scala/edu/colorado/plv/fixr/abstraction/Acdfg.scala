@@ -35,13 +35,13 @@ abstract class CommandNode extends Node {
   override def toString = this match {
     case n : MethodNode =>
       n.getClass.getSimpleName + "(" +
-        "id: "+ n.id.toString + ", " +
-        "invokee: "   + n.invokee.toString + ", " +
-        "name: "      + n.name.toString + ", " +
-        "arguments: [" +
-        n.argumentIds.map(_.toString).mkString(", ") +
-        "]" +
-        ")"
+      "id: "+ n.id.toString + ", " +
+      "invokee: "   + n.invokee.toString + ", " +
+      "name: "      + n.name.toString + ", " +
+      "arguments: [" +
+      n.argumentIds.map(_.toString).mkString(", ") +
+      "]" +
+      ")"
     case n =>
       this.getClass.getSimpleName + "(" + id.toString + ")"
   }
@@ -60,7 +60,7 @@ case class MethodNode(
   invokee : Option[Long],
   name : String,
   argumentIds : Vector[Long]
-  // var argumentNames : Array[String]
+    // var argumentNames : Array[String]
 ) extends CommandNode
 
 case class MiscNode(
@@ -75,10 +75,10 @@ abstract class Edge {
   val id   : Long
   override def toString =
     this.getClass.getSimpleName +
-      "(id: "     + id.toString   +
-      ", to: "    + to.toString   +
-      ", from: "  + from.toString +
-      ")"
+  "(id: "     + id.toString   +
+  ", to: "    + to.toString   +
+  ", from: "  + from.toString +
+  ")"
 }
 
 case class DefEdge(
@@ -227,9 +227,9 @@ class Acdfg(
   def disjointUnion(that : Acdfg) : AdjacencyList =
     AdjacencyList(
       ((this.nodes.values.toSet &~ that.nodes.values.toSet) ++
-      (that.nodes.values.toSet -- this.nodes.values.toSet)).toVector,
-     ((this.edges.values.toSet -- that.edges.values.toSet) ++
-      (that.edges.values.toSet -- this.edges.values.toSet)).toVector
+        (that.nodes.values.toSet -- this.nodes.values.toSet)).toVector,
+      ((this.edges.values.toSet -- that.edges.values.toSet) ++
+        (that.edges.values.toSet -- this.edges.values.toSet)).toVector
     )
   def +|(that : Acdfg) = disjointUnion(that)
 
@@ -251,7 +251,7 @@ class Acdfg(
   def equals(that : Acdfg) : Boolean = {
     val du = this +| that
     du.nodes.isEmpty && du.edges.isEmpty &&
-      this.ghr == that.ghr
+    this.ghr == that.ghr
   }
 
   def ==(that : Acdfg) : Boolean =
@@ -353,10 +353,10 @@ class Acdfg(
     val useEdges = cdfg.useEdges()
 
     def addDataNode(
-                     local : soot.Local,
-                     name : String,
-                     datatype : String
-                   ) = {
+      local : soot.Local,
+      name : String,
+      datatype : String
+    ) = {
       val id = getNewId
       val node = new DataNode(id, name, datatype)
       localToId += ((local,id))
@@ -364,12 +364,12 @@ class Acdfg(
     }
 
     def addMethodNode(
-                       unit : soot.Unit,
-                       assignee : Option[String],
-                       invokee : Option[Long],
-                       name : String,
-                       argumentStrings : Array[String]
-                     ) : (Long, Node) = {
+      unit : soot.Unit,
+      assignee : Option[String],
+      invokee : Option[Long],
+      name : String,
+      argumentStrings : Array[String]
+    ) : (Long, Node) = {
       val id   = getNewId
       val node = new MethodNode(
         id,
@@ -384,8 +384,8 @@ class Acdfg(
     }
 
     def addMiscNode(
-                     unit : soot.Unit
-                   ) : (Long, Node) = {
+      unit : soot.Unit
+    ) : (Long, Node) = {
       val id = getNewId
       val node = new MiscNode(id)
       addNode(id, node)
@@ -422,7 +422,7 @@ class Acdfg(
     def addDefEdges(unit : soot.Unit, unitId : Long): Unit = {
       if (!defEdges.containsKey(unit)) {
         return
-        // defensive programming; don't know if defEdges has a value for every unit
+          // defensive programming; don't know if defEdges has a value for every unit
       }
       val localIds : Array[Long] = defEdges.get(unit).iterator().map({local : soot.Local =>
         localToId(local)
@@ -434,7 +434,7 @@ class Acdfg(
     def addUseEdges(local : soot.Local, localId : Long): Unit = {
       if (!useEdges.containsKey(local)) {
         return
-        // defensive programming; don't know if useEdges has a value for every local
+          // defensive programming; don't know if useEdges has a value for every local
       }
       val unitIds : Array[Long] = useEdges.get(local).iterator().map({unit : soot.Unit =>
         unitToId(unit)
@@ -479,15 +479,15 @@ class Acdfg(
       // add all non-dominated nodes to work list
       commandNodes.filter {node => true
         /*
-        edges.values.toSet.contains {
-          edge : Edge =>
+         edges.values.toSet.contains {
+         edge : Edge =>
 
-            edge : Edge => edge.from == node.id
-          }  &&
-          !edges.values.toSet.contains {
-            edge : Edge => edge.to   == node.id
-          }
-          */
+         edge : Edge => edge.from == node.id
+         }  &&
+         !edges.values.toSet.contains {
+         edge : Edge => edge.to   == node.id
+         }
+         */
       }.foreach{ n =>
         logger.debug("Starting node " + n.toString + " found.")
         stack.push(n)
@@ -501,15 +501,15 @@ class Acdfg(
           edges.filter { case ((id, edge)) =>
             edge.from == node.id && idToAdjIndex.contains(edge.to)
           }.foreach { case ((id, edge)) =>
-            val fromId = idToAdjIndex.get(edge.from).get
-            val toId   = idToAdjIndex.get(edge.to).get
-            commandAdjMatrix(fromId)(toId) = true
-            logger.debug(commandAdjMatrix.toString)
-            val newNode = commandNodes(toId)
-            if (!discovered.contains(newNode)) {
-              stack.push(newNode)
-              logger.debug("Command node pushed to stack: " + node.toString)
-            }
+              val fromId = idToAdjIndex.get(edge.from).get
+              val toId   = idToAdjIndex.get(edge.to).get
+              commandAdjMatrix(fromId)(toId) = true
+              logger.debug(commandAdjMatrix.toString)
+              val newNode = commandNodes(toId)
+              if (!discovered.contains(newNode)) {
+                stack.push(newNode)
+                logger.debug("Command node pushed to stack: " + node.toString)
+              }
           }
         }
       }
@@ -710,7 +710,7 @@ class Acdfg(
             )))
           }
         }
-      }
+    }
 
     logger.debug("### Adding argument ids from argument names and use-edges...")
 
@@ -753,21 +753,21 @@ class Acdfg(
 
     // for Protobuf
     def addDataNode(
-                     id : Long,
-                     name : String,
-                     datatype : String
-                   ) = {
+      id : Long,
+      name : String,
+      datatype : String
+    ) = {
       val node = new DataNode(id, name, datatype)
       addNode(id, node)
     }
 
     // Protobuf
     def addMethodNode(
-                       id : Long,
-                       invokee : Option[Long],
-                       name : String,
-                       arguments : Vector[Long]
-                     ): (Long, Node) = {
+      id : Long,
+      invokee : Option[Long],
+      name : String,
+      arguments : Vector[Long]
+    ): (Long, Node) = {
       val node = new MethodNode(
         id,
         invokee,
@@ -780,8 +780,8 @@ class Acdfg(
 
     // Protobuf
     def addMiscNode(
-                     id : Long
-                   ) : (Long, Node) = {
+      id : Long
+    ) : (Long, Node) = {
       val node = new MiscNode(id)
       addNode(id, node)
       (id, node)
