@@ -2,7 +2,7 @@ package edu.colorado.plv.fixr.tests.slicing
 
 class SlicingTestMethods extends TestSlicing("./src/test/resources/jimple",
     "slice.TestSliceMethods", "slice.TestSliceMethodsRes") {
-  
+
   override def getPackages() : List[String] = {
     return List[String]("java.util.Random")
   }
@@ -12,6 +12,7 @@ class SlicingTestMethods extends TestSlicing("./src/test/resources/jimple",
   test("testSliceMethods03") {testSlice("testSliceMethods03")}
   test("testSliceMethods04") {testSlice("testSliceMethods04")}
   test("testSliceMethods05") {testSlice("testSliceMethods05")}
-  /* still not pass */  
-  ignore("testSliceMethods06") {testSlice("testSliceMethods06")}  	
+
+  /* still not pass */
+  ignore("testSliceMethods06") {testSlice("testSliceMethods06")}
 }
