@@ -5,10 +5,10 @@ import java.lang.Math.*;
 
 public class TestSliceMethods {
   private int innerField1;
-  private int innerField2;  
+  private int innerField2;
 
   private static int staticField = 0;
-  
+
   /**
    * Multiple seeds for random API
    */
@@ -19,7 +19,7 @@ public class TestSliceMethods {
 
     n2 = 1;
     n1 = 0;
-    
+
     r.nextInt(n1);
 
     /* should not be in the slice */

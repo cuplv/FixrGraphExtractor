@@ -8,13 +8,13 @@ public class TestSlice {
 
     java.lang.Math.abs(a);
   }
-  
+
   public void m2() {
     // Slice a sequence
     int a;
     int b;
     a = 0;
-    b = 0;    
+    b = 0;
     java.lang.Math.abs(a);
   }
 
@@ -73,11 +73,11 @@ public class TestSlice {
     int a;
     int b;
     int c;
-    
+
     a = 0;
     b = 0;
     c = 3;
-    
+
     if (b == 0) {
       a = c;
     }
@@ -87,9 +87,9 @@ public class TestSlice {
 
     java.lang.Math.abs(a);
   }
-  
+
   public void m7() {
-    int i;    
+    int i;
 
     for (i = 0; i <= 10; i++) {
       java.lang.Math.abs(i);
@@ -101,11 +101,11 @@ public class TestSlice {
     int a;
 
     i = 0;
-    
+
     for (a = 0; a <= 10; a++) {
       a = a + 1;
     }
-    
+
     java.lang.Math.abs(i);
-  }  
+  }
 }
