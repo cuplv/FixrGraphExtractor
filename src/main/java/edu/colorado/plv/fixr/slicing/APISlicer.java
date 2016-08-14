@@ -54,7 +54,7 @@ public class APISlicer {
   private PDGSlicer pdg;
   private DataDependencyGraph ddg;
 
-  public static boolean PRINT_DEBUG_GRAPHS = false;
+  public static boolean PRINT_DEBUG_GRAPHS = true;
 
   /**
    * @return the cfg
@@ -632,12 +632,16 @@ public class APISlicer {
              chain, while before we insert all the branches.
           */
           List<Integer> successors = new ArrayList<Integer>();
+          boolean hasEmpty = false;
           for (int j = 0; j < edges[srcUnitId].length; j++) {
             if (! unitsInSlice[j]) continue;
 
             if (edges[srcUnitId][j] &&
                 !statusMap.containsKey(new Integer(j))) {
               if (this.edgeLabels[srcUnitId][j].contains(LabelHandler.EMPTY_LABEL)) {
+                /* the empty label should be on just one edge */
+                assert ! hasEmpty;
+                hasEmpty = true;
                 int succStatus = getStatus(statusMap, idToUnit[j]);
                 if (succStatus == 0) {
                   successors.add(new Integer(j));
@@ -648,12 +652,14 @@ public class APISlicer {
                 }
               }
               else {
-                /* add a jump to the last unit */
-                dstChain.insertAfter(Jimple.v().newGotoStmt(dstLast),dstUnit);
                 /* visit it later to change the jumps */
-                successors.add(0, new Integer(j));
+                successors.add(0, new Integer(j));                
               }
             }
+          }
+          if (! hasEmpty) {
+            /* add a jump to the last unit */
+            dstChain.insertAfter(Jimple.v().newGotoStmt(dstLast),dstUnit);
           }
 
           /* add elements to the stack */
