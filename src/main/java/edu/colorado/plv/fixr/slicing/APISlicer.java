@@ -16,6 +16,7 @@ import edu.colorado.plv.fixr.graphs.DataDependencyGraph;
 import edu.colorado.plv.fixr.SootHelper;
 
 import soot.Body;
+import soot.BooleanType;
 import soot.PatchingChain;
 import soot.util.Chain;
 import soot.SootClass;
@@ -24,6 +25,7 @@ import soot.Unit;
 import soot.Value;
 import soot.Local;
 import soot.ValueBox;
+import soot.dava.internal.javaRep.DIntConstant;
 import soot.jimple.GotoStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.Jimple;
@@ -51,6 +53,8 @@ public class APISlicer {
   private UnitGraph cfg;
   private PDGSlicer pdg;
   private DataDependencyGraph ddg;
+
+  public static boolean PRINT_DEBUG_GRAPHS = false;
 
   /**
    * @return the cfg
@@ -103,22 +107,22 @@ public class APISlicer {
       /* 2.2 Get the CFG units that are relevant for the slice */
       Set<Unit> unitsInSlice = findReachableUnits(seeds);
 
-      // // DEBUG
-      // {
-      //   SootHelper.dumpToDot(this.cfg, this.cfg.getBody(), "/tmp/cfg.dot");
-      //   SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");
-      //   SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
-      // }
+      if (PRINT_DEBUG_GRAPHS)
+      {
+        SootHelper.dumpToDot(this.cfg, this.cfg.getBody(), "/tmp/cfg.dot");
+        SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");
+        SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
+      }
 
       /* 3. Construct the sliced body */
       SlicerGraph sg = new SlicerGraph(this.cfg, unitsInSlice);
       Body slice = sg.getSlicedBody();
 
-      // // DEBUG
-      // {
-      //   EnhancedUnitGraph slicedGraph = new EnhancedUnitGraph(slice);
-      //   SootHelper.dumpToDot(slicedGraph, slice, "/tmp/sliced.dot");
-      // }
+      if (PRINT_DEBUG_GRAPHS)
+      {
+        EnhancedUnitGraph slicedGraph = new EnhancedUnitGraph(slice);
+        SootHelper.dumpToDot(slicedGraph, slice, "/tmp/sliced.dot");
+      }
 
       return slice;
     }
@@ -258,6 +262,13 @@ public class APISlicer {
     return reachableUnits;
   }
 
+  /**
+   * Given a pdg node, returns the goto instruction in the block.
+   * If there is not goto, the method returns null.
+   *
+   * @param pdgNode a node in the pdg
+   * @return the last goto instruction in pdgNode
+   */
   private Unit getBlockGoto(PDGNode pdgNode)
   {
     Unit blockLabel = null;
@@ -281,65 +292,39 @@ public class APISlicer {
     return blockLabel;
   }
 
+
   /**
-   * Return a slice (as a block graph) of the cfg nodes in unitsInSlice
+   * Class used to build the sliced body given the a set of relevant 
+   * units.
    *
-   * Builds a new body (dstBody) that only contains the unti found in
-   * unitsInSlice.
-   * dstBody is the sliced body.
+   * The class is responsible for creating the correct slice, taking into
+   * account the transitive edges in the graph and building
+   * a well formed body.
    *
-   * @return a sliced block graph
+   * @author Sergio Mover
+   *
    */
-  @Deprecated
-  private Body buildSlice(Set<Unit> unitsInSlice) {
-    Body srcBody = this.cfg.getBody();
-    SootMethod srcMethod = srcBody.getMethod();
-    SootClass srcClass = srcMethod.getDeclaringClass();
-    assert (null != srcMethod);
-    String methodName = srcMethod.getName();
-    methodName = getSlicedMethodName(methodName);
-
-    SootMethod dstMethod = new SootMethod(methodName,
-                                          srcMethod.getParameterTypes(), srcMethod.getReturnType(),
-                                          srcMethod.getModifiers());
-    JimpleBody dstBody = Jimple.v().newBody(dstMethod);
-    dstMethod.setActiveBody(dstBody);
-    srcClass.addMethod(dstMethod);
-
-    Map<Object,Object> src2dst = dstBody.importBodyContentsFrom(srcBody);
-
-    PatchingChain<Unit> dstPc = dstBody.getUnits();
-
-    unitsInSlice.add(dstBody.getUnits().getFirst());
-    unitsInSlice.add(dstBody.getUnits().getLast());
-
-    /* remove all the units that are not in the relevant nodes */
-    dstPc.addLast(new JNopStmt());
-    for (Unit srcUnit : srcBody.getUnits()) {
-      if (! unitsInSlice.contains(srcUnit)) {
-        Unit dstUnit = (Unit) src2dst.get(srcUnit);
-        assert null != dstUnit;
-        dstPc.remove(dstUnit);
-      }
-    }
-
-    /* add the gotos informations */
-    /* fixFlow(dstPc, src2dst, unitsInSlice); */
-
-    return dstBody;
-  }
-
   private class SlicerGraph {
-
     Body srcBody;
+    /* Adjacency matrix, contains true if the edge i-j exists */
     boolean[][] edges;
-    /* keep the label on the edge - to be merged with edges */
+    /* Labels of the edges */
     List<Object>[][] edgeLabels;
+    /* unitsInSlice[i] is true if the i-th unit is in the slice */
     boolean[]  unitsInSlice;
+    /* idToUnit[i] is the i-th unit */
     Unit[] idToUnit;
+    /* Map from units to ids */
     Map<Unit,Integer> unitToId;
 
 
+    /**
+     * Creates the SlicerGraph from a unit graph and a set of 
+     * units that must be kept in the slice.
+     *
+     * @param g a unit graph
+     * @param unitsInSlice units of g that must be kept in the slice.
+     */
     public SlicerGraph(UnitGraph g, Set<Unit> unitsInSlice) {
       srcBody = g.getBody();
       int size = srcBody.getUnits().size();
@@ -382,8 +367,8 @@ public class APISlicer {
         }
       }
 
-      // // DEBUG
-      // printGraph("/tmp/pre_slice.dot");
+      if (PRINT_DEBUG_GRAPHS)
+        printGraph("/tmp/pre_slice.dot");
 
       /* computes the transitive edges across the nodes not in the slice */
       transitiveClosure();
@@ -398,7 +383,8 @@ public class APISlicer {
         }
       }
 
-      // printGraph("/tmp/post_slice.dot");
+      if (PRINT_DEBUG_GRAPHS)
+        printGraph("/tmp/post_slice.dot");
     }
 
     private void printGraph(String fname) {
@@ -437,11 +423,20 @@ public class APISlicer {
         hasEdges = hasEdges || (edges[srcUnitId][j]);
       return hasEdges;
     }
+
     /**
      * Compute the closure of the transitions among the node not in the slice.
      *
-     * Use a modified version of Floyd-Warshall
+     * The transitive closure is computed only among nodes that are <bf>not</bf>
+     * in the slice.
      *
+     * The idea is to compute the control flow from a unit in the slice to another 
+     * unit in the slice that flows through units that are not in the slice.
+     *
+     * The procedure uses a modified version of Floyd-Warshall, which keeps into 
+     * account  the in slice/not in slice property and the labels on the edges.
+     *
+     * The method changes the internal data structures of the graph.
      */
     private void transitiveClosure() {
       for (int k = 0; k < edges.length; k++) {
@@ -467,6 +462,13 @@ public class APISlicer {
       }
     }
 
+    /**
+     * Creates an empty body from an existing body, associating it 
+     * to a "sliced" method in the class.
+     * 
+     * @param srcBody the non-sliced body
+     * @return an empty body
+     */
     private Body getEmptyDstBody(Body srcBody)
     {
       SootMethod srcMethod = srcBody.getMethod();
@@ -486,6 +488,14 @@ public class APISlicer {
       return dstBody;
     }
 
+    /**
+     * Get the status (non visited, visited in pre-order, visited in 
+     * post-order) of the unit u
+     *
+     * @param statusMap map that keeps the visited status
+     * @param u unit to get the status
+     * @return the status of u in the search
+     */
     private int getStatus(Map<Unit, Integer> statusMap, Unit u) {
       int status = 0;
       Integer statusInt = statusMap.get(u);
@@ -493,10 +503,31 @@ public class APISlicer {
       return status;
     }
 
+
+    /* Returns the heads of the graph that are also in the slice.
+     *
+     * @return a list of ids of the units that are in the slice and are an head.
+     */
+    private List<Integer> getHeadsInSlice() {
+      List<Integer> heads = new ArrayList<Integer>();
+      for (int i = 0; i < edges.length; i++) {
+        if (unitsInSlice[i]) {
+          boolean isHead = true;
+          for (int j = 0; (isHead && j < edges.length); j++)
+            isHead = isHead && ! edges[j][i];
+          if (isHead) heads.add(i);
+        }
+      }
+      return heads;
+    }
+
+    /**
+     * Builds the sliced body
+     *
+     * @return the sliced body
+     */
     public Body getSlicedBody()
     {
-      HashMap<Object, Object> bindings = new HashMap<Object, Object>();
-      PatchingChain<Unit> srcChain = srcBody.getUnits();
       Stack<Integer> toVisit = new Stack<Integer>();
       Map<Unit, Integer> statusMap = new HashMap<Unit, Integer>();
       Unit[] idToDstUnit = new Unit[idToUnit.length];
@@ -504,14 +535,79 @@ public class APISlicer {
       Body dstBody = getEmptyDstBody(srcBody);
       PatchingChain<Unit> dstChain = dstBody.getUnits();
 
-      Unit dstFirst = Jimple.v().newNopStmt();
-      Unit dstLast = Jimple.v().newNopStmt();
-      dstChain.addFirst(dstFirst);
-      dstChain.addLast(dstLast);
+      Unit dstFirst = null;
+      Unit dstLast = null;
 
-      assert (unitToId.containsKey(srcChain.getFirst()));
-      toVisit.push(unitToId.get(srcChain.getFirst()));
+      /* Visit the graph (after the slicing we possibly have a forest. */
+      List<Integer> heads = getHeadsInSlice();
+      for (Integer currentHeadId : heads) {
+        if (null == dstLast) {
+          dstFirst = Jimple.v().newNopStmt();
+          dstChain.addFirst(dstFirst);
+          dstLast = Jimple.v().newNopStmt();
+          dstChain.addLast(dstLast);
+        }
+        else {
+          /*
+            - create a new head and a new end
+            - connect the old head with the new head with an if
+            - connect the new tail with the old tail
 
+           */
+          Unit newFirst = Jimple.v().newNopStmt();
+          Unit newLast = Jimple.v().newGotoStmt(dstLast);
+          Unit newJump = Jimple.v().newIfStmt(DIntConstant.v(1, BooleanType.v()),
+              newFirst);
+
+          dstChain.insertAfter(dstFirst,newFirst);
+          dstFirst = newFirst;
+          dstLast = newLast;
+        }
+
+        toVisit.push(currentHeadId);
+        visitHead(toVisit, dstFirst, dstLast, statusMap,
+                  idToDstUnit, dstChain);
+      }
+
+      {
+        HashMap<Object, Object> bindings = new HashMap<Object, Object>();
+        {
+          // Clone local units.
+          Chain<Local> dstLocalChain = dstBody.getLocals();
+          for (soot.Local srcLocal : srcBody.getLocals()) {
+            soot.Local dstLocal = (soot.Local) srcLocal.clone();
+
+            // Add cloned unit to our trap list.
+            dstLocalChain.addLast(dstLocal);
+
+            // Build old <-> new mapping.
+            bindings.put(srcLocal, dstLocal);
+          }
+        }
+
+        // TODO add exceptions?
+
+        {
+          // backpatching all local variables.
+          for (ValueBox vb : dstBody.getUseBoxes()) {
+            if(vb.getValue() instanceof Local)
+              vb.setValue((Value) bindings.get(vb.getValue()));
+          }
+          for (ValueBox vb : dstBody.getDefBoxes()) {
+            if(vb.getValue() instanceof Local)
+              vb.setValue((Value) bindings.get(vb.getValue()));
+          }
+        }
+      }
+      return dstBody;
+    }
+
+    private void visitHead(Stack<Integer> toVisit,
+                           Unit dstFirst, Unit dstLast,
+                           Map<Unit, Integer> statusMap,
+                           Unit[] idToDstUnit,
+                           PatchingChain<Unit> dstChain)
+    {
       while (! toVisit.isEmpty()) {
         int srcUnitId = toVisit.pop().intValue();
         Unit srcUnit = this.idToUnit[srcUnitId];
@@ -528,10 +624,8 @@ public class APISlicer {
            */
           dstUnit = (Unit) srcUnit.clone();
           idToDstUnit[srcUnitId] = dstUnit;
-          bindings.put(srcUnit, dstUnit);
           dstUnit.addAllTagsOf(srcUnit);
           dstChain.insertBeforeNoRedirect(dstUnit, dstLast);
-          //insertBefore(dstUnit, dstLast);
 
           /* Schedule the visit of all the children.
              Here we insert as LAST element the next element in the patching
@@ -599,37 +693,6 @@ public class APISlicer {
           assert false;
         }
       }
-
-
-      {
-        // Clone local units.
-        Chain<Local> dstLocalChain = dstBody.getLocals();
-        for (soot.Local srcLocal : srcBody.getLocals()) {
-          soot.Local dstLocal = (soot.Local) srcLocal.clone();
-
-          // Add cloned unit to our trap list.
-          dstLocalChain.addLast(dstLocal);
-
-          // Build old <-> new mapping.
-          bindings.put(srcLocal, dstLocal);
-        }
-      }
-
-      // TODO add exceptions?
-
-      {
-        // backpatching all local variables.
-        for (ValueBox vb : dstBody.getUseBoxes()) {
-          if(vb.getValue() instanceof Local)
-            vb.setValue((Value) bindings.get(vb.getValue()));
-        }
-        for (ValueBox vb : dstBody.getDefBoxes()) {
-          if(vb.getValue() instanceof Local)
-            vb.setValue((Value) bindings.get(vb.getValue()));
-        }
-      }
-
-      return dstBody;
     }
 
 
