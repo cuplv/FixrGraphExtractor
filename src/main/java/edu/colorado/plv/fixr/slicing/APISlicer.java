@@ -545,17 +545,18 @@ public class APISlicer {
                 !statusMap.containsKey(new Integer(j))) {
               if (this.edgeLabels[srcUnitId][j].contains(LabelHandler.EMPTY_LABEL)) {                
                 int succStatus = getStatus(statusMap, idToUnit[j]);
-                if (succStatus == 0) {                                
+                if (succStatus == 0) {
                   successors.add(new Integer(j));
                 }
                 else {
                   /* already added. Add a goto */
-                  dstChain.insertAfter(Jimple.v().newGotoStmt(idToDstUnit[j]),
-                      dstUnit);                  
+                  dstChain.insertAfter(Jimple.v().newGotoStmt(idToDstUnit[j]),dstUnit);
                 }
               }
               else {
-                /* a jummp */
+                /* add a jump to the last unit */
+                dstChain.insertAfter(Jimple.v().newGotoStmt(dstLast),dstUnit);
+                /* visit it later to change the jumps */
                 successors.add(0, new Integer(j));
               }
             }
