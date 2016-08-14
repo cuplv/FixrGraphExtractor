@@ -31,17 +31,14 @@ import soot.jimple.IfStmt;
 import soot.jimple.Jimple;
 import soot.jimple.JimpleBody;
 import soot.jimple.LookupSwitchStmt;
-import soot.jimple.NopStmt;
 import soot.jimple.SwitchStmt;
 import soot.jimple.TableSwitchStmt;
-import soot.jimple.internal.JNopStmt;
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.graph.pdg.ConditionalPDGNode;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
 import soot.toolkits.graph.pdg.LoopedPDGNode;
 import soot.toolkits.graph.pdg.PDGNode;
-import soot.toolkits.graph.pdg.PDGRegion;
 
 /**
  * Slice a CFG of a method using as seeds the nodes of the API calls.
@@ -240,9 +237,13 @@ public class APISlicer {
              * this PDGNode
              *  */
             Object pdgObject = currentPdgNode.getNode();
-            if (pdgObject instanceof Block) {
+            if (pdgObject instanceof Block &&
+                (currentPdgNode instanceof LoopedPDGNode ||
+                    currentPdgNode instanceof ConditionalPDGNode)) {
               Block block = (Block) pdgObject;
               for (Iterator<Unit> iter = (block).iterator(); iter.hasNext();) {
+                // TODO: check if we can get a better slice considering
+                // dependencies
                 Unit unit = iter.next();
                 toProcess.add(unit);
               }
@@ -294,7 +295,7 @@ public class APISlicer {
 
 
   /**
-   * Class used to build the sliced body given the a set of relevant 
+   * Class used to build the sliced body given the a set of relevant
    * units.
    *
    * The class is responsible for creating the correct slice, taking into
@@ -319,12 +320,13 @@ public class APISlicer {
 
 
     /**
-     * Creates the SlicerGraph from a unit graph and a set of 
+     * Creates the SlicerGraph from a unit graph and a set of
      * units that must be kept in the slice.
      *
      * @param g a unit graph
      * @param unitsInSlice units of g that must be kept in the slice.
      */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public SlicerGraph(UnitGraph g, Set<Unit> unitsInSlice) {
       srcBody = g.getBody();
       int size = srcBody.getUnits().size();
@@ -430,10 +432,10 @@ public class APISlicer {
      * The transitive closure is computed only among nodes that are <bf>not</bf>
      * in the slice.
      *
-     * The idea is to compute the control flow from a unit in the slice to another 
+     * The idea is to compute the control flow from a unit in the slice to another
      * unit in the slice that flows through units that are not in the slice.
      *
-     * The procedure uses a modified version of Floyd-Warshall, which keeps into 
+     * The procedure uses a modified version of Floyd-Warshall, which keeps into
      * account  the in slice/not in slice property and the labels on the edges.
      *
      * The method changes the internal data structures of the graph.
@@ -463,9 +465,9 @@ public class APISlicer {
     }
 
     /**
-     * Creates an empty body from an existing body, associating it 
+     * Creates an empty body from an existing body, associating it
      * to a "sliced" method in the class.
-     * 
+     *
      * @param srcBody the non-sliced body
      * @return an empty body
      */
@@ -489,7 +491,7 @@ public class APISlicer {
     }
 
     /**
-     * Get the status (non visited, visited in pre-order, visited in 
+     * Get the status (non visited, visited in pre-order, visited in
      * post-order) of the unit u
      *
      * @param statusMap map that keeps the visited status
@@ -559,7 +561,7 @@ public class APISlicer {
           Unit newJump = Jimple.v().newIfStmt(DIntConstant.v(1, BooleanType.v()),
               newFirst);
 
-          dstChain.insertAfter(dstFirst,newFirst);
+          dstChain.insertAfter(newJump,newFirst);
           dstFirst = newFirst;
           dstLast = newLast;
         }
@@ -653,7 +655,7 @@ public class APISlicer {
               }
               else {
                 /* visit it later to change the jumps */
-                successors.add(0, new Integer(j));                
+                successors.add(0, new Integer(j));
               }
             }
           }

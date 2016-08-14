@@ -166,8 +166,23 @@ public class SootHelper {
    * @return true if the string representation of b1 and b2 are equal
    */
   public static boolean compareBodies(Body b1, Body b2) {
-    String reprB1 = b1.toString();
-    String reprB2 = b2.toString();
+
+    if (b1.getLocalCount() != b2.getLocalCount()) return false;
+    
+    for (soot.Local l1 : b1.getLocals()) {
+      boolean found = false;
+      for (soot.Local l2 : b1.getLocals()) {
+        if (l1.getName() == l2.getName() &&
+            l1.getType() == l2.getType() &&
+            l1.getNumber() == l2.getNumber()) {
+          found = true;
+        }
+      }
+      if (! found) return false;
+    }
+
+    String reprB1 = b1.getUnits().toString();
+    String reprB2 = b2.getUnits().toString();
 
     return 0 == reprB1.compareToIgnoreCase(reprB2);
   }
