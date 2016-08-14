@@ -103,24 +103,22 @@ public class APISlicer {
       /* 2.2 Get the CFG units that are relevant for the slice */
       Set<Unit> unitsInSlice = findReachableUnits(seeds);
 
-      // DEBUG
-      {
-        SootHelper.dumpToDot(this.cfg, this.cfg.getBody(), "/tmp/cfg.dot");
-        SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");
-        SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
-      }
+      // // DEBUG
+      // {
+      //   SootHelper.dumpToDot(this.cfg, this.cfg.getBody(), "/tmp/cfg.dot");
+      //   SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");
+      //   SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
+      // }
 
       /* 3. Construct the sliced body */
       SlicerGraph sg = new SlicerGraph(this.cfg, unitsInSlice);
       Body slice = sg.getSlicedBody();
 
-      // Body slice = buildSlice(unitsInSlice);
-
-      // DEBUG
-      {
-        EnhancedUnitGraph slicedGraph = new EnhancedUnitGraph(slice);
-        SootHelper.dumpToDot(slicedGraph, slice, "/tmp/sliced.dot");
-      }
+      // // DEBUG
+      // {
+      //   EnhancedUnitGraph slicedGraph = new EnhancedUnitGraph(slice);
+      //   SootHelper.dumpToDot(slicedGraph, slice, "/tmp/sliced.dot");
+      // }
 
       return slice;
     }
@@ -292,6 +290,7 @@ public class APISlicer {
    *
    * @return a sliced block graph
    */
+  @Deprecated
   private Body buildSlice(Set<Unit> unitsInSlice) {
     Body srcBody = this.cfg.getBody();
     SootMethod srcMethod = srcBody.getMethod();
@@ -383,7 +382,8 @@ public class APISlicer {
         }
       }
 
-      printGraph("/tmp/pre_slice.dot");
+      // // DEBUG
+      // printGraph("/tmp/pre_slice.dot");
 
       /* computes the transitive edges across the nodes not in the slice */
       transitiveClosure();
@@ -398,7 +398,7 @@ public class APISlicer {
         }
       }
 
-      printGraph("/tmp/post_slice.dot");
+      // printGraph("/tmp/post_slice.dot");
     }
 
     private void printGraph(String fname) {
@@ -490,9 +490,9 @@ public class APISlicer {
       int status = 0;
       Integer statusInt = statusMap.get(u);
       if (null != statusInt) status = statusInt.intValue();
-      return status; 
+      return status;
     }
-    
+
     public Body getSlicedBody()
     {
       HashMap<Object, Object> bindings = new HashMap<Object, Object>();
@@ -512,12 +512,12 @@ public class APISlicer {
       assert (unitToId.containsKey(srcChain.getFirst()));
       toVisit.push(unitToId.get(srcChain.getFirst()));
 
-      while (! toVisit.isEmpty()) {        
+      while (! toVisit.isEmpty()) {
         int srcUnitId = toVisit.pop().intValue();
         Unit srcUnit = this.idToUnit[srcUnitId];
         Unit dstUnit = null;
         int status = getStatus(statusMap, srcUnit);
-        
+
         switch (status) {
         case 0:
           /* Never visited node:
@@ -543,7 +543,7 @@ public class APISlicer {
 
             if (edges[srcUnitId][j] &&
                 !statusMap.containsKey(new Integer(j))) {
-              if (this.edgeLabels[srcUnitId][j].contains(LabelHandler.EMPTY_LABEL)) {                
+              if (this.edgeLabels[srcUnitId][j].contains(LabelHandler.EMPTY_LABEL)) {
                 int succStatus = getStatus(statusMap, idToUnit[j]);
                 if (succStatus == 0) {
                   successors.add(new Integer(j));
@@ -576,7 +576,6 @@ public class APISlicer {
              - Adjust the gotos to the children.
              The children have been created, we just need to fix the gotos.
           */
-          System.out.println("Post-visit " + srcUnitId);
           dstUnit = idToDstUnit[srcUnitId];
 
           /* redirect gotos */
