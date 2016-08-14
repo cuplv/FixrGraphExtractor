@@ -30,6 +30,7 @@ import soot.jimple.Jimple;
 import soot.jimple.JimpleBody;
 import soot.jimple.LookupSwitchStmt;
 import soot.jimple.NopStmt;
+import soot.jimple.SwitchStmt;
 import soot.jimple.TableSwitchStmt;
 import soot.jimple.internal.JNopStmt;
 import soot.toolkits.graph.Block;
@@ -102,6 +103,13 @@ public class APISlicer {
       /* 2.2 Get the CFG units that are relevant for the slice */
       Set<Unit> unitsInSlice = findReachableUnits(seeds);
 
+      // DEBUG
+      {
+        SootHelper.dumpToDot(this.cfg, this.cfg.getBody(), "/tmp/cfg.dot");
+        SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");
+        SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
+      }
+
       /* 3. Construct the sliced body */
       SlicerGraph sg = new SlicerGraph(this.cfg, unitsInSlice);
       Body slice = sg.getSlicedBody();
@@ -110,10 +118,6 @@ public class APISlicer {
 
       // DEBUG
       {
-        SootHelper.dumpToDot(this.cfg, this.cfg.getBody(), "/tmp/cfg.dot");
-        SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");
-        SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
-
         EnhancedUnitGraph slicedGraph = new EnhancedUnitGraph(slice);
         SootHelper.dumpToDot(slicedGraph, slice, "/tmp/sliced.dot");
       }
@@ -355,7 +359,7 @@ public class APISlicer {
 
         for (int j = 0; j < edges.length; j++) {
           edges[id][j] = false;
-          edgeLabels[id][j] = null;
+          edgeLabels[id][j] = new ArrayList();
         }
 
         id = id + 1;
@@ -372,9 +376,10 @@ public class APISlicer {
           edges[id][dstId] = true;
 
           List<Object> conditions = handler.getConditions(idToUnit[dstId]);
-          if (null != conditions) {
-            edgeLabels[id][dstId] = conditions;
-          }
+          if (null != conditions)
+            edgeLabels[id][dstId].addAll(conditions);
+          else
+            edgeLabels[id][dstId].add(LabelHandler.EMPTY_LABEL);
         }
       }
 
@@ -383,10 +388,13 @@ public class APISlicer {
       /* computes the transitive edges across the nodes not in the slice */
       transitiveClosure();
 
-      /* remove all the edges not in the slice */
-        for (int i = 0; i < edges.length; i++) {
-          for (int j = 0; j < edges.length; j++) {
-          if (! isEdgeInSlice(i,j)) edges[i][j] = false;
+      /* remove all the edges (and labels) not in the slice */
+      for (int i = 0; i < edges.length; i++) {
+        for (int j = 0; j < edges.length; j++) {
+          if (! isEdgeInSlice(i,j)) {
+            edges[i][j] = false;
+            edgeLabels[i][j] = null;
+          }
         }
       }
 
@@ -397,6 +405,12 @@ public class APISlicer {
       try {
         BufferedWriter writer = new BufferedWriter(new FileWriter(fname));
         writer.write("digraph G {\n");
+        for (int i = 0; i < edges.length; i++) {
+          String s = idToUnit[i].toString();
+          s = s.replace('"', ' ');
+          writer.write("n" + i + " [label = \"" + s + "\"];\n") ;
+        }
+
         for (int i = 0; i < edges.length; i++) {
           for (int j = 0; j < edges.length; j++) {
             if (edges[i][j]) {
@@ -439,13 +453,13 @@ public class APISlicer {
         if (this.unitsInSlice[k]) continue;
         for (int j = 0; j < edges.length; j++) {
           for (int i = 0; i < edges.length; i++) {
-            if (edges[i][j]) continue; /* already an edge */
             if (edges[i][k] && edges[k][j]) {
               edges[i][j] = true;
 
               if (this.unitsInSlice[i]) {
                 /* set the label for the edge */
-                edgeLabels[i][j] = edgeLabels[i][k];
+                assert edgeLabels[i][i] != null;
+                edgeLabels[i][j].addAll(edgeLabels[i][k]);
               }
             }
           }
@@ -472,6 +486,13 @@ public class APISlicer {
       return dstBody;
     }
 
+    private int getStatus(Map<Unit, Integer> statusMap, Unit u) {
+      int status = 0;
+      Integer statusInt = statusMap.get(u);
+      if (null != statusInt) status = statusInt.intValue();
+      return status; 
+    }
+    
     public Body getSlicedBody()
     {
       HashMap<Object, Object> bindings = new HashMap<Object, Object>();
@@ -491,16 +512,12 @@ public class APISlicer {
       assert (unitToId.containsKey(srcChain.getFirst()));
       toVisit.push(unitToId.get(srcChain.getFirst()));
 
-      while (! toVisit.isEmpty()) {
-        int status = 0;
-
+      while (! toVisit.isEmpty()) {        
         int srcUnitId = toVisit.pop().intValue();
         Unit srcUnit = this.idToUnit[srcUnitId];
         Unit dstUnit = null;
-
-        Integer statusInt = statusMap.get(srcUnit);
-        if (null != statusInt) status = statusInt.intValue();
-
+        int status = getStatus(statusMap, srcUnit);
+        
         switch (status) {
         case 0:
           /* Never visited node:
@@ -526,12 +543,20 @@ public class APISlicer {
 
             if (edges[srcUnitId][j] &&
                 !statusMap.containsKey(new Integer(j))) {
-              if (null != this.edgeLabels[srcUnitId][j]) {
-                /* label is not null, it is a jump */
-                successors.add(0, new Integer(j));
+              if (this.edgeLabels[srcUnitId][j].contains(LabelHandler.EMPTY_LABEL)) {                
+                int succStatus = getStatus(statusMap, idToUnit[j]);
+                if (succStatus == 0) {                                
+                  successors.add(new Integer(j));
+                }
+                else {
+                  /* already added. Add a goto */
+                  dstChain.insertAfter(Jimple.v().newGotoStmt(idToDstUnit[j]),
+                      dstUnit);                  
+                }
               }
               else {
-                successors.add(new Integer(j));
+                /* a jummp */
+                successors.add(0, new Integer(j));
               }
             }
           }
@@ -556,7 +581,7 @@ public class APISlicer {
           /* redirect gotos */
           LabelHandler labelHandler = new LabelHandler(dstUnit);
           Map<Object, List<Unit>> c2t = getConditions2Targets(srcUnitId, idToDstUnit);
-          labelHandler.fixGotos(c2t);
+          labelHandler.fixGotos(c2t, dstLast);
 
           /* redirect to final node */
           if (! hasEdges(srcUnitId)) {
@@ -614,17 +639,20 @@ public class APISlicer {
       Map<Object, List<Unit>> c2t = new HashMap<Object, List<Unit>>();
 
       for (int j = 0; j < edges[srcUnitId].length; j++) {
-        if (isEdgeInSlice(srcUnitId, j) &&
-            (null != this.edgeLabels[srcUnitId][j])) {
-          List<Object> conditions = this.edgeLabels[srcUnitId][j];
-
-          for (Object condition : conditions) {
-            List<Unit> targets = c2t.get(condition);
-            if (null == targets) {
-              targets = new ArrayList<Unit>();
-              c2t.put(condition, targets);
+        boolean edgeInSlice = isEdgeInSlice(srcUnitId, j);
+        if (edgeInSlice) {
+          boolean edgeHasJumpLabel = (! this.edgeLabels[srcUnitId][j].contains(LabelHandler.EMPTY_LABEL)) ||
+              (this.edgeLabels[srcUnitId][j].size() > 1);
+          if (edgeInSlice && edgeHasJumpLabel) {
+            for (Object condition : this.edgeLabels[srcUnitId][j]) {
+              if (condition == LabelHandler.EMPTY_LABEL) continue;
+              List<Unit> targets = c2t.get(condition);
+              if (null == targets) {
+                targets = new ArrayList<Unit>();
+                c2t.put(condition, targets);
+              }
+              targets.add(idToDstUnit[j]);
             }
-            targets.add(idToDstUnit[j]);
           }
         }
       }
@@ -637,7 +665,8 @@ public class APISlicer {
       private Map<Unit,List<Object>> target2conditions;
       private Map<Object,List<Unit>> condition2targets;
 
-      private final static String DEFAULT = "default";
+      private final static String DEFAULT_LABEL = "default_label";
+      private final static String EMPTY_LABEL = "empty_label";
 
       public LabelHandler(Unit sourceUnit)
       {
@@ -650,23 +679,29 @@ public class APISlicer {
         return conditions;
       }
 
-      public void fixGotos(Map<Object, List<Unit>> c2t) {
+      public void fixGotos(Map<Object, List<Unit>> c2t, Unit defaultTarget) {
         if (sourceUnit instanceof GotoStmt) {
           GotoStmt gotoStmt = (GotoStmt) sourceUnit;
+          Unit target = defaultTarget;
 
-          /* use the target as label */
-          List<Unit> targets = c2t.get(DEFAULT);
-          assert (targets.size() == 1);
-          Unit target = targets.get(0);
+          assert(c2t.containsKey(DEFAULT_LABEL));
+          List<Unit> targets = c2t.get(DEFAULT_LABEL);
+          if (null != targets) {
+            assert targets.size() == 1;
+            target = targets.get(0);
+          }
           gotoStmt.setTarget(target);
+
         } else if (sourceUnit instanceof IfStmt) {
           IfStmt ifstmt = (IfStmt) sourceUnit;
+          Unit target = defaultTarget;
 
-          assert(c2t.containsKey(DEFAULT));
-
-          List<Unit> targets = c2t.get(DEFAULT);
-          assert (targets.size() == 1);
-          Unit target = targets.get(0);
+          assert(c2t.containsKey(DEFAULT_LABEL));
+          List<Unit> targets = c2t.get(DEFAULT_LABEL);
+          if (targets != null) {
+            assert targets.size() == 1;
+            target = targets.get(0);
+          }
           ifstmt.setTarget(target);
         }
         else if (sourceUnit instanceof LookupSwitchStmt) {
@@ -674,18 +709,9 @@ public class APISlicer {
 
           for (int i = 0; i < switchStmt.getTargets().size(); i ++) {
             Object condition = switchStmt.getLookupValue(i);
-            assert(c2t.containsKey(condition));
-            List<Unit> targets = c2t.get(condition);
-            assert(targets.size() > 0);
-            Unit target = targets.get(0);
-            switchStmt.setTarget(i, target);
-            targets.remove(0); /* consume the target */
+            setTargetSwitch(c2t, defaultTarget, switchStmt, condition, i);
           }
-
-          /* add default */
-          List<Unit> targets = c2t.get(DEFAULT);
-          if (targets.size() > 0)
-            switchStmt.setDefaultTarget(targets.get(0));
+          setDefaultTargetSwitch(c2t, defaultTarget, switchStmt);
         }
         else if (sourceUnit instanceof TableSwitchStmt) {
           TableSwitchStmt switchStmt = (TableSwitchStmt) sourceUnit;
@@ -693,23 +719,42 @@ public class APISlicer {
           for (int i = switchStmt.getLowIndex();
                i <= switchStmt.getHighIndex(); i++) {
             Object condition = new Integer(i);
-            assert(c2t.containsKey(condition));
-            List<Unit> targets = c2t.get(condition);
-            assert(targets != null);
-            assert(targets.size() > 0);
-            Unit target = targets.get(0);
-            switchStmt.setTarget(i, target);
-            targets.remove(0); /* consume the target */
+            setTargetSwitch(c2t, defaultTarget, switchStmt, condition, i);
           }
-
-          /* add default */
-          List<Unit> targets = c2t.get(DEFAULT);
-          if (targets.size() > 0)
-            switchStmt.setDefaultTarget(targets.get(0));
+          setDefaultTargetSwitch(c2t, defaultTarget, switchStmt);
         }
         else {
           assert(c2t.size() == 0);
         }
+      }
+
+      private void setTargetSwitch(Map<Object, List<Unit>> c2t,
+          Unit defaultTarget,
+          SwitchStmt switchStmt,
+          Object condition,
+          int targetIndex) {
+
+        Unit target = defaultTarget;
+
+        assert(c2t.containsKey(condition));
+        List<Unit> targets = c2t.get(condition);
+
+        if (targets != null) {
+          assert targets.size() > 0;
+          target = targets.get(0);
+          targets.remove(0); /* consume the target */
+        }
+        switchStmt.setTarget(targetIndex, target);
+      }
+
+      private void setDefaultTargetSwitch(Map<Object, List<Unit>> c2t,
+          Unit defaultTarget, SwitchStmt switchStmt)
+      {
+        /* add default */
+        List<Unit> targets = c2t.get(DEFAULT_LABEL);
+        if (targets != null && targets.size() > 0)
+          switchStmt.setDefaultTarget(targets.get(0));
+        else switchStmt.setDefaultTarget(defaultTarget);
       }
 
       private void buildMaps()
@@ -722,15 +767,15 @@ public class APISlicer {
           Unit target = gotoStmt.getTarget();
 
           /* use the target as label */
-          addToMapO(condition2targets, DEFAULT, target);
-          addToMapU(target2conditions, target, DEFAULT);
+          addToMapO(condition2targets, DEFAULT_LABEL, target);
+          addToMapU(target2conditions, target, DEFAULT_LABEL);
         }
         else if (sourceUnit instanceof IfStmt) {
           IfStmt ifstmt = (IfStmt) sourceUnit;
           Unit target = ifstmt.getTarget();
 
-          addToMapO(condition2targets, DEFAULT, target);
-          addToMapU(target2conditions, target, DEFAULT);
+          addToMapO(condition2targets, DEFAULT_LABEL, target);
+          addToMapU(target2conditions, target, DEFAULT_LABEL);
         }
         else if (sourceUnit instanceof LookupSwitchStmt) {
           LookupSwitchStmt switchStmt = (LookupSwitchStmt) sourceUnit;
@@ -746,8 +791,8 @@ public class APISlicer {
 
           Unit defaultTarget = switchStmt.getDefaultTarget();
           if (defaultTarget != null) {
-            addToMapO(condition2targets, DEFAULT, defaultTarget);
-            addToMapU(target2conditions, defaultTarget, DEFAULT);
+            addToMapO(condition2targets, DEFAULT_LABEL, defaultTarget);
+            addToMapU(target2conditions, defaultTarget, DEFAULT_LABEL);
           }
         }
         else if (sourceUnit instanceof TableSwitchStmt) {
@@ -764,8 +809,8 @@ public class APISlicer {
 
           Unit defaultTarget = switchStmt.getDefaultTarget();
           if (defaultTarget != null) {
-            addToMapO(condition2targets, DEFAULT, defaultTarget);
-            addToMapU(target2conditions, defaultTarget, DEFAULT);
+            addToMapO(condition2targets, DEFAULT_LABEL, defaultTarget);
+            addToMapU(target2conditions, defaultTarget, DEFAULT_LABEL);
           }
         }
       }
