@@ -656,12 +656,12 @@ public class APISlicer {
         for (Integer handlerId : handlerList) {
           Unit dstHandler = idToDstUnit[handlerId];
           Unit handler = idToUnit[handlerId];
-          Trap trap = caughtToTrap.get(handler);          
-          
+          Trap trap = caughtToTrap.get(handler);
+
           Unit lastToVisit = srcBody.getUnits().getPredOf(trap.getEndUnit());
           Iterator<Unit> unitIt = srcBody.getUnits().iterator(trap.getBeginUnit(),
               lastToVisit);
-          
+
           int firstUnitInTrap = -1;
           int lastUnitInTrap = -1;
           while (unitIt.hasNext()) {
@@ -674,18 +674,18 @@ public class APISlicer {
           }
           assert firstUnitInTrap >= 0;
           assert lastUnitInTrap >= 0;
-          
+
           Unit dstFirstUnitInTrap = idToDstUnit[firstUnitInTrap];
           Unit dstLastUnitInTrap = idToDstUnit[firstUnitInTrap];
           dstLastUnitInTrap = dstChain.getSuccOf(dstLastUnitInTrap);
-                    
+
           Trap dstTrap = new JTrap(trap.getException(),
               dstFirstUnitInTrap, dstLastUnitInTrap,
               dstHandler);
           dstTrapsChain.addLast(dstTrap);
-          bindings.put(trap, dstTrap);          
+          bindings.put(trap, dstTrap);
         }
-        
+
         {
           // backpatching all local variables.
           for (ValueBox vb : dstBody.getUseBoxes()) {
@@ -793,7 +793,7 @@ public class APISlicer {
             }
 
             handlerList.add(i);
-          }          
+          }
 
           /* redirect to final node */
           if (! hasEdges(srcUnitId)) {
@@ -887,7 +887,7 @@ public class APISlicer {
       public List<Unit> fixGotos(Map<Object, List<Unit>> c2t,
           Unit defaultTarget) {
         List<Unit> handlerList = new ArrayList<Unit>();
-        
+
         if (sourceUnit instanceof NopStmt) {
           List<Unit> targets = c2t.get(CATCH_LABEL);
           if (null != targets) {
