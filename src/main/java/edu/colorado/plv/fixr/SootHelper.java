@@ -166,9 +166,8 @@ public class SootHelper {
    * @return true if the string representation of b1 and b2 are equal
    */
   public static boolean compareBodies(Body b1, Body b2) {
-
     if (b1.getLocalCount() != b2.getLocalCount()) return false;
-    
+
     for (soot.Local l1 : b1.getLocals()) {
       boolean found = false;
       for (soot.Local l2 : b1.getLocals()) {
