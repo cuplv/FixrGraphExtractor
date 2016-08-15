@@ -48,11 +48,11 @@ concurrentRestrictions in Global += Tags.limit(Tags.Test, 1)
 
 
 libraryDependencies ++= Seq(
-  "org.eclipse.jdt" % "org.eclipse.jdt.core" % "3.10.0",
   "org.scalatest" %% "scalatest" % "2.2.2" % Test,
   "junit" % "junit" % "4.11" % Test,
   "commons-lang" % "commons-lang" % "2.6",
-  "org.slf4j" % "slf4j-api" % "1.7.20",
+  "org.slf4j" % "slf4j-api" % "1.7.5",
+  "org.slf4j" % "slf4j-simple" % "1.7.5",
   "com.github.scopt" %% "scopt" % "3.4.0",
   "com.lihaoyi" %% "scalatags" % "0.5.5",
   "com.google.googlejavaformat" % "google-java-format" % "1.0",
@@ -63,7 +63,7 @@ libraryDependencies ++= Seq(
   "net.sf.jgrapht" % "jgrapht" % "0.8.3",
   "org.apache.commons" % "commons-lang3" % "3.1",
   "com.google.code.findbugs" % "annotations" % "2.0.1",
-  "org.ow2.asm" % "asm-debug-all" % "5.0.3"
+  "org.ow2.asm" % "asm-debug-all" % "5.1"
 )
 
 oneJarSettings

@@ -20,6 +20,9 @@ public class TransactionAPI {
       mDb.beginTransaction();
       mDb.setTransactionSuccessful();
     }
+    catch (Exception e ) {
+      mDb.beginTransaction();
+    }
     finally {
       mDb.endTransaction();
     }

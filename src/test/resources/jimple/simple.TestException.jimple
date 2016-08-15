@@ -1,0 +1,72 @@
+public class simple.TestException extends java.lang.Object
+{
+
+    public static void main(java.lang.String[])
+    {
+        java.lang.String[] args;
+        int a, b, temp$0, temp$1, temp$2, temp$3, temp$6, temp$7;
+        java.lang.Exception e;
+        java.lang.Throwable temp$4;
+
+        args := @parameter0: java.lang.String[];
+
+        a = 0;
+
+        b = 0;
+
+     label1:
+        temp$0 = a / b;
+
+        a = temp$0;
+
+     label2:
+        temp$1 = 0;
+
+        b = temp$1;
+
+        goto label6;
+
+     label3:
+        e := @caughtexception;
+
+        temp$2 = 0;
+
+        a = temp$2;
+
+     label4:
+        temp$3 = 0;
+
+        b = temp$3;
+
+        goto label6;
+
+     label5:
+        temp$4 := @caughtexception;
+
+        throw temp$4;
+
+     label6:
+        temp$6 = a;
+
+        temp$7 = temp$6 + b;
+
+        staticinvoke <java.lang.Math: int abs(int)>(temp$7);
+
+        return;
+
+        catch java.lang.Exception from label1 to label2 with label3;
+        catch java.lang.Throwable from label1 to label2 with label5;
+        catch java.lang.Throwable from label2 to label4 with label5;
+    }
+
+    public void <init>()
+    {
+        simple.TestException this;
+
+        this := @this: simple.TestException;
+
+        specialinvoke this.<java.lang.Object: void <init>()>();
+
+        return;
+    }
+}

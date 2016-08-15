@@ -68,7 +68,8 @@ object Main {
       opt[String]('i', "graph2") action { (x, c) =>
         c.copy(iso = x) } text("Path to embedding/isomorphism protobuf")
 
-      opt[String]('l', "cp") action { (x, c) =>
+      opt[String]('l', "cp").required().action { (x, c) =>
+
       c.copy(sootClassPath = x) } text("cp is the soot classpath")
       //
       opt[Boolean]('s', "read-from-sources") action { (x, c) =>
@@ -79,7 +80,7 @@ object Main {
       opt[String]('z', "jphantom-folder") action { (x, c) =>
         c.copy(outPhantomJar = x) } text("Path to the generated JPhantom classes")
       //
-      opt[String]('f', "slice-filter") action { (x, c) =>
+      opt[String]('f', "slice-filter").action { (x, c) =>
       c.copy(sliceFilter = x) } text("Package prefix to use as seed for slicing")
       //
       opt[String]('p', "process-dir") action { (x, c) =>
@@ -91,10 +92,10 @@ object Main {
       opt[String]('m', "method-name") action { (x, c) =>
       c.copy(methodName = x) } text("Name of the method to be processed.")
       //
-      opt[String]('o', "output-dir") action { (x, c) =>
+      opt[String]('o', "output-dir").required().action { (x, c) =>
       c.copy(outputDir = x) } text("Path of the output directory for the ACDFG.")
       //
-      opt[String]('d', "provenance-dir") action { (x, c) =>
+      opt[String]('d', "provenance-dir").action { (x, c) =>
       c.copy(provenanceDir = x) } text("Path of the directory used to store the provenance information.")
       //
       opt[Long]('t', "time-out") action { (x, c) =>
@@ -198,10 +199,15 @@ object Main {
           mainopt.commitHash = ""
         }
 
+        if (null == mainopt.processDir &&
+            (null == mainopt.className || null == mainopt.methodName)) {
+           logger.error("You must set one between process dir and class name and method")
+           System.exit(1)
+        }
         if (null != mainopt.processDir &&
             (null != mainopt.className || null != mainopt.methodName)) {
            logger.error("The process-dir option is mutually exclusive " +
-               "with the class-name and method-name options");
+               "with the class-name and method-name options")
            System.exit(1)
         }
         if ( (null != mainopt.className && null == mainopt.methodName) ||
@@ -217,7 +223,6 @@ object Main {
         options.useJPhantom = mainopt.useJPhantom
         options.outPhantomJar = mainopt.outPhantomJar
         options.readFromSources = mainopt.readFromSources
-        options.sliceFilter = mainopt.sliceFilter
         options.sootClassPath = mainopt.sootClassPath
         options.outputDir = mainopt.outputDir
         options.provenanceDir = mainopt.provenanceDir
@@ -227,8 +232,11 @@ object Main {
         options.url = mainopt.url
         options.commitHash = mainopt.commitHash
         
+        if (null != mainopt.sliceFilter) {
+          options.sliceFilter = mainopt.sliceFilter.split(":").toList
+        }
+
         if (null != mainopt.processDir) {
-          //List[String]("/home/sergio/works/projects/muse/repos/FixrGraphExtractor/src/test/resources/javasources")/
           val myArray : Array[String] = mainopt.processDir.split(":")
           options.processDir = myArray.toList
         }
@@ -242,5 +250,6 @@ object Main {
     }
 
     logger.info("Terminated extraction...")
+    System.exit(0)
   }
 }

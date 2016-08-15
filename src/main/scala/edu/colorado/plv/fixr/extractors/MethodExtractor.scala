@@ -24,7 +24,7 @@ class MethodExtractor(options : ExtractorOptions) extends Extractor(options) {
       new MethodsTransformer(options)))
 
     PhaseOptions.v().setPhaseOption("jtp", "on");
-    Options.v().set_main_class(options.className)    
+    Options.v().set_main_class(options.className)
     SootHelper.run(Array(options.className))
   }
 }

@@ -16,7 +16,7 @@ public class androidtests.TransactionAPI extends java.lang.Object
         return;
     }
 
-    public void rightTransaction(android.database.sqlite.SQLiteOpenHelper)
+    public void rightTransactionOld(android.database.sqlite.SQLiteOpenHelper)
     {
         androidtests.TransactionAPI this;
         android.database.sqlite.SQLiteOpenHelper helper;
@@ -46,6 +46,90 @@ public class androidtests.TransactionAPI extends java.lang.Object
         return;
 
         catch java.lang.Throwable from label0 to label1 with label1;
+    }
+
+    public void rightTransactionOlOld(android.database.sqlite.SQLiteOpenHelper)
+    {
+        androidtests.TransactionAPI this;
+        android.database.sqlite.SQLiteOpenHelper helper;
+        android.database.sqlite.SQLiteDatabase temp$0;
+        java.lang.Throwable temp$1;
+
+        this := @this: androidtests.TransactionAPI;
+
+        helper := @parameter0: android.database.sqlite.SQLiteOpenHelper;
+
+        temp$0 = virtualinvoke helper.<android.database.sqlite.SQLiteOpenHelper: android.database.sqlite.SQLiteDatabase getWritableDatabase()>();
+
+     label1:
+        virtualinvoke temp$0.<android.database.sqlite.SQLiteDatabase: void beginTransaction()>();
+
+        virtualinvoke temp$0.<android.database.sqlite.SQLiteDatabase: void setTransactionSuccessful()>();
+
+        virtualinvoke temp$0.<android.database.sqlite.SQLiteDatabase: void endTransaction()>();
+
+        goto label3;
+
+     label2:
+        temp$1 := @caughtexception;
+
+        virtualinvoke temp$0.<android.database.sqlite.SQLiteDatabase: void endTransaction()>();
+
+        throw temp$1;
+
+     label3:
+        return;
+
+        catch java.lang.Throwable from label1 to label2 with label2;
+    }
+
+    public void rightTransaction(android.database.sqlite.SQLiteOpenHelper)
+    {
+        androidtests.TransactionAPI this;
+        android.database.sqlite.SQLiteOpenHelper helper;
+        android.database.sqlite.SQLiteDatabase temp$0;
+        java.lang.Exception e;
+        java.lang.Throwable temp$1;
+
+        this := @this: androidtests.TransactionAPI;
+
+        helper := @parameter0: android.database.sqlite.SQLiteOpenHelper;
+
+        temp$0 = virtualinvoke helper.<android.database.sqlite.SQLiteOpenHelper: android.database.sqlite.SQLiteDatabase getWritableDatabase()>();
+
+     label1:
+        virtualinvoke temp$0.<android.database.sqlite.SQLiteDatabase: void beginTransaction()>();
+
+        virtualinvoke temp$0.<android.database.sqlite.SQLiteDatabase: void setTransactionSuccessful()>();
+
+     label2:
+        virtualinvoke temp$0.<android.database.sqlite.SQLiteDatabase: void endTransaction()>();
+
+        goto label6;
+
+     label3:
+        e := @caughtexception;
+
+        virtualinvoke temp$0.<android.database.sqlite.SQLiteDatabase: void beginTransaction()>();
+
+     label4:
+        virtualinvoke temp$0.<android.database.sqlite.SQLiteDatabase: void endTransaction()>();
+
+        goto label6;
+
+     label5:
+        temp$1 := @caughtexception;
+
+        virtualinvoke temp$0.<android.database.sqlite.SQLiteDatabase: void endTransaction()>();
+
+        throw temp$1;
+
+     label6:
+        return;
+
+        catch java.lang.Exception from label1 to label2 with label3;
+        catch java.lang.Throwable from label1 to label2 with label5;
+        catch java.lang.Throwable from label2 to label4 with label5;
     }
 
     public void syncUsers(java.util.List, android.database.sqlite.SQLiteOpenHelper)

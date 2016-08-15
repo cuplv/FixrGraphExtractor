@@ -38,16 +38,18 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
+import scala.collection.JavaConversions._
 
 
 class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
   val logger : Logger = LoggerFactory.getLogger(this.getClass())
-  
-  override protected def internalTransform(body : Body, phase : String, transformOpt :
-      java.util.Map[_,_] ) : Unit = {
+
+  override protected def internalTransform(body : Body,
+    phase : String,
+    transformOpt : java.util.Map[String,String] ) : Unit = {
     val method : SootMethod = body.getMethod()
     val sootClass : SootClass = method.getDeclaringClass()
-    
+
     if (method.isConcrete() &&
       (method.getName() == options.methodName &&
         sootClass.getName() == options.className) ||
@@ -55,26 +57,28 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       (null != options.processDir)) {
       try {
         if (options.to > 0) {
-          val executor : ExecutorService = Executors.newSingleThreadExecutor(); 
-        	var future : Future[Unit] = executor.submit(new TimeOutExecutor(this,
-        	    sootClass, method));
+          val executor : ExecutorService = Executors.newSingleThreadExecutor()
+          var future : Future[Unit] = null
 
-        	try {
-        	  logger.info("Started thread...");
-        		System.out.println(future.get(options.to, TimeUnit.SECONDS));
-            logger.info("Finished thread...");
-        	} catch {
-        	  case e : TimeoutException => {
-              future.cancel(true);
-              logger.info("Thread timed out.");
-        	  }
-        	  case e : Exception => {
-        	  	logger.error("Error processing class {}, method {}{}",
-        	  			sootClass.getName(), method.getName(), "");
-        	  	logger.error("Exception {}:", e)
-        	  }
-        	}
-        	executor.shutdownNow();
+
+          try {
+            future = executor.submit(new TimeOutExecutor(this, sootClass, method))
+            logger.info("Started thread...")
+            System.out.println(future.get(options.to, TimeUnit.SECONDS))
+            logger.info("Finished thread...")
+          } catch {
+            case e : TimeoutException => {
+              logger.info("Thread timed out.")
+            }
+            case e : Exception => {
+              logger.error("Error processing class {}, method {}{}",
+                sootClass.getName(), method.getName(), "");
+              logger.error("Exception {}:", e)
+            }
+          } finally {
+            future.cancel(true)
+            executor.shutdownNow()
+          }
         }
         else {
           // No timeout
@@ -84,7 +88,12 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       catch {
         case e : Exception => {
           logger.error("Error processing class {}, method {}{}",
-              sootClass.getName(), method.getName(), "");
+            sootClass.getName(), method.getName(), "");
+          logger.error("Exception {}:", e)
+        }
+        case e : StackOverflowError => {
+          logger.error("StackOverflowError processing class {}, method {}{}",
+            sootClass.getName(), method.getName(), "");
           logger.error("Exception {}:", e)
         }
       }
@@ -96,33 +105,29 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       }
     }
   }
-  
+
   def extractMethod(sootClass : SootClass, sootMethod : SootMethod) : Unit = {
     logger.info("Extracting graph for - class {} - method: {}{}",
       sootClass.getName(), sootMethod.getName(), "")
-    
+
     assert(sootMethod.isConcrete());
-    
+
     val body: Body = sootMethod.retrieveActiveBody()
     val jimpleUnitGraph: EnhancedUnitGraph = new EnhancedUnitGraph(body)
     val slicer: APISlicer = new APISlicer(jimpleUnitGraph, body)
-    
+
     var sc: SlicingCriterion = null
     if (null == options.sliceFilter)
       sc = MethodPackageSeed.createAndroidSeed()
     else
       sc = new MethodPackageSeed(options.sliceFilter)
-    
+
     logger.debug("Slicing...")
     val slicedJimple: Body = slicer.slice(sc)
-    
+
     if (null == slicedJimple) {
-      /* Do not print the graph for empty slices */
-      logger.warn("Empty slice for - class {} - method: {}{}",
-        sootClass.getName(), sootMethod.getName(), "")
-      logger.warn("Empty slice for - class {} - method: {}\nFilter: {}\nBody:\n{}\n",
-        sootClass.getName(), sootMethod.getName(), sc.getCriterionDescription(),
-        body.toString())
+      logger.warn("Empty slice for - class {} - method: {}\nFilter: {}\n\n",
+        sootClass.getName(), sootMethod.getName(), sc.getCriterionDescription())
     }
     else {
       logger.debug("CDFG construction...")
@@ -136,19 +141,20 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       sootMethod.getName();
 
       if (null != options.outputDir) {
-    	logger.info("Writing data for - class {} - method: {}{}",
-    	  sootClass.getName(), sootMethod.getName(), "")
-    	writeData(name, acdfg, cdfg, body, slicedJimple, slicer.getCfg());
-    	logger.info("Created graph for - class {} - method: {}{}",
-    	  sootClass.getName(), sootMethod.getName(), "")
+        logger.info("Writing data for - class {} - method: {}{}",
+          sootClass.getName(), sootMethod.getName(), "")
+
+        writeData(name, acdfg, cdfg, body, slicedJimple, slicer.getCfg());
+        logger.info("Created graph for - class {} - method: {}{}",
+          sootClass.getName(), sootMethod.getName(), "")
       }
       else {
-    	logger.warn("Disabled data writing for - class {} - method: {}{}",
-    	  sootClass.getName(), sootMethod.getName(), "")
+        logger.warn("Disabled data writing for - class {} - method: {}{}",
+          sootClass.getName(), sootMethod.getName(), "")
       }
     }
   }
-  
+
   protected def writeJimple(body : Body, fileName : String) : Unit = {
     val streamOut : OutputStream = new FileOutputStream(fileName);
     val writerOut : PrintWriter = new PrintWriter(new OutputStreamWriter(streamOut));
@@ -156,7 +162,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     writerOut.flush();
     streamOut.close();
   }
-  
+
   /**
     * Write the data to the output folder
     */
@@ -174,10 +180,21 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     // Write the acdfg
     val acdfgFileName : String = Paths.get(outputDir,
       outFileNamePrefix + ".acdfg.bin").toString();
-    val output : FileOutputStream = new FileOutputStream(acdfgFileName)
+    val outputFile : File = new File(acdfgFileName)
+    try {
+      if (! outputFile.getParentFile.exists) {
+        outputFile.getParentFile.mkdir
+      }
+    }
+    catch {
+      case ex: Exception =>
+        logger.error("Unable to create required new output directory")
+        throw ex
+    }
+    val output : FileOutputStream = new FileOutputStream(outputFile)
     acdfg.toProtobuf.writeTo(output)
     output.close()
-    
+
     // Write the povenance information
     if (options.provenanceDir != null) {
       logger.debug("Writing provenance data to: {}", options.provenanceDir)
@@ -185,13 +202,14 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
 
       try {
         val provFile : File = new File(filePrefix)
-        if (!provFile.getParentFile.exists) {
+        if (! provFile.getParentFile.exists) {
           provFile.getParentFile.mkdir
         }
       }
       catch {
         case ex: Exception =>
           logger.error("Unable to create required new provenance directory")
+          throw ex
       }
 
       // ACDFG DOT
@@ -247,10 +265,19 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
   private class TimeOutExecutor(transformer : MethodsTransformer,
     sootClass : SootClass, sootMethod : SootMethod)
       extends Callable[Unit] {
-    
+
     @throws(classOf[Exception])
     override def call() : Unit = {
-      transformer.extractMethod(sootClass, sootMethod);
+      try {
+        transformer.extractMethod(sootClass, sootMethod);
+      }
+      catch {
+        case e : StackOverflowError => {
+          logger.error("StackOverflowError processing class {}, method {}{}", sootClass.getName(), sootMethod.getName(), "")
+          logger.error("Exception {}:", e)
+        }
+      }
+
       return;
     }
   }
