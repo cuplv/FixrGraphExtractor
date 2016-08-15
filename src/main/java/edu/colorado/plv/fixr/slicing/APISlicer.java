@@ -18,27 +18,36 @@ import edu.colorado.plv.fixr.SootHelper;
 import soot.Body;
 import soot.BooleanType;
 import soot.PatchingChain;
+import soot.RefType;
 import soot.util.Chain;
 import soot.SootClass;
 import soot.SootMethod;
+import soot.Trap;
 import soot.Unit;
 import soot.Value;
 import soot.Local;
 import soot.ValueBox;
 import soot.dava.internal.javaRep.DIntConstant;
+import soot.jimple.CaughtExceptionRef;
 import soot.jimple.GotoStmt;
+import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
 import soot.jimple.Jimple;
 import soot.jimple.JimpleBody;
 import soot.jimple.LookupSwitchStmt;
+import soot.jimple.NopStmt;
 import soot.jimple.SwitchStmt;
 import soot.jimple.TableSwitchStmt;
+import soot.jimple.internal.JTrap;
 import soot.toolkits.graph.Block;
 import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.graph.pdg.ConditionalPDGNode;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
 import soot.toolkits.graph.pdg.LoopedPDGNode;
 import soot.toolkits.graph.pdg.PDGNode;
+import soot.toolkits.exceptions.ThrowAnalysis;
+import soot.toolkits.exceptions.ThrowAnalysisFactory;
+import soot.toolkits.exceptions.ThrowableSet;
 
 /**
  * Slice a CFG of a method using as seeds the nodes of the API calls.
@@ -50,6 +59,11 @@ public class APISlicer {
   private UnitGraph cfg;
   private PDGSlicer pdg;
   private DataDependencyGraph ddg;
+  private ThrowAnalysis throwAnalysis;
+  /* map from trap to set of units */
+  private Map<Trap, Set<Unit>> trapToUnit;
+  /* map from caught unit to trap */
+  private Map<Unit, Trap> caughtToTrap;
 
   public static boolean PRINT_DEBUG_GRAPHS = true;
 
@@ -85,10 +99,39 @@ public class APISlicer {
     /* Computes the program dependency graph */
     this.pdg= new PDGSlicer((UnitGraph) this.cfg);
     this.ddg = new DataDependencyGraph(this.cfg);
+    this.throwAnalysis = ThrowAnalysisFactory.checkInitThrowAnalysis();
+    buildTrapMaps();
   }
 
   public APISlicer(Body body) {
     this(null, body);
+  }
+
+  private void buildTrapMaps() {
+    Chain<Unit> units = this.cfg.getBody().getUnits();
+    trapToUnit = new HashMap<Trap, Set<Unit>>();
+    caughtToTrap = new HashMap<Unit, Trap>();
+
+    for (Trap trap : this.cfg.getBody().getTraps()) {
+      HashSet<Unit> unitSet = new HashSet<Unit>();
+      RefType catcher = trap.getException().getType();
+      Unit lastUnitInTrap = units.getPredOf(trap.getEndUnit());
+      Iterator<Unit> unitIt = units.iterator(trap.getBeginUnit(),
+                                             lastUnitInTrap);
+
+      caughtToTrap.put(trap.getHandlerUnit(), trap);
+      trapToUnit.put(trap, unitSet);
+
+      while (unitIt.hasNext()) {
+        Unit unit = unitIt.next();
+        ThrowableSet thrownSet = throwAnalysis.mightThrow(unit);
+
+        ThrowableSet.Pair catchableAs = thrownSet.whichCatchableAs(catcher);
+        if (! catchableAs.getCaught().equals(ThrowableSet.Manager.v().EMPTY)) {
+          unitSet.add(unit);
+        }
+      }
+    }
   }
 
   /**
@@ -113,7 +156,7 @@ public class APISlicer {
 
       /* 3. Construct the sliced body */
       SlicerGraph sg = new SlicerGraph(this.cfg, unitsInSlice);
-      Body slice = sg.getSlicedBody();
+      Body slice = sg.getSlicedBody(caughtToTrap);
 
       if (PRINT_DEBUG_GRAPHS)
       {
@@ -209,11 +252,19 @@ public class APISlicer {
         PDGNode currentPdgNode = this.pdg.getPDGNodeFromUnit(currentUnit);
         assert (null != currentPdgNode);
 
-        /* Add the "gotos" or conditions (if they exists) in the cfg block */
+        /* Add the "gotos" and catch (if they exists) in the cfg block */
         {
-          Unit blockLabel = getBlockGoto(currentPdgNode);
-          if (null != blockLabel) {
-            reachableUnits.add(blockLabel);
+          for (Unit blockLabel : getDependentUnits(currentPdgNode)) {
+            if (null != blockLabel) {
+              reachableUnits.add(blockLabel);
+
+              if (APISlicer.isCaughtException(blockLabel)) {
+                /* Include all the units in the try that can throw the exception */
+                Trap trap = this.caughtToTrap.get(blockLabel);
+                Set<Unit> unitsInTrap = this.trapToUnit.get(trap);
+                toProcess.addAll(unitsInTrap);
+              }
+            }
           }
         }
 
@@ -263,16 +314,26 @@ public class APISlicer {
     return reachableUnits;
   }
 
+  private static boolean isCaughtException(Unit u) {
+    boolean isCaughtException = false;
+    if (u instanceof IdentityStmt) {
+      IdentityStmt identity = (IdentityStmt) u;
+      isCaughtException = identity.getRightOp() instanceof CaughtExceptionRef;
+    }
+    return isCaughtException;
+  }
+
   /**
-   * Given a pdg node, returns the goto instruction in the block.
-   * If there is not goto, the method returns null.
+   * Given a pdg node, returns the goto instruction, conditions and
+   * catch expressions in the block.
    *
    * @param pdgNode a node in the pdg
-   * @return the last goto instruction in pdgNode
+   * @return the "dependent" units
    */
-  private Unit getBlockGoto(PDGNode pdgNode)
+  private List<Unit> getDependentUnits(PDGNode pdgNode)
   {
-    Unit blockLabel = null;
+    List<Unit> unitList = new ArrayList<Unit>();
+
     assert(pdgNode.getType() == PDGNode.Type.CFGNODE);
     Object pdgObject = pdgNode.getNode();
 
@@ -282,15 +343,15 @@ public class APISlicer {
       for (Iterator<Unit> iter = (block).iterator(); iter.hasNext();) {
         appBlock = iter.next();
 
-        if (appBlock instanceof GotoStmt || appBlock instanceof IfStmt) {
+        if (isCaughtException(appBlock) ||
+            appBlock instanceof GotoStmt || appBlock instanceof IfStmt) {
           /* Assume at most one goto statement in the block */
-          assert (appBlock == null);
-          blockLabel = appBlock;
+          unitList.add(appBlock);
         }
       }
     }
 
-    return blockLabel;
+    return unitList;
   }
 
 
@@ -353,11 +414,12 @@ public class APISlicer {
 
       /* Fill the edges matrix */
       for (Unit u : g.getBody().getUnits()) {
+        List<Unit> successors = g.getSuccsOf(u);
         id = unitToId.get(u).intValue();
 
-        LabelHandler handler = new LabelHandler(u);
+        LabelHandler handler = new LabelHandler(u, successors);
 
-        for (Unit succ : g.getSuccsOf(u)) {
+        for (Unit succ : successors) {
           int dstId = unitToId.get(succ).intValue();
           edges[id][dstId] = true;
 
@@ -402,7 +464,8 @@ public class APISlicer {
         for (int i = 0; i < edges.length; i++) {
           for (int j = 0; j < edges.length; j++) {
             if (edges[i][j]) {
-              writer.write("n" + i + " -> " + "n" + j + "[ label = \"" + this.edgeLabels[i][j] + "\" ];\n") ;
+              writer.write("n" + i + " -> " + "n" + j + "[ label = \"" +
+                           this.edgeLabels[i][j] + "\" ];\n") ;
             }
           }
         }
@@ -528,11 +591,13 @@ public class APISlicer {
      *
      * @return the sliced body
      */
-    public Body getSlicedBody()
+    public Body getSlicedBody(Map<Unit, Trap> caughtToTrap)
     {
       Stack<Integer> toVisit = new Stack<Integer>();
       Map<Unit, Integer> statusMap = new HashMap<Unit, Integer>();
       Unit[] idToDstUnit = new Unit[idToUnit.length];
+      List<Integer> handlerList = new ArrayList<Integer>();
+      HashMap<Object, Object> bindings = new HashMap<Object, Object>();
 
       Body dstBody = getEmptyDstBody(srcBody);
       PatchingChain<Unit> dstChain = dstBody.getUnits();
@@ -567,12 +632,11 @@ public class APISlicer {
         }
 
         toVisit.push(currentHeadId);
-        visitHead(toVisit, dstFirst, dstLast, statusMap,
-                  idToDstUnit, dstChain);
+        visitHead(toVisit, bindings, dstFirst, dstLast, statusMap,
+                  idToDstUnit, dstChain, handlerList);
       }
 
       {
-        HashMap<Object, Object> bindings = new HashMap<Object, Object>();
         {
           // Clone local units.
           Chain<Local> dstLocalChain = dstBody.getLocals();
@@ -587,8 +651,41 @@ public class APISlicer {
           }
         }
 
-        // TODO add exceptions?
-
+        /* Process exceptions */
+        Chain<Trap> dstTrapsChain = dstBody.getTraps();
+        for (Integer handlerId : handlerList) {
+          Unit dstHandler = idToDstUnit[handlerId];
+          Unit handler = idToUnit[handlerId];
+          Trap trap = caughtToTrap.get(handler);          
+          
+          Unit lastToVisit = srcBody.getUnits().getPredOf(trap.getEndUnit());
+          Iterator<Unit> unitIt = srcBody.getUnits().iterator(trap.getBeginUnit(),
+              lastToVisit);
+          
+          int firstUnitInTrap = -1;
+          int lastUnitInTrap = -1;
+          while (unitIt.hasNext()) {
+            Unit u = unitIt.next();
+            int unitId = this.unitToId.get(u);
+            if (this.unitsInSlice[unitId]) {
+              if (firstUnitInTrap < 0) firstUnitInTrap = unitId;
+              lastUnitInTrap = unitId;
+            }
+          }
+          assert firstUnitInTrap >= 0;
+          assert lastUnitInTrap >= 0;
+          
+          Unit dstFirstUnitInTrap = idToDstUnit[firstUnitInTrap];
+          Unit dstLastUnitInTrap = idToDstUnit[firstUnitInTrap];
+          dstLastUnitInTrap = dstChain.getSuccOf(dstLastUnitInTrap);
+                    
+          Trap dstTrap = new JTrap(trap.getException(),
+              dstFirstUnitInTrap, dstLastUnitInTrap,
+              dstHandler);
+          dstTrapsChain.addLast(dstTrap);
+          bindings.put(trap, dstTrap);          
+        }
+        
         {
           // backpatching all local variables.
           for (ValueBox vb : dstBody.getUseBoxes()) {
@@ -605,10 +702,12 @@ public class APISlicer {
     }
 
     private void visitHead(Stack<Integer> toVisit,
-                           Unit dstFirst, Unit dstLast,
-                           Map<Unit, Integer> statusMap,
-                           Unit[] idToDstUnit,
-                           PatchingChain<Unit> dstChain)
+        HashMap<Object, Object> bindings,
+        Unit dstFirst, Unit dstLast,
+        Map<Unit, Integer> statusMap,
+        Unit[] idToDstUnit,
+        PatchingChain<Unit> dstChain,
+        List<Integer> handlerList)
     {
       while (! toVisit.isEmpty()) {
         int srcUnitId = toVisit.pop().intValue();
@@ -627,6 +726,7 @@ public class APISlicer {
           dstUnit = (Unit) srcUnit.clone();
           idToDstUnit[srcUnitId] = dstUnit;
           dstUnit.addAllTagsOf(srcUnit);
+          bindings.put(srcUnit, dstUnit);
           dstChain.insertBeforeNoRedirect(dstUnit, dstLast);
 
           /* Schedule the visit of all the children.
@@ -681,9 +781,19 @@ public class APISlicer {
           dstUnit = idToDstUnit[srcUnitId];
 
           /* redirect gotos */
-          LabelHandler labelHandler = new LabelHandler(dstUnit);
+          LabelHandler labelHandler = new LabelHandler(dstUnit, null);
           Map<Object, List<Unit>> c2t = getConditions2Targets(srcUnitId, idToDstUnit);
-          labelHandler.fixGotos(c2t, dstLast);
+          List<Unit> handlers = labelHandler.fixGotos(c2t, dstLast);
+          for (Unit dstHandler : handlers) {
+            int i = 0;
+            for (; i < idToDstUnit.length; i++) {
+              if (idToDstUnit[i] == dstHandler) {
+                break;
+              }
+            }
+
+            handlerList.add(i);
+          }          
 
           /* redirect to final node */
           if (! hasEdges(srcUnitId)) {
@@ -733,16 +843,21 @@ public class APISlicer {
 
     private class LabelHandler {
       Unit sourceUnit;
+      List<Unit> successors;
       private Map<Unit,List<Object>> target2conditions;
       private Map<Object,List<Unit>> condition2targets;
 
       private final static String DEFAULT_LABEL = "default_label";
       private final static String EMPTY_LABEL = "empty_label";
+      private final static String CATCH_LABEL = "catch_label";
 
-      public LabelHandler(Unit sourceUnit)
+      public LabelHandler(Unit sourceUnit,
+                          List<Unit> successors)
       {
         this.sourceUnit = sourceUnit;
+        this.successors = successors;
         buildMaps();
+
       }
 
       public List<Object> getConditions(Unit target) {
@@ -750,8 +865,36 @@ public class APISlicer {
         return conditions;
       }
 
-      public void fixGotos(Map<Object, List<Unit>> c2t, Unit defaultTarget) {
-        if (sourceUnit instanceof GotoStmt) {
+      private void setTargetSwitch(Map<Object, List<Unit>> c2t,
+          Unit defaultTarget,
+          SwitchStmt switchStmt,
+          Object condition,
+          int targetIndex) {
+
+        Unit target = defaultTarget;
+
+        assert(c2t.containsKey(condition));
+        List<Unit> targets = c2t.get(condition);
+
+        if (targets != null) {
+          assert targets.size() > 0;
+          target = targets.get(0);
+          targets.remove(0); /* consume the target */
+        }
+        switchStmt.setTarget(targetIndex, target);
+      }
+
+      public List<Unit> fixGotos(Map<Object, List<Unit>> c2t,
+          Unit defaultTarget) {
+        List<Unit> handlerList = new ArrayList<Unit>();
+        
+        if (sourceUnit instanceof NopStmt) {
+          List<Unit> targets = c2t.get(CATCH_LABEL);
+          if (null != targets) {
+            assert (targets.size() == 1);
+            handlerList.add(targets.get(0));
+          }
+        } else if (sourceUnit instanceof GotoStmt) {
           GotoStmt gotoStmt = (GotoStmt) sourceUnit;
           Unit target = defaultTarget;
 
@@ -762,7 +905,6 @@ public class APISlicer {
             target = targets.get(0);
           }
           gotoStmt.setTarget(target);
-
         } else if (sourceUnit instanceof IfStmt) {
           IfStmt ifstmt = (IfStmt) sourceUnit;
           Unit target = defaultTarget;
@@ -797,35 +939,7 @@ public class APISlicer {
         else {
           assert(c2t.size() == 0);
         }
-      }
-
-      private void setTargetSwitch(Map<Object, List<Unit>> c2t,
-          Unit defaultTarget,
-          SwitchStmt switchStmt,
-          Object condition,
-          int targetIndex) {
-
-        Unit target = defaultTarget;
-
-        assert(c2t.containsKey(condition));
-        List<Unit> targets = c2t.get(condition);
-
-        if (targets != null) {
-          assert targets.size() > 0;
-          target = targets.get(0);
-          targets.remove(0); /* consume the target */
-        }
-        switchStmt.setTarget(targetIndex, target);
-      }
-
-      private void setDefaultTargetSwitch(Map<Object, List<Unit>> c2t,
-          Unit defaultTarget, SwitchStmt switchStmt)
-      {
-        /* add default */
-        List<Unit> targets = c2t.get(DEFAULT_LABEL);
-        if (targets != null && targets.size() > 0)
-          switchStmt.setDefaultTarget(targets.get(0));
-        else switchStmt.setDefaultTarget(defaultTarget);
+        return handlerList;
       }
 
       private void buildMaps()
@@ -833,7 +947,18 @@ public class APISlicer {
         target2conditions = new HashMap<Unit,List<Object>>();
         condition2targets = new HashMap<Object,List<Unit>>();
 
-        if (sourceUnit instanceof GotoStmt) {
+        if (sourceUnit instanceof NopStmt) {
+          if (null != successors) {
+            for (Unit succ : successors) {
+              if (APISlicer.isCaughtException(succ)) {
+                /* use the target as label */
+                addToMapO(condition2targets, CATCH_LABEL, succ);
+                addToMapU(target2conditions, succ, CATCH_LABEL);
+              }
+            }
+          }
+        }
+        else if (sourceUnit instanceof GotoStmt) {
           GotoStmt gotoStmt = (GotoStmt) sourceUnit;
           Unit target = gotoStmt.getTarget();
 
@@ -885,6 +1010,17 @@ public class APISlicer {
           }
         }
       }
+
+      private void setDefaultTargetSwitch(Map<Object, List<Unit>> c2t,
+          Unit defaultTarget, SwitchStmt switchStmt)
+      {
+        /* add default */
+        List<Unit> targets = c2t.get(DEFAULT_LABEL);
+        if (targets != null && targets.size() > 0)
+          switchStmt.setDefaultTarget(targets.get(0));
+        else switchStmt.setDefaultTarget(defaultTarget);
+      }
+
 
       private void addToMapU(Map<Unit, List<Object>> map, Unit key, Object element) {
         List<Object> list = map.get(key);
