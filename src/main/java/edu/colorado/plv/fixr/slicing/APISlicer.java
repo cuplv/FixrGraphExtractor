@@ -158,9 +158,15 @@ public class APISlicer {
       SlicerGraph sg = new SlicerGraph(this.cfg, unitsInSlice);
       Body slice = sg.getSlicedBody(caughtToTrap);
 
-      if (PRINT_DEBUG_GRAPHS)
-      {
-        EnhancedUnitGraph slicedGraph = new EnhancedUnitGraph(slice);
+      /* Creates the unit graph
+
+         This simplifies the body and removes duplicates that are not useful.
+
+         This has to be investigated further.
+       */
+
+      EnhancedUnitGraph slicedGraph = new EnhancedUnitGraph(slice);
+      if (PRINT_DEBUG_GRAPHS) {
         SootHelper.dumpToDot(slicedGraph, slice, "/tmp/sliced.dot");
       }
 
