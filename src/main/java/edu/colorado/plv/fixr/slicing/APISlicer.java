@@ -734,7 +734,7 @@ public class APISlicer {
              chain, while before we insert all the branches.
           */
           List<Integer> successors = new ArrayList<Integer>();
-          boolean hasEmpty = false;
+          boolean hasEmpty = false;          
           for (int j = 0; j < edges[srcUnitId].length; j++) {
             if (! unitsInSlice[j]) continue;
 
@@ -759,7 +759,7 @@ public class APISlicer {
               }
             }
           }
-          if (! hasEmpty) {
+          if (! hasEmpty && hasEdges(srcUnitId)) {
             /* add a jump to the last unit */
             dstChain.insertAfter(Jimple.v().newGotoStmt(dstLast),dstUnit);
           }
