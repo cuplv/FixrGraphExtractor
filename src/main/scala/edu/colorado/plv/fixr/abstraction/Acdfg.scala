@@ -6,17 +6,12 @@ import soot.jimple.internal.JimpleLocal
 
 import scala.collection.JavaConversions.asScalaIterator
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.Stack
-import scala.collection.mutable.HashMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import edu.colorado.plv.fixr.protobuf.ProtoAcdfg
 
-import edu.colorado.plv.fixr.protobuf.ProtoAcdfg.Acdfg.RepoTag
-
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
-import scala.collection.immutable.HashMap
 
 /**
   * Acdfg
@@ -35,13 +30,13 @@ abstract class CommandNode extends Node {
   override def toString = this match {
     case n : MethodNode =>
       n.getClass.getSimpleName + "(" +
-      "id: "+ n.id.toString + ", " +
-      "invokee: "   + n.invokee.toString + ", " +
-      "name: "      + n.name.toString + ", " +
-      "arguments: [" +
-      n.argumentIds.map(_.toString).mkString(", ") +
-      "]" +
-      ")"
+        "id: "+ n.id.toString + ", " +
+        "invokee: "   + n.invokee.toString + ", " +
+        "name: "      + n.name.toString + ", " +
+        "arguments: [" +
+        n.argumentIds.map(_.toString).mkString(", ") +
+        "]" +
+        ")"
     case n =>
       this.getClass.getSimpleName + "(" + id.toString + ")"
   }
@@ -60,7 +55,7 @@ case class MethodNode(
   invokee : Option[Long],
   name : String,
   argumentIds : Vector[Long]
-    // var argumentNames : Array[String]
+  // var argumentNames : Array[String]
 ) extends CommandNode
 
 case class MiscNode(
@@ -75,10 +70,10 @@ abstract class Edge {
   val id   : Long
   override def toString =
     this.getClass.getSimpleName +
-  "(id: "     + id.toString   +
-  ", to: "    + to.toString   +
-  ", from: "  + from.toString +
-  ")"
+      "(id: "     + id.toString   +
+      ", to: "    + to.toString   +
+      ", from: "  + from.toString +
+      ")"
 }
 
 case class DefEdge(
@@ -140,6 +135,15 @@ class Acdfg(
   protected[fixr] var edges = scala.collection.mutable.HashMap[Long, Edge]()
   protected[fixr] var nodes = scala.collection.mutable.HashMap[Long, Node]()
 
+  var methodBag = new scala.collection.mutable.ArrayBuffer[String]()
+
+  def prepareMethodBag() = {
+    nodes.filter(_._2.isInstanceOf[MethodNode]).foreach { case (_, node) =>
+      methodBag.append(node.asInstanceOf[MethodNode].name)
+    }
+    methodBag = methodBag.sorted
+  }
+
   /* Internal Protobuf value generated as needed */
   private lazy val pb : ProtoAcdfg.Acdfg = {
     var builder : ProtoAcdfg.Acdfg.Builder = ProtoAcdfg.Acdfg.newBuilder()
@@ -173,6 +177,8 @@ class Acdfg(
         protoTransEdge.setTo(edge.to)
         builder.addTransEdge(protoTransEdge)
     }
+    var methodBag : scala.collection.mutable.ArrayBuffer[String] =
+      new scala.collection.mutable.ArrayBuffer[String]()
     nodes.foreach {
       case (id : Long, node : DataNode) =>
         val protoDataNode : ProtoAcdfg.Acdfg.DataNode.Builder =
@@ -196,6 +202,8 @@ class Acdfg(
         node.argumentIds.foreach(protoMethodNode.addArgument)
         protoMethodNode.setName(node.name)
         builder.addMethodNode(protoMethodNode)
+        // add method to bag of methods representation
+        methodBag.append(node.name)
     }
 
     val protoRepoTag = ProtoAcdfg.Acdfg.RepoTag.newBuilder()
@@ -204,6 +212,11 @@ class Acdfg(
     protoRepoTag.setUrl(this.gitHubRecord.url)
     protoRepoTag.setCommitHash(this.gitHubRecord.commitHash)
     builder.setRepoTag(protoRepoTag)
+
+    // add bag of methods
+    val protoMethodBag = ProtoAcdfg.Acdfg.MethodBag.newBuilder()
+    methodBag.sorted.foreach(protoMethodBag.addMethod)
+    builder.setMethodBag(protoMethodBag)
 
     builder.build()
   }
@@ -227,9 +240,9 @@ class Acdfg(
   def disjointUnion(that : Acdfg) : AdjacencyList =
     AdjacencyList(
       ((this.nodes.values.toSet &~ that.nodes.values.toSet) ++
-        (that.nodes.values.toSet -- this.nodes.values.toSet)).toVector,
-      ((this.edges.values.toSet -- that.edges.values.toSet) ++
-        (that.edges.values.toSet -- this.edges.values.toSet)).toVector
+      (that.nodes.values.toSet -- this.nodes.values.toSet)).toVector,
+     ((this.edges.values.toSet -- that.edges.values.toSet) ++
+      (that.edges.values.toSet -- this.edges.values.toSet)).toVector
     )
   def +|(that : Acdfg) = disjointUnion(that)
 
@@ -251,7 +264,7 @@ class Acdfg(
   def equals(that : Acdfg) : Boolean = {
     val du = this +| that
     du.nodes.isEmpty && du.edges.isEmpty &&
-    this.ghr == that.ghr
+      this.ghr == that.ghr
   }
 
   def ==(that : Acdfg) : Boolean =
@@ -337,6 +350,7 @@ class Acdfg(
     adjacencyList.edges.foreach {edge =>
       edges += ((edge.id, edge))
     }
+    prepareMethodBag()
   }
 
   def this(cdfg : UnitCdfgGraph, gitHubRecord: GitHubRecord) = {
@@ -353,10 +367,10 @@ class Acdfg(
     val useEdges = cdfg.useEdges()
 
     def addDataNode(
-      local : soot.Local,
-      name : String,
-      datatype : String
-    ) = {
+                     local : soot.Local,
+                     name : String,
+                     datatype : String
+                   ) = {
       val id = getNewId
       val node = new DataNode(id, name, datatype)
       localToId += ((local,id))
@@ -364,12 +378,12 @@ class Acdfg(
     }
 
     def addMethodNode(
-      unit : soot.Unit,
-      assignee : Option[String],
-      invokee : Option[Long],
-      name : String,
-      argumentStrings : Array[String]
-    ) : (Long, Node) = {
+                       unit : soot.Unit,
+                       assignee : Option[String],
+                       invokee : Option[Long],
+                       name : String,
+                       argumentStrings : Array[String]
+                     ) : (Long, Node) = {
       val id   = getNewId
       val node = new MethodNode(
         id,
@@ -384,8 +398,8 @@ class Acdfg(
     }
 
     def addMiscNode(
-      unit : soot.Unit
-    ) : (Long, Node) = {
+                     unit : soot.Unit
+                   ) : (Long, Node) = {
       val id = getNewId
       val node = new MiscNode(id)
       addNode(id, node)
@@ -422,7 +436,7 @@ class Acdfg(
     def addDefEdges(unit : soot.Unit, unitId : Long): Unit = {
       if (!defEdges.containsKey(unit)) {
         return
-          // defensive programming; don't know if defEdges has a value for every unit
+        // defensive programming; don't know if defEdges has a value for every unit
       }
       val localIds : Array[Long] = defEdges.get(unit).iterator().map({local : soot.Local =>
         localToId(local)
@@ -434,7 +448,7 @@ class Acdfg(
     def addUseEdges(local : soot.Local, localId : Long): Unit = {
       if (!useEdges.containsKey(local)) {
         return
-          // defensive programming; don't know if useEdges has a value for every local
+        // defensive programming; don't know if useEdges has a value for every local
       }
       val unitIds : Array[Long] = useEdges.get(local).iterator().map({unit : soot.Unit =>
         unitToId(unit)
@@ -479,15 +493,15 @@ class Acdfg(
       // add all non-dominated nodes to work list
       commandNodes.filter {node => true
         /*
-         edges.values.toSet.contains {
-         edge : Edge =>
+        edges.values.toSet.contains {
+          edge : Edge =>
 
-         edge : Edge => edge.from == node.id
-         }  &&
-         !edges.values.toSet.contains {
-         edge : Edge => edge.to   == node.id
-         }
-         */
+            edge : Edge => edge.from == node.id
+          }  &&
+          !edges.values.toSet.contains {
+            edge : Edge => edge.to   == node.id
+          }
+          */
       }.foreach{ n =>
         logger.debug("Starting node " + n.toString + " found.")
         stack.push(n)
@@ -501,15 +515,15 @@ class Acdfg(
           edges.filter { case ((id, edge)) =>
             edge.from == node.id && idToAdjIndex.contains(edge.to)
           }.foreach { case ((id, edge)) =>
-              val fromId = idToAdjIndex.get(edge.from).get
-              val toId   = idToAdjIndex.get(edge.to).get
-              commandAdjMatrix(fromId)(toId) = true
-              logger.debug(commandAdjMatrix.toString)
-              val newNode = commandNodes(toId)
-              if (!discovered.contains(newNode)) {
-                stack.push(newNode)
-                logger.debug("Command node pushed to stack: " + node.toString)
-              }
+            val fromId = idToAdjIndex.get(edge.from).get
+            val toId   = idToAdjIndex.get(edge.to).get
+            commandAdjMatrix(fromId)(toId) = true
+            logger.debug(commandAdjMatrix.toString)
+            val newNode = commandNodes(toId)
+            if (!discovered.contains(newNode)) {
+              stack.push(newNode)
+              logger.debug("Command node pushed to stack: " + node.toString)
+            }
           }
         }
       }
@@ -710,7 +724,7 @@ class Acdfg(
             )))
           }
         }
-    }
+      }
 
     logger.debug("### Adding argument ids from argument names and use-edges...")
 
@@ -731,6 +745,9 @@ class Acdfg(
     logger.debug("### Computing transitive closure down to DFS of command edges...")
     computeTransClosure()
 
+    logger.debug("### Preparing bag of methods...")
+    prepareMethodBag()
+
     logger.debug("### Done")
   }
 
@@ -740,34 +757,34 @@ class Acdfg(
       null,
       protobuf,
       GitHubRecord(
-        if (protobuf.getRepoTag.hasUserName())
+        if (protobuf.getRepoTag.hasUserName)
           protobuf.getRepoTag.getUserName else "",
-        if (protobuf.getRepoTag.hasRepoName())
+        if (protobuf.getRepoTag.hasRepoName)
           protobuf.getRepoTag.getRepoName else "",
-        if (protobuf.getRepoTag.hasUrl())
+        if (protobuf.getRepoTag.hasUrl)
           protobuf.getRepoTag.getUrl else "",
-        if (protobuf.getRepoTag.hasCommitHash())
+        if (protobuf.getRepoTag.hasCommitHash)
           protobuf.getRepoTag.getCommitHash else ""
       )
     )
 
     // for Protobuf
     def addDataNode(
-      id : Long,
-      name : String,
-      datatype : String
-    ) = {
+                     id : Long,
+                     name : String,
+                     datatype : String
+                   ) = {
       val node = new DataNode(id, name, datatype)
       addNode(id, node)
     }
 
     // Protobuf
     def addMethodNode(
-      id : Long,
-      invokee : Option[Long],
-      name : String,
-      arguments : Vector[Long]
-    ): (Long, Node) = {
+                       id : Long,
+                       invokee : Option[Long],
+                       name : String,
+                       arguments : Vector[Long]
+                     ): (Long, Node) = {
       val node = new MethodNode(
         id,
         invokee,
@@ -780,8 +797,8 @@ class Acdfg(
 
     // Protobuf
     def addMiscNode(
-      id : Long
-    ) : (Long, Node) = {
+                     id : Long
+                   ) : (Long, Node) = {
       val node = new MiscNode(id)
       addNode(id, node)
       (id, node)
@@ -850,6 +867,17 @@ class Acdfg(
 
     protobuf.getTransEdgeList.foreach { transEdge =>
       addTransControlEdge(transEdge.getId, transEdge.getFrom, transEdge.getTo)
+    }
+
+    if (
+      (!protobuf.getMethodBag.isInitialized) ||
+        (protobuf.getMethodBag.getMethodCount == 0)
+    ) {
+      prepareMethodBag()
+    } else {
+      protobuf.getMethodBag.getMethodList.foreach {method =>
+        methodBag.append(method)
+      }
     }
   }
 }
