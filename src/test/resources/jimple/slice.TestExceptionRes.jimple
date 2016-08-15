@@ -1,134 +1,71 @@
-public class slice.TestException extends java.lang.Object
+public class slice.TestExceptionRes extends java.lang.Object
 {
-
-    public void testContinue__sliced__()
-    {
-        slice.TestException this;
-        int i, temp$0, temp$1, temp$2, temp$3, temp$4, temp$5, temp$6;
-        java.io.File temp$7;
-        java.lang.StringBuffer temp$8;
-        java.lang.String temp$9, temp$10;
-
-        this := @this: slice.TestException;
-
-        temp$0 = 0;
-
-        i = temp$0;
-
-     label1:
-        if i <= 10 goto label2;
-
-        goto label6;
-
-     label2:
-        if i == 9 goto label3;
-
-        goto label4;
-
-     label3:
-        temp$1 = i;
-
-        temp$2 = temp$1 + 1;
-
-        i = temp$2;
-
-        goto label5;
-
-     label4:
-        temp$3 = i;
-
-        temp$4 = temp$3 + 2;
-
-        i = temp$4;
-
-     label5:
-        temp$5 = i;
-
-        temp$6 = temp$5 + 1;
-
-        i = temp$6;
-
-        goto label1;
-
-     label6:
-        temp$7 = new java.io.File;
-
-        temp$8 = new java.lang.StringBuffer;
-
-        specialinvoke temp$8.<java.lang.StringBuffer: void <init>()>();
-
-        virtualinvoke temp$8.<java.lang.StringBuffer: java.lang.StringBuffer append(java.lang.Object)>("fubars.txt");
-
-        temp$9 = staticinvoke <java.lang.String: java.lang.String valueOf(int)>(i);
-
-        virtualinvoke temp$8.<java.lang.StringBuffer: java.lang.StringBuffer append(java.lang.Object)>(temp$9);
-
-        temp$10 = virtualinvoke temp$8.<java.lang.StringBuffer: java.lang.String toString()>();
-
-        specialinvoke temp$7.<java.io.File: void <init>(java.lang.String)>(temp$10);
-
-        return;
-    }
 
     public void tryCatch__sliced__()
     {
-        slice.TestException this;
-        int i;
         java.lang.Exception e;
+        int i;
+        slice.TestException this;
+
+        nop;
 
         this := @this: slice.TestException;
 
         i = 0;
 
+        nop;
+
+        nop;
+
      label1:
         staticinvoke <java.lang.Math: int abs(int)>(i);
 
-        goto label3;
-
      label2:
+        goto label4;
+
+     label3:
         e := @caughtexception;
 
         staticinvoke <java.lang.Math: int abs(int)>(i);
 
-        goto label3;
+        goto label4;
 
-     label3:
-        return;
+     label4:
+        nop;
 
-        catch java.lang.Exception from label1 to label2 with label2;
+        catch java.lang.Exception from label1 to label2 with label3;
     }
+
 
     public void tryCatchNotImportant__sliced__()
     {
-        slice.TestException this;
-        int i;
         java.lang.Exception e;
+        int i;
+        slice.TestException this;
+
+        nop;
 
         this := @this: slice.TestException;
 
         i = 0;
 
-     label1:
+        nop;
+
         staticinvoke <java.lang.Math: int abs(int)>(i);
 
-        goto label3;
+        goto label1;
 
-     label2:
-        e := @caughtexception;
-
-        goto label3;
-
-     label3:
-        return;
-
-        catch java.lang.Exception from label1 to label2 with label2;
+     label1:
+        nop;
     }
 
     public void tryFinally__sliced__()
     {
-        slice.TestException this;
-        int i, j;
         java.lang.Throwable temp$2;
+        int i, j;
+        slice.TestException this;
+
+        nop;
 
         this := @this: slice.TestException;
 
@@ -136,32 +73,39 @@ public class slice.TestException extends java.lang.Object
 
         j = 1;
 
+        nop;
+
+        nop;
+
      label1:
         staticinvoke <java.lang.Math: int abs(int)>(i);
 
+     label2:
         staticinvoke <java.lang.Math: int abs(int)>(j);
 
-        goto label3;
+        goto label4;
 
-     label2:
+     label3:
         temp$2 := @caughtexception;
 
         staticinvoke <java.lang.Math: int abs(int)>(j);
 
-        throw temp$2;
+        goto label1;
 
-     label3:
-        return;
+     label4:
+        nop;
 
-        catch java.lang.Throwable from label1 to label2 with label2;
+        catch java.lang.Throwable from label1 to label2 with label3;
     }
 
     public void tryCatchFinally__sliced__()
     {
-        slice.TestException this;
-        int i, j, z;
-        java.lang.Exception e;
         java.lang.Throwable temp$4;
+        java.lang.Exception e;
+        int i, j, z;
+        slice.TestException this;
+
+        nop;
 
         this := @this: slice.TestException;
 
@@ -171,20 +115,26 @@ public class slice.TestException extends java.lang.Object
 
         z = 1;
 
+        nop;
+
+        nop;
+
      label1:
         staticinvoke <java.lang.Math: int abs(int)>(i);
+
+        nop;
 
      label2:
         staticinvoke <java.lang.Math: int abs(int)>(j);
 
+     label3:
         goto label6;
 
-     label3:
+     label4:
         e := @caughtexception;
 
         staticinvoke <java.lang.Math: int abs(int)>(z);
 
-     label4:
         staticinvoke <java.lang.Math: int abs(int)>(j);
 
         goto label6;
@@ -194,23 +144,24 @@ public class slice.TestException extends java.lang.Object
 
         staticinvoke <java.lang.Math: int abs(int)>(j);
 
-        throw temp$4;
+        goto label6;
 
      label6:
-        return;
+        nop;
 
-        catch java.lang.Exception from label1 to label2 with label3;
-        catch java.lang.Throwable from label1 to label2 with label5;
-        catch java.lang.Throwable from label2 to label4 with label5;
+        catch java.lang.Exception from label1 to label2 with label4;
+        catch java.lang.Throwable from label2 to label3 with label5;
     }
 
     public void tryCatchNested__sliced__()
     {
-        slice.TestException this;
-        int firstCatch, secondCatch, temp$1, temp$2;
-        int[] array, temp$0;
-        java.lang.IndexOutOfBoundsException e1;
         java.lang.Exception e2;
+        java.lang.IndexOutOfBoundsException e1;
+        int[] array, temp$0;
+        int firstCatch, secondCatch, temp$1, temp$2;
+        slice.TestException this;
+
+        nop;
 
         this := @this: slice.TestException;
 
@@ -218,9 +169,14 @@ public class slice.TestException extends java.lang.Object
 
         secondCatch = 1;
 
+        nop;
+
+        nop;
+
      label1:
         array = newarray (int)[10];
 
+     label2:
         temp$0 = array;
 
         temp$1 = 0;
@@ -231,28 +187,28 @@ public class slice.TestException extends java.lang.Object
 
         goto label3;
 
-     label2:
+     label3:
+        goto label6;
+
+     label4:
         e1 := @caughtexception;
 
         staticinvoke <java.lang.Math: int abs(int)>(firstCatch);
 
         goto label3;
 
-     label3:
-        goto label5;
-
-     label4:
+     label5:
         e2 := @caughtexception;
 
         staticinvoke <java.lang.Math: int abs(int)>(secondCatch);
 
-        goto label5;
+        goto label6;
 
-     label5:
-        return;
+     label6:
+        nop;
 
-        catch java.lang.IndexOutOfBoundsException from label1 to label2 with label2;
-        catch java.lang.Exception from label1 to label4 with label4;
+        catch java.lang.IndexOutOfBoundsException from label1 to label2 with label4;
+        catch java.lang.Exception from label1 to label2 with label5;
     }
 
     public void <init>()

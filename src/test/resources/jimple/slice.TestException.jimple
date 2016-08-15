@@ -1,109 +1,188 @@
 public class slice.TestException extends java.lang.Object
 {
-
-    public void m1()
+    public void tryCatch()
     {
         slice.TestException this;
-        float[] d, temp$0, temp$4, temp$12, temp$16, temp$21;
-        int temp$1, temp$2, temp$5, temp$6, temp$13, temp$14, temp$17, temp$18, temp$22, temp$23;
-        float temp$3, temp$7, temp$15, temp$19, temp$24;
-        java.lang.IndexOutOfBoundsException e;
-        java.io.PrintStream temp$8;
-        java.lang.StringBuffer temp$9;
-        java.lang.String temp$10, temp$11;
-        java.lang.Throwable temp$20;
+        int i;
+        java.lang.Exception e;
 
         this := @this: slice.TestException;
 
-        d = newarray (float)[1];
+        i = 0;
 
      label1:
-        temp$0 = d;
+        staticinvoke <java.lang.Math: int abs(int)>(i);
 
-        temp$1 = 1;
-
-        temp$2 = staticinvoke <java.lang.Math: int abs(int)>(2);
-
-        temp$3 = (float) temp$2;
-
-        temp$0[temp$1] = temp$3;
+        goto label3;
 
      label2:
-        temp$4 = d;
+        e := @caughtexception;
 
-        temp$5 = 0;
+        staticinvoke <java.lang.Math: int abs(int)>(i);
 
-        temp$6 = staticinvoke <java.lang.Math: int abs(int)>(0);
+        goto label3;
 
-        temp$7 = (float) temp$6;
+     label3:
+        return;
 
-        temp$4[temp$5] = temp$7;
+        catch java.lang.Exception from label1 to label2 with label2;
+    }
+
+    public void tryCatchNotImportant()
+    {
+        slice.TestException this;
+        int i;
+        java.lang.Exception e;
+
+        this := @this: slice.TestException;
+
+        i = 0;
+
+     label1:
+        staticinvoke <java.lang.Math: int abs(int)>(i);
+
+        goto label3;
+
+     label2:
+        e := @caughtexception;
+
+        goto label3;
+
+     label3:
+        return;
+
+        catch java.lang.Exception from label1 to label2 with label2;
+    }
+
+    public void tryFinally()
+    {
+        slice.TestException this;
+        int i, j;
+        java.lang.Throwable temp$2;
+
+        this := @this: slice.TestException;
+
+        i = 0;
+
+        j = 1;
+
+     label1:
+        staticinvoke <java.lang.Math: int abs(int)>(i);
+
+        staticinvoke <java.lang.Math: int abs(int)>(j);
+
+        goto label3;
+
+     label2:
+        temp$2 := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(j);
+
+        throw temp$2;
+
+     label3:
+        return;
+
+        catch java.lang.Throwable from label1 to label2 with label2;
+    }
+
+    public void tryCatchFinally()
+    {
+        slice.TestException this;
+        int i, j, z;
+        java.lang.Exception e;
+        java.lang.Throwable temp$4;
+
+        this := @this: slice.TestException;
+
+        i = 0;
+
+        j = 1;
+
+        z = 1;
+
+     label1:
+        staticinvoke <java.lang.Math: int abs(int)>(i);
+
+     label2:
+        staticinvoke <java.lang.Math: int abs(int)>(j);
 
         goto label6;
 
      label3:
         e := @caughtexception;
 
-        temp$8 = <java.lang.System: java.io.PrintStream err>;
-
-        temp$9 = new java.lang.StringBuffer;
-
-        specialinvoke temp$9.<java.lang.StringBuffer: void <init>()>();
-
-        virtualinvoke temp$9.<java.lang.StringBuffer: java.lang.StringBuffer append(java.lang.Object)>("Caught IndexOutOfBoundsException: ");
-
-        temp$10 = virtualinvoke e.<java.lang.IndexOutOfBoundsException: java.lang.String getMessage()>();
-
-        virtualinvoke temp$9.<java.lang.StringBuffer: java.lang.StringBuffer append(java.lang.Object)>(temp$10);
-
-        temp$11 = virtualinvoke temp$9.<java.lang.StringBuffer: java.lang.String toString()>();
-
-        virtualinvoke temp$8.<java.io.PrintStream: void println(java.lang.String)>(temp$11);
-
-        temp$12 = d;
-
-        temp$13 = 0;
-
-        temp$14 = staticinvoke <java.lang.Math: int abs(int)>(9);
-
-        temp$15 = (float) temp$14;
-
-        temp$12[temp$13] = temp$15;
+        staticinvoke <java.lang.Math: int abs(int)>(z);
 
      label4:
-        temp$16 = d;
-
-        temp$17 = 0;
-
-        temp$18 = staticinvoke <java.lang.Math: int abs(int)>(0);
-
-        temp$19 = (float) temp$18;
-
-        temp$16[temp$17] = temp$19;
+        staticinvoke <java.lang.Math: int abs(int)>(j);
 
         goto label6;
 
      label5:
-        temp$20 := @caughtexception;
+        temp$4 := @caughtexception;
 
-        temp$21 = d;
+        staticinvoke <java.lang.Math: int abs(int)>(j);
 
-        temp$22 = 0;
-
-        temp$23 = staticinvoke <java.lang.Math: int abs(int)>(0);
-
-        temp$24 = (float) temp$23;
-
-        temp$21[temp$22] = temp$24;
-
-        throw temp$20;
+        throw temp$4;
 
      label6:
         return;
 
-        catch java.lang.IndexOutOfBoundsException from label1 to label2 with label3;
+        catch java.lang.Exception from label1 to label2 with label3;
         catch java.lang.Throwable from label1 to label2 with label5;
         catch java.lang.Throwable from label2 to label4 with label5;
+    }
+
+    public void tryCatchNested()
+    {
+        slice.TestException this;
+        int firstCatch, secondCatch, temp$1, temp$2;
+        int[] array, temp$0;
+        java.lang.IndexOutOfBoundsException e1;
+        java.lang.Exception e2;
+
+        this := @this: slice.TestException;
+
+        firstCatch = 1;
+
+        secondCatch = 1;
+
+     label1:
+        array = newarray (int)[10];
+
+        temp$0 = array;
+
+        temp$1 = 0;
+
+        temp$2 = temp$0[temp$1];
+
+        staticinvoke <java.lang.Math: int abs(int)>(temp$2);
+
+        goto label3;
+
+     label2:
+        e1 := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(firstCatch);
+
+        goto label3;
+
+     label3:
+        goto label5;
+
+     label4:
+        e2 := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(secondCatch);
+
+        goto label5;
+
+     label5:
+        return;
+
+        catch java.lang.IndexOutOfBoundsException from label1 to label2 with label2;
+        catch java.lang.Exception from label1 to label4 with label4;
     }
 
     public void <init>()

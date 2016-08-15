@@ -8,23 +8,6 @@ import java.io.IOException;
 public class TestException {
   /* Test the excaptional control flow */
 
-
-  public void testContinue() {
-    int i;
-    File file = null;
-
-    for (i = 0; i <= 10; i++) {
-      if (i == 9) {
-        i = i + 1;
-
-        continue;
-      }
-      i = i + 2;
-    }
-
-    file = new File("fubars.txt" + String.valueOf(i));
-  }
-
   public void tryCatch() {
     int i = 0;
 
