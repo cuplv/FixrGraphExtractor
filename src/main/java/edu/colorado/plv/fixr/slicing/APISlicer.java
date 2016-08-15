@@ -65,7 +65,7 @@ public class APISlicer {
   /* map from caught unit to trap */
   private Map<Unit, Trap> caughtToTrap;
 
-  public static boolean PRINT_DEBUG_GRAPHS = true;
+  public static boolean PRINT_DEBUG_GRAPHS = false;
 
   /**
    * @return the cfg
@@ -891,8 +891,9 @@ public class APISlicer {
         if (sourceUnit instanceof NopStmt) {
           List<Unit> targets = c2t.get(CATCH_LABEL);
           if (null != targets) {
-            assert (targets.size() == 1);
-            handlerList.add(targets.get(0));
+            for (Unit target : targets) {
+              handlerList.add(target);
+            }
           }
         } else if (sourceUnit instanceof GotoStmt) {
           GotoStmt gotoStmt = (GotoStmt) sourceUnit;
