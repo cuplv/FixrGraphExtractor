@@ -1,0 +1,119 @@
+public class slice.TestException extends java.lang.Object
+{
+
+    public void m1()
+    {
+        slice.TestException this;
+        float[] d, temp$0, temp$4, temp$12, temp$16, temp$21;
+        int temp$1, temp$2, temp$5, temp$6, temp$13, temp$14, temp$17, temp$18, temp$22, temp$23;
+        float temp$3, temp$7, temp$15, temp$19, temp$24;
+        java.lang.IndexOutOfBoundsException e;
+        java.io.PrintStream temp$8;
+        java.lang.StringBuffer temp$9;
+        java.lang.String temp$10, temp$11;
+        java.lang.Throwable temp$20;
+
+        this := @this: slice.TestException;
+
+        d = newarray (float)[1];
+
+     label1:
+        temp$0 = d;
+
+        temp$1 = 1;
+
+        temp$2 = staticinvoke <java.lang.Math: int abs(int)>(2);
+
+        temp$3 = (float) temp$2;
+
+        temp$0[temp$1] = temp$3;
+
+     label2:
+        temp$4 = d;
+
+        temp$5 = 0;
+
+        temp$6 = staticinvoke <java.lang.Math: int abs(int)>(0);
+
+        temp$7 = (float) temp$6;
+
+        temp$4[temp$5] = temp$7;
+
+        goto label6;
+
+     label3:
+        e := @caughtexception;
+
+        temp$8 = <java.lang.System: java.io.PrintStream err>;
+
+        temp$9 = new java.lang.StringBuffer;
+
+        specialinvoke temp$9.<java.lang.StringBuffer: void <init>()>();
+
+        virtualinvoke temp$9.<java.lang.StringBuffer: java.lang.StringBuffer append(java.lang.Object)>("Caught IndexOutOfBoundsException: ");
+
+        temp$10 = virtualinvoke e.<java.lang.IndexOutOfBoundsException: java.lang.String getMessage()>();
+
+        virtualinvoke temp$9.<java.lang.StringBuffer: java.lang.StringBuffer append(java.lang.Object)>(temp$10);
+
+        temp$11 = virtualinvoke temp$9.<java.lang.StringBuffer: java.lang.String toString()>();
+
+        virtualinvoke temp$8.<java.io.PrintStream: void println(java.lang.String)>(temp$11);
+
+        temp$12 = d;
+
+        temp$13 = 0;
+
+        temp$14 = staticinvoke <java.lang.Math: int abs(int)>(9);
+
+        temp$15 = (float) temp$14;
+
+        temp$12[temp$13] = temp$15;
+
+     label4:
+        temp$16 = d;
+
+        temp$17 = 0;
+
+        temp$18 = staticinvoke <java.lang.Math: int abs(int)>(0);
+
+        temp$19 = (float) temp$18;
+
+        temp$16[temp$17] = temp$19;
+
+        goto label6;
+
+     label5:
+        temp$20 := @caughtexception;
+
+        temp$21 = d;
+
+        temp$22 = 0;
+
+        temp$23 = staticinvoke <java.lang.Math: int abs(int)>(0);
+
+        temp$24 = (float) temp$23;
+
+        temp$21[temp$22] = temp$24;
+
+        throw temp$20;
+
+     label6:
+        return;
+
+        catch java.lang.IndexOutOfBoundsException from label1 to label2 with label3;
+        catch java.lang.Throwable from label1 to label2 with label5;
+        catch java.lang.Throwable from label2 to label4 with label5;
+    }
+
+    public void <init>()
+    {
+        slice.TestException this;
+
+        this := @this: slice.TestException;
+
+        specialinvoke this.<java.lang.Object: void <init>()>();
+
+        return;
+    }
+}
