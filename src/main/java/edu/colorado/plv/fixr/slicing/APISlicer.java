@@ -164,7 +164,7 @@ public class APISlicer {
 
          This has to be investigated further.
        */
-
+      testBug(slice.getUnits());
       EnhancedUnitGraph slicedGraph = new EnhancedUnitGraph(slice);
       if (PRINT_DEBUG_GRAPHS) {
         SootHelper.dumpToDot(slicedGraph, slice, "/tmp/sliced.dot");
@@ -181,6 +181,57 @@ public class APISlicer {
     return methodName + "__sliced__";
   }
 
+  protected void testBug(Chain<Unit> unitChain) {
+    Map<Unit,List<Unit>> unitToSuccs = new HashMap<Unit,List<Unit>>();
+    Map<Unit,List<Unit>> unitToPreds = new HashMap<Unit,List<Unit>>();
+
+    // Initialize the predecessor sets to empty
+    for (Unit u : unitChain) {
+      unitToPreds.put(u, new ArrayList<Unit>());
+    }
+
+    Iterator<Unit> unitIt = unitChain.iterator();
+    Unit currentUnit, nextUnit;
+
+    nextUnit = unitIt.hasNext() ? (Unit) unitIt.next(): null;
+
+    while(nextUnit != null) {
+      currentUnit = nextUnit;
+
+      System.out.println(currentUnit);
+
+      nextUnit = unitIt.hasNext() ? (Unit) unitIt.next(): null;
+
+      List<Unit> successors = new ArrayList<Unit>();
+
+      if( currentUnit.fallsThrough() ) {
+        // Add the next unit as the successor
+        if(nextUnit != null) {
+          successors.add(nextUnit);
+          unitToPreds.get(nextUnit).add(currentUnit);
+        }
+      }
+
+      if( currentUnit.branches() ) {
+        for (soot.UnitBox targetBox : currentUnit.getUnitBoxes()) {
+          Unit target = targetBox.getUnit();
+          // Arbitrary bytecode can branch to the same
+          // target it falls through to, so we screen for duplicates:
+          if (! successors.contains(target)) {
+            successors.add(target);
+            List<Unit> preds = unitToPreds.get(target);
+            if (preds == null)
+              throw new RuntimeException("Unit graph contains jump to non-existing target");
+            preds.add(currentUnit);
+          }
+        }
+      }
+
+      // Store away successors
+     unitToSuccs.put(currentUnit, successors);
+ }
+ 
+   }
   /**
    * Finds all the seeds (units) in the PDG according to the slicing criterion
    *
@@ -617,8 +668,15 @@ public class APISlicer {
         if (null == dstLast) {
           dstFirst = Jimple.v().newNopStmt();
           dstChain.addFirst(dstFirst);
+
+          // DEBUG
+          System.out.println(dstFirst);
+
           dstLast = Jimple.v().newNopStmt();
           dstChain.addLast(dstLast);
+
+          // DEBUG
+          System.out.println(dstLast);
         }
         else {
           /*
@@ -629,10 +687,16 @@ public class APISlicer {
            */
           Unit newFirst = Jimple.v().newNopStmt();
           Unit newLast = Jimple.v().newGotoStmt(dstLast);
-          Unit newJump = Jimple.v().newIfStmt(DIntConstant.v(1, BooleanType.v()),
+          Unit toNewFirst = Jimple.v().newIfStmt(DIntConstant.v(1, BooleanType.v()),
               newFirst);
+          Unit toNewLast = Jimple.v().newIfStmt(DIntConstant.v(1, BooleanType.v()),
+              newLast);
 
-          dstChain.insertAfter(newJump,newFirst);
+          dstChain.insertAfter(newFirst, dstLast);
+          dstChain.insertAfter(newLast, newFirst);
+          dstChain.insertAfter(toNewFirst, dstFirst);
+          dstChain.insertAfter(toNewLast, dstLast);
+
           dstFirst = newFirst;
           dstLast = newLast;
         }
@@ -740,7 +804,7 @@ public class APISlicer {
              chain, while before we insert all the branches.
           */
           List<Integer> successors = new ArrayList<Integer>();
-          boolean hasEmpty = false;          
+          boolean hasEmpty = false;
           for (int j = 0; j < edges[srcUnitId].length; j++) {
             if (! unitsInSlice[j]) continue;
 
