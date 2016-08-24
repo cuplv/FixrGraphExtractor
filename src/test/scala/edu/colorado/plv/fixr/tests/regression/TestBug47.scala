@@ -7,19 +7,19 @@ import edu.colorado.plv.fixr.extractors.MethodExtractor;
 import edu.colorado.plv.fixr.extractors.Extractor
 import edu.colorado.plv.fixr.extractors.ExtractorOptions
 
-class TestBug46 extends FunSuite with BeforeAndAfter {
+class TestBug47 extends FunSuite with BeforeAndAfter {
   before {
     SootHelper.reset();
   }
 
-  test("bug_046") {
+  ignore("bug_047") {
     val options : ExtractorOptions = new ExtractorOptions();
-    options.className = "bugs.Bug_046"
-    options.methodName = "getLog"
-    options.readFromSources = false
+    options.className = "bugs.Bug_047"
+    options.methodName = "bug_047_method"
+    options.readFromSources = true
     options.sliceFilter = List("android")
-    options.sootClassPath = "./src/test/resources/libs/android-17.jar:./src/test/resources/classes"
-    options.outputDir = null
+    options.sootClassPath = ":./src/test/resources/javasources"
+    options.outputDir = "/tmp/"
     options.provenanceDir = null
     options.processDir = null
     options.useJPhantom = false
