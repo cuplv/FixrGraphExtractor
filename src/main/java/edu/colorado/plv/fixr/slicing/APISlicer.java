@@ -164,7 +164,7 @@ public class APISlicer {
 
          This has to be investigated further.
        */
-
+      testBug(slice.getUnits());
       EnhancedUnitGraph slicedGraph = new EnhancedUnitGraph(slice);
       if (PRINT_DEBUG_GRAPHS) {
         SootHelper.dumpToDot(slicedGraph, slice, "/tmp/sliced.dot");
@@ -181,6 +181,55 @@ public class APISlicer {
     return methodName + "__sliced__";
   }
 
+  protected void testBug(Chain<Unit> unitChain) {
+    Map<Unit,List<Unit>> unitToSuccs = new HashMap<Unit,List<Unit>>();
+    Map<Unit,List<Unit>> unitToPreds = new HashMap<Unit,List<Unit>>();
+
+    // Initialize the predecessor sets to empty
+    for (Unit u : unitChain) {
+      unitToPreds.put(u, new ArrayList<Unit>());
+    }
+
+    Iterator<Unit> unitIt = unitChain.iterator();
+    Unit currentUnit, nextUnit;
+
+    nextUnit = unitIt.hasNext() ? (Unit) unitIt.next(): null;
+
+    while(nextUnit != null) {
+      currentUnit = nextUnit;
+
+      nextUnit = unitIt.hasNext() ? (Unit) unitIt.next(): null;
+
+      List<Unit> successors = new ArrayList<Unit>();
+
+      if( currentUnit.fallsThrough() ) {
+        // Add the next unit as the successor
+        if(nextUnit != null) {
+          successors.add(nextUnit);
+          unitToPreds.get(nextUnit).add(currentUnit);
+        }
+      }
+
+      if( currentUnit.branches() ) {
+        for (soot.UnitBox targetBox : currentUnit.getUnitBoxes()) {
+          Unit target = targetBox.getUnit();
+          // Arbitrary bytecode can branch to the same
+          // target it falls through to, so we screen for duplicates:
+          if (! successors.contains(target)) {
+            successors.add(target);
+            List<Unit> preds = unitToPreds.get(target);
+            if (preds == null)
+              throw new RuntimeException("Unit graph contains jump to non-existing target");
+            preds.add(currentUnit);
+          }
+        }
+      }
+
+      // Store away successors
+     unitToSuccs.put(currentUnit, successors);
+ }
+
+   }
   /**
    * Finds all the seeds (units) in the PDG according to the slicing criterion
    *
@@ -464,14 +513,15 @@ public class APISlicer {
         for (int i = 0; i < edges.length; i++) {
           String s = idToUnit[i].toString();
           s = s.replace('"', ' ');
-          writer.write("n" + i + " [label = \"" + s + "\"];\n") ;
+          writer.write("n" + i + " [label = \"" + i + " " + s + "\"];\n") ;
         }
 
         for (int i = 0; i < edges.length; i++) {
           for (int j = 0; j < edges.length; j++) {
             if (edges[i][j]) {
-              writer.write("n" + i + " -> " + "n" + j + "[ label = \"" +
-                           this.edgeLabels[i][j] + "\" ];\n") ;
+              writer.write("n" + i + " -> " + "n" + j + "[ label = \"(" +
+                  i + "," + j + ") " +
+                  this.edgeLabels[i][j] + "\" ];\n") ;
             }
           }
         }
@@ -629,10 +679,16 @@ public class APISlicer {
            */
           Unit newFirst = Jimple.v().newNopStmt();
           Unit newLast = Jimple.v().newGotoStmt(dstLast);
-          Unit newJump = Jimple.v().newIfStmt(DIntConstant.v(1, BooleanType.v()),
+          Unit toNewFirst = Jimple.v().newIfStmt(DIntConstant.v(1, BooleanType.v()),
               newFirst);
+          Unit toNewLast = Jimple.v().newIfStmt(DIntConstant.v(1, BooleanType.v()),
+              newLast);
 
-          dstChain.insertAfter(newJump,newFirst);
+          dstChain.insertAfter(newFirst, dstLast);
+          dstChain.insertAfter(newLast, newFirst);
+          dstChain.insertAfter(toNewFirst, dstFirst);
+          dstChain.insertAfter(toNewLast, dstLast);
+
           dstFirst = newFirst;
           dstLast = newLast;
         }
@@ -740,17 +796,18 @@ public class APISlicer {
              chain, while before we insert all the branches.
           */
           List<Integer> successors = new ArrayList<Integer>();
-          boolean hasEmpty = false;          
+          boolean hasEmpty = false;
           for (int j = 0; j < edges[srcUnitId].length; j++) {
             if (! unitsInSlice[j]) continue;
 
             if (edges[srcUnitId][j] &&
                 !statusMap.containsKey(new Integer(j))) {
+              int succStatus = getStatus(statusMap, idToUnit[j]);
               if (this.edgeLabels[srcUnitId][j].contains(LabelHandler.EMPTY_LABEL)) {
                 /* the empty label should be on just one edge */
                 assert ! hasEmpty;
                 hasEmpty = true;
-                int succStatus = getStatus(statusMap, idToUnit[j]);
+
                 if (succStatus == 0) {
                   successors.add(new Integer(j));
                 }
@@ -761,7 +818,12 @@ public class APISlicer {
               }
               else {
                 /* visit it later to change the jumps */
-                successors.add(0, new Integer(j));
+                if (succStatus == 0) {
+                  successors.add(0, new Integer(j));
+                }
+                else {
+                  /* Do nothing, already visited */
+                }
               }
             }
           }
@@ -770,11 +832,13 @@ public class APISlicer {
             dstChain.insertAfter(Jimple.v().newGotoStmt(dstLast),dstUnit);
           }
 
-          /* add elements to the stack */
+          /* add elements to the stack.
+           * Ensure to visit all the children before getting back to
+           * srcUnit
+           */
           toVisit.push(srcUnitId);
           for (Integer i : successors) toVisit.push(i);
 
-          /* Visited in pre-order */
           statusMap.put(srcUnit, 1);
 
           break;
@@ -826,6 +890,7 @@ public class APISlicer {
       Map<Object, List<Unit>> c2t = new HashMap<Object, List<Unit>>();
 
       for (int j = 0; j < edges[srcUnitId].length; j++) {
+        if (! this.edges[srcUnitId][j]) continue;
         boolean edgeInSlice = isEdgeInSlice(srcUnitId, j);
         if (edgeInSlice) {
           boolean edgeHasJumpLabel = (! this.edgeLabels[srcUnitId][j].contains(LabelHandler.EMPTY_LABEL)) ||
@@ -838,6 +903,7 @@ public class APISlicer {
                 targets = new ArrayList<Unit>();
                 c2t.put(condition, targets);
               }
+              assert idToDstUnit[j] != null;
               targets.add(idToDstUnit[j]);
             }
           }
@@ -898,6 +964,7 @@ public class APISlicer {
           List<Unit> targets = c2t.get(CATCH_LABEL);
           if (null != targets) {
             for (Unit target : targets) {
+              assert (null != target);
               handlerList.add(target);
             }
           }
@@ -905,23 +972,25 @@ public class APISlicer {
           GotoStmt gotoStmt = (GotoStmt) sourceUnit;
           Unit target = defaultTarget;
 
-          assert(c2t.containsKey(DEFAULT_LABEL));
+          // assert(c2t.containsKey(DEFAULT_LABEL));
           List<Unit> targets = c2t.get(DEFAULT_LABEL);
           if (null != targets) {
             assert targets.size() == 1;
             target = targets.get(0);
           }
+          assert (null != target);
           gotoStmt.setTarget(target);
         } else if (sourceUnit instanceof IfStmt) {
           IfStmt ifstmt = (IfStmt) sourceUnit;
           Unit target = defaultTarget;
 
-          assert(c2t.containsKey(DEFAULT_LABEL));
+          // assert(c2t.containsKey(DEFAULT_LABEL));
           List<Unit> targets = c2t.get(DEFAULT_LABEL);
           if (targets != null) {
             assert targets.size() == 1;
             target = targets.get(0);
           }
+          assert (null != target);
           ifstmt.setTarget(target);
         }
         else if (sourceUnit instanceof LookupSwitchStmt) {
