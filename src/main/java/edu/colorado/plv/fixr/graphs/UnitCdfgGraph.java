@@ -40,16 +40,11 @@ public class UnitCdfgGraph extends EnhancedUnitGraph {
 
     this.ddg = new DataDependencyGraph(this);
     addDataDependentNodes();
-
+    pruneDataDependent();
   }
 
-  public UnitCdfgGraph(Body body, DataDependencyGraph ddg) {
-    super(body);
-
-    addDataDependentNodes();
-  }
-
-  public Map<Local, List<Unit>> useEdges() {return useEdges;}
+  public Map<Local, List<Unit>> useEdges(
+      ) {return useEdges;}
   public Map<Unit, List<Local>> defEdges() {return defEdges;}
 
 
@@ -103,7 +98,7 @@ public class UnitCdfgGraph extends EnhancedUnitGraph {
       }
     }
   }
-
+  
   public Iterator<Local> localsIter()
   {
     return localsList.iterator();
@@ -116,9 +111,9 @@ public class UnitCdfgGraph extends EnhancedUnitGraph {
   }
 
   public List<Unit> getUseUnits(Local l) {
-    List<Unit> unitList= useEdges.get(l);
-    assert unitList != null;
-    return unitList;
+    List<Unit> unitList = useEdges.get(l);    
+    if (null == unitList) return new ArrayList<Unit>();       
+    else return unitList;
   }
 
   public void checkGraph() {
@@ -129,5 +124,41 @@ public class UnitCdfgGraph extends EnhancedUnitGraph {
       i += 1;
     };
     System.out.println("FOUND " + i);
+  }
+  
+  /**
+   * Remove redundancies in the CDFG.
+   * 
+   * Redundancies are locals node that are not connected to anything and
+   * multiple use edges from a local to a unit.
+   *  
+   *
+   */
+  private void pruneDataDependent() {
+    Set<Local> usedLocals = new HashSet<Local>();
+    
+    for (Map.Entry<Local, List<Unit>> entry : useEdges.entrySet()) {
+      List<Unit> localUseEdges = entry.getValue();
+      Local local = entry.getKey();
+      
+      if (localUseEdges.size() > 0) {
+        usedLocals.add(local);
+        /* remove duplicates */
+        Set<Unit> setUnits = new HashSet<Unit>(localUseEdges);
+        localUseEdges.clear();
+        localUseEdges.addAll(setUnits);       
+      }          
+    }
+    
+    for (Map.Entry<Unit, List<Local>> entry : defEdges.entrySet()) {
+      List<Local> unitDefaEdges = entry.getValue();      
+      usedLocals.addAll(unitDefaEdges);
+    }
+    
+    Set<Local> toRemove = new HashSet<Local>(localsList);
+    toRemove.removeAll(usedLocals);                 
+    for (Local l : toRemove) useEdges.remove(l);
+    
+    localsList.retainAll(usedLocals);
   }
 }

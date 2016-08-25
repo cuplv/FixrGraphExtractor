@@ -513,7 +513,12 @@ public class APISlicer {
         for (int i = 0; i < edges.length; i++) {
           String s = idToUnit[i].toString();
           s = s.replace('"', ' ');
-          writer.write("n" + i + " [label = \"" + i + " " + s + "\"];\n") ;
+          if (unitsInSlice[i]) {
+            writer.write("n" + i + " [label = \"" + i + " " + s + "\", color=red];\n") ;
+          }
+          else {
+            writer.write("n" + i + " [label = \"" + i + " " + s + "\"];\n") ;
+          }
         }
 
         for (int i = 0; i < edges.length; i++) {
