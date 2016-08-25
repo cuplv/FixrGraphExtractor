@@ -581,10 +581,6 @@ class Acdfg(
             val methodName = n.getInvokeExpr.getMethod.getName
             // must have empty arguments to toString(); otherwise needs a pointer to some printer object
             val arguments = n.getInvokeExpr.getArgs
-            var i : Int = 1
-            arguments.iterator.foreach({argument =>
-              i += 1
-            })
             val argumentStrings = arguments.iterator.foldRight(new ArrayBuffer[String]())(
               (argument, array) => array += argument.toString
             )
@@ -597,10 +593,6 @@ class Acdfg(
               val methodName = n.getInvokeExpr.getMethod.getName
               // must have empty arguments to toString(); otherwise needs a pointer to some printer object
               val arguments = n.getInvokeExpr.getArgs
-              var i : Int = 1
-              arguments.iterator.foreach({argument =>
-                i += 1
-              })
               val argumentStrings = arguments.iterator.foldRight(new ArrayBuffer[String]())(
                 (argument, array) => array += argument.toString()
               )
