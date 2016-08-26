@@ -1027,10 +1027,12 @@ public class APISlicer {
         else if (sourceUnit instanceof TableSwitchStmt) {
           TableSwitchStmt switchStmt = (TableSwitchStmt) sourceUnit;
 
-          for (int i = switchStmt.getLowIndex();
-               i <= switchStmt.getHighIndex(); i++) {
+          for (int i = switchStmt.getLowIndex(),
+              j = 0;
+              i <= switchStmt.getHighIndex();
+              i++, j++) {
             Object condition = new Integer(i);
-            setTargetSwitch(c2t, defaultTarget, switchStmt, condition, i);
+            setTargetSwitch(c2t, defaultTarget, switchStmt, condition, j);
           }
           setDefaultTargetSwitch(c2t, defaultTarget, switchStmt);
         }
@@ -1093,9 +1095,11 @@ public class APISlicer {
           TableSwitchStmt switchStmt = (TableSwitchStmt) sourceUnit;
 
           List<? extends Unit> targets = switchStmt.getTargets();
-          for (int i = switchStmt.getLowIndex(); i <= switchStmt.getHighIndex();
-               i++) {
-            Unit target = targets.get(i);
+          for (int i = switchStmt.getLowIndex(),
+              j = 0;
+              i <= switchStmt.getHighIndex();
+              i++, j++) {
+            Unit target = targets.get(j);
             Object condition = new Integer(i);
             addToMapO(condition2targets, condition, target);
             addToMapU(target2conditions, target, condition);
