@@ -118,8 +118,8 @@ public class APISlicer {
       Unit lastUnitInTrap = units.getPredOf(trap.getEndUnit());
       Iterator<Unit> unitIt = units.iterator(trap.getBeginUnit(),
                                              lastUnitInTrap);
-
-      caughtToTrap.put(trap.getHandlerUnit(), trap);
+      Unit handler = trap.getHandlerUnit();
+      caughtToTrap.put(handler, trap);
       trapToUnit.put(trap, unitSet);
 
       while (unitIt.hasNext()) {
@@ -725,7 +725,24 @@ public class APISlicer {
           Unit handler = idToUnit[handlerId];
           Trap trap = caughtToTrap.get(handler);
 
-          Unit lastToVisit = srcBody.getUnits().getPredOf(trap.getEndUnit());
+          if (trap == null) {
+            /* The trap can be null here.
+             * Consider the example of the Bug051.
+             *
+             * The handler node that we insert in the list can *not* belong to
+             * a trap at all, by transitivity.
+             *
+             * If it is the case, it means that there are no nodes in the
+             * trap and are also in the slice. Hence, we can disregard the trap.
+             *
+             */
+            continue;
+          }
+          assert (trap != null);
+          Unit trapEndUnit = trap.getEndUnit();
+          assert (null != trapEndUnit);
+
+          Unit lastToVisit = srcBody.getUnits().getPredOf(trapEndUnit);
           Iterator<Unit> unitIt = srcBody.getUnits().iterator(trap.getBeginUnit(),
               lastToVisit);
 

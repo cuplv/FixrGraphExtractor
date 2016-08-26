@@ -29,9 +29,9 @@ class Visualizer(
     val graph2 : abstraction.Acdfg = new abstraction.Acdfg(protoGraph2)
 
   def drawEdge(e : (Long, Edge), canvas : DotGraph, graphNum : Int) = {
-    println("$$$ edge " + graphNum.toString + " id: " + e._2.id.toString)
-    println("$$$   edge " + graphNum.toString + " from: " + e._2.from.toString)
-    println("$$$   edge " + graphNum.toString + " to: " + e._2.to.toString)
+    //println("$$$ edge " + graphNum.toString + " id: " + e._2.id.toString)
+    //println("$$$   edge " + graphNum.toString + " from: " + e._2.from.toString)
+    //println("$$$   edge " + graphNum.toString + " to: " + e._2.to.toString)
     var dotEdge : DotGraphEdge = canvas.drawEdge(
       graphNum.toString + "_" + e._2.from.toString,
       graphNum.toString + "_" +  e._2.to.toString
@@ -50,15 +50,15 @@ class Visualizer(
   }
 
   def drawNode(n : (Long, Node), canvas : DotGraph, graphNum : Int) = {
-    println("$$$ node " + graphNum.toString + "  id: " + n._2.id.toString)
+    //println("$$$ node " + graphNum.toString + "  id: " + n._2.id.toString)
     var dotNode : DotGraphNode = canvas.drawNode(graphNum.toString + "_" + n._1.toString)
     n match {
       case n@(id : Long, node : DataNode) =>
         dotNode.setLabel("#" + id.toString + ": " + node.datatype.toString + " " + node.name)
         dotNode.setStyle(DotGraphConstants.NODE_STYLE_DASHED)
         dotNode.setAttribute("shape", "ellipse")
-        println("$$$   node " + graphNum.toString + " name: " + "#" + id.toString + ": " +
-          node.datatype.toString + " " + node.name)
+        // println("$$$   node " + graphNum.toString + " name: " + "#" + id.toString + ": " +
+        //  node.datatype.toString + " " + node.name)
       case n@(id : Long, node : MethodNode) =>
         var name : String = "#" + node.id.toString + ": "
         val arguments = node.argumentIds.map { case id =>
@@ -74,10 +74,10 @@ class Visualizer(
         }
         name += "(" + arguments.mkString(",") + ")"
         dotNode.setLabel(name)
-        println("$$$   node " + graphNum.toString + " name: " + name)
+        //println("$$$   node " + graphNum.toString + " name: " + name)
       case n@(id : Long, node : MiscNode) =>
         dotNode.setLabel("#" + id.toString)
-        println("$$$   node " + graphNum.toString + " name: #" + id.toString)
+        //println("$$$   node " + graphNum.toString + " name: #" + id.toString)
       case n => Nil
     }
   }
@@ -102,6 +102,8 @@ class Visualizer(
     graph2.edges.foreach {e => drawEdge(e, canvas2, 2)}
 
     for (e <- protoIso.getMapNodeList) {
+      assert(this.graph1.nodes.contains(e.getId1))
+      assert(this.graph2.nodes.contains(e.getId2))      
       var dotEdge : DotGraphEdge = canvas.drawEdge(
         "1_" + e.getId1.toString,
         "2_" + e.getId2.toString
