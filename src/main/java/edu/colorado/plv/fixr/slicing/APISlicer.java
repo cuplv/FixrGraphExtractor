@@ -118,8 +118,8 @@ public class APISlicer {
       Unit lastUnitInTrap = units.getPredOf(trap.getEndUnit());
       Iterator<Unit> unitIt = units.iterator(trap.getBeginUnit(),
                                              lastUnitInTrap);
-
-      caughtToTrap.put(trap.getHandlerUnit(), trap);
+      Unit handler = trap.getHandlerUnit();      
+      caughtToTrap.put(handler, trap);
       trapToUnit.put(trap, unitSet);
 
       while (unitIt.hasNext()) {
@@ -724,8 +724,11 @@ public class APISlicer {
           Unit dstHandler = idToDstUnit[handlerId];
           Unit handler = idToUnit[handlerId];
           Trap trap = caughtToTrap.get(handler);
+          assert (trap != null);
+          Unit trapEndUnit = trap.getEndUnit();
+          assert (null != trapEndUnit);
 
-          Unit lastToVisit = srcBody.getUnits().getPredOf(trap.getEndUnit());
+          Unit lastToVisit = srcBody.getUnits().getPredOf(trapEndUnit);
           Iterator<Unit> unitIt = srcBody.getUnits().iterator(trap.getBeginUnit(),
               lastToVisit);
 
