@@ -10,17 +10,17 @@ import soot.util.dot.{DotGraphEdge, DotGraphNode, DotGraphConstants, DotGraph}
 
 
 /**
- * AcdfgToDotGraph
- *   Class implementing conversion from abstract control data flow graph (ACDFG)
- *   to .dot graph format.
- *
- *   @author Rhys Braginton Pettee Olsen <rhol9958@colorado.edu>
- *   @group  University of Colorado at Boulder CUPLV
- */
+  * AcdfgToDotGraph
+  *   Class implementing conversion from abstract control data flow graph (ACDFG)
+  *   to .dot graph format.
+  *
+  *   @author Rhys Braginton Pettee Olsen <rhol9958@colorado.edu>
+  *   @group  University of Colorado at Boulder CUPLV
+  */
 
 class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
   def draw() : DotGraph = {
-		var canvas     : DotGraph       = initDotGraph(null)
+    var canvas     : DotGraph       = initDotGraph(null)
     canvas.setGraphLabel("ACDFG")
     import scala.collection.JavaConversions._
     for (n <- acdfg.nodes) {
@@ -66,5 +66,5 @@ class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
       }
     }
     canvas
-	}
+  }
 }

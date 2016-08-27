@@ -108,36 +108,37 @@ case class GitHubRecord(
   commitHash : String
 )
 
+case class SourceInfo(
+  packageName : String,
+  className : String,
+  methodName : String,
+  classLineNumber : Int,
+  methodLineNumber : Int,
+  sourceClassName : String,
+  absSourceClassName : String // Absolute path to the source file
+)
+
 case class AdjacencyList(nodes : Vector[Node], edges : Vector[Edge])
 
-class Acdfg(
-  adjacencyList: AdjacencyList,
+class Acdfg(adjacencyList: AdjacencyList,
   cdfg : UnitCdfgGraph,
   protobuf : ProtoAcdfg.Acdfg,
-  gitHubRecord : GitHubRecord
-) {
-  private lazy val ghr = gitHubRecord
+  gitHubRecord : GitHubRecord,
+  sourceInfo : SourceInfo) {
 
   val logger : Logger = LoggerFactory.getLogger(classOf[Acdfg])
-
-  /* Nodes */
-
-  // ControlEdge, ExceptionalEdge
-
-  // var edges : ArrayBuffer[Edge] = ArrayBuffer()
-  //var nodes : ArrayBuffer[Node] = ArrayBuffer()
 
   /*
    * Edges and nodes
    *   Design rationale: our graph will be very sparse; want indexing by ID to be fast
    */
-
   protected[fixr] var edges = scala.collection.mutable.HashMap[Long, Edge]()
   protected[fixr] var nodes = scala.collection.mutable.HashMap[Long, Node]()
 
   var methodBag = new scala.collection.mutable.ArrayBuffer[String]()
 
   def prepareMethodBag() = {
+    logger.debug("### Preparing bag of methods...")
     nodes.filter(_._2.isInstanceOf[MethodNode]).foreach { case (_, node) =>
       methodBag.append(node.asInstanceOf[MethodNode].name)
     }
@@ -260,11 +261,10 @@ class Acdfg(
     )
   def --(that : Acdfg) = diff(that)
 
-
   def equals(that : Acdfg) : Boolean = {
     val du = this +| that
     du.nodes.isEmpty && du.edges.isEmpty &&
-      this.ghr == that.ghr
+    this.gitHubRecord == that.getGitHubRecord
   }
 
   def ==(that : Acdfg) : Boolean =
@@ -282,13 +282,11 @@ class Acdfg(
       // Must maintain invariant: freshIds always has at least one fresh id
       freshIds.enqueue(newId + 1)
     }
-    // System.err.logger.info("ID #" + newId.toString + " issued")
     newId
   }
 
   def removeId(id : Long) = {
     freshIds.enqueue(id)
-    // System.err.logger.info("ID #" + id.toString + " revoked")
   }
 
   def addNode(id : Long, node : Node) : (Long, Node) = {
@@ -335,12 +333,13 @@ class Acdfg(
 
   def toProtobuf = pb
 
-  def getGitHubRecord = ghr
+  def getGitHubRecord = gitHubRecord
+  def getSourceInfo = sourceInfo
 
-  // unary argument constructors
-
-  def this(adjacencyList: AdjacencyList, gitHubRecord: GitHubRecord) = {
-    this(adjacencyList, null, null, gitHubRecord)
+  def this(adjacencyList: AdjacencyList,
+    gitHubRecord: GitHubRecord,
+    sourceInfo : SourceInfo) = {
+    this(adjacencyList, null, null, gitHubRecord, sourceInfo)
     assert(this.gitHubRecord == gitHubRecord)
 
     adjacencyList.nodes.foreach {node =>
@@ -350,11 +349,13 @@ class Acdfg(
     adjacencyList.edges.foreach {edge =>
       edges += ((edge.id, edge))
     }
+
     prepareMethodBag()
   }
 
-  def this(cdfg : UnitCdfgGraph, gitHubRecord: GitHubRecord) = {
-    this(null, cdfg, null, gitHubRecord)
+  def this(cdfg : UnitCdfgGraph, gitHubRecord: GitHubRecord,
+    sourceInfo : SourceInfo) = {
+    this(null, cdfg, null, gitHubRecord, sourceInfo)
     assert(this.gitHubRecord == gitHubRecord)
 
     // the following are used to make lookup more efficient
@@ -366,24 +367,20 @@ class Acdfg(
     val defEdges = cdfg.defEdges()
     val useEdges = cdfg.useEdges()
 
-    def addDataNode(
-                     local : soot.Local,
-                     name : String,
-                     datatype : String
-                   ) = {
+    def addDataNode(local : soot.Local,
+      name : String,
+      datatype : String) = {
       val id = getNewId
       val node = new DataNode(id, name, datatype)
       localToId += ((local,id))
       addNode(id, node)
     }
 
-    def addMethodNode(
-                       unit : soot.Unit,
-                       assignee : Option[String],
-                       invokee : Option[Long],
-                       name : String,
-                       argumentStrings : Array[String]
-                     ) : (Long, Node) = {
+    def addMethodNode(unit : soot.Unit,
+      assignee : Option[String],
+      invokee : Option[Long],
+      name : String,
+      argumentStrings : Array[String]) : (Long, Node) = {
       val id   = getNewId
       val node = new MethodNode(
         id,
@@ -397,9 +394,7 @@ class Acdfg(
       (id, node)
     }
 
-    def addMiscNode(
-                     unit : soot.Unit
-                   ) : (Long, Node) = {
+    def addMiscNode(unit : soot.Unit) : (Long, Node) = {
       val id = getNewId
       val node = new MiscNode(id)
       addNode(id, node)
@@ -681,12 +676,12 @@ class Acdfg(
     logger.debug("### Computing transitive closure down to DFS of command edges...")
     computeTransClosure()
 
-    logger.debug("### Preparing bag of methods...")
     prepareMethodBag()
 
     logger.debug("### Done")
   }
 
+  /* Creates the ACDFG structure from the protobuf representation */
   def this(protobuf : ProtoAcdfg.Acdfg) = {
     this(
       null,
@@ -701,15 +696,21 @@ class Acdfg(
           protobuf.getRepoTag.getUrl else "",
         if (protobuf.getRepoTag.hasCommitHash)
           protobuf.getRepoTag.getCommitHash else ""
+      ),
+      SourceInfo(protobuf.getSourceInfo.getPackageName,
+        protobuf.getSourceInfo.getClassName,
+        protobuf.getSourceInfo.getMethodName,
+        protobuf.getSourceInfo.getClassLineNumber,
+        protobuf.getSourceInfo.getMethodLineNumber,
+        protobuf.getSourceInfo.getSourceClassName,
+        protobuf.getSourceInfo.getAbsSourceClassName
       )
     )
 
     // for Protobuf
-    def addDataNode(
-                     id : Long,
-                     name : String,
-                     datatype : String
-                   ) = {
+    def addDataNode(id : Long,
+      name : String,
+      datatype : String) = {
       val node = new DataNode(id, name, datatype)
       addNode(id, node)
     }
@@ -815,5 +816,5 @@ class Acdfg(
         methodBag.append(method)
       }
     }
-  }
+  } /* end of constructor from protobuf */
 }

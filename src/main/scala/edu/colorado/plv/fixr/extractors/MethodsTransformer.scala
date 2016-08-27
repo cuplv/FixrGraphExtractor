@@ -10,7 +10,7 @@ import java.io.PrintWriter
 import java.io.OutputStreamWriter
 
 import edu.colorado.plv.fixr.slicing.SlicingCriterion
-import edu.colorado.plv.fixr.abstraction.{Acdfg, AcdfgToDotGraph, GitHubRecord}
+import edu.colorado.plv.fixr.abstraction.{Acdfg, AcdfgToDotGraph, GitHubRecord, SourceInfo}
 import edu.colorado.plv.fixr.slicing.APISlicer
 import java.io.FileOutputStream
 
@@ -39,9 +39,10 @@ import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
 import scala.collection.JavaConversions._
-
+import scala.collection.mutable.ListBuffer
 
 class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
+  val acdfgListBuffer : ListBuffer[Acdfg] = ListBuffer[Acdfg]()
   val logger : Logger = LoggerFactory.getLogger(this.getClass())
 
   override protected def internalTransform(body : Body,
@@ -133,9 +134,19 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       logger.debug("CDFG construction...")
       val cdfg: UnitCdfgGraph = new UnitCdfgGraph(slicedJimple)
       logger.debug("ACDFG construction...")
-      val acdfg : Acdfg = new Acdfg(cdfg, GitHubRecord(
-        options.userName, options.repoName, options.url, options.commitHash
-      ))
+
+      val sourceInfo : SourceInfo = SourceInfo(sootClass.getPackageName(),
+        sootClass.getName(),
+        sootMethod.getName(),
+        SootHelper.getLineNumber(sootClass),
+        SootHelper.getLineNumber(sootMethod),
+        SootHelper.getFileName(sootClass),
+        SootHelper.getAbsFileName(sootClass))
+      val gitHubRecord : GitHubRecord = GitHubRecord(options.userName,
+        options.repoName, options.url, options.commitHash)
+      val acdfg : Acdfg = new Acdfg(cdfg, gitHubRecord, sourceInfo)
+
+      if (options.storeAcdfg) acdfgListBuffer += acdfg;
 
       val name : String = sootClass.getName() + "_" +
       sootMethod.getName();
@@ -273,7 +284,8 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       }
       catch {
         case e : StackOverflowError => {
-          logger.error("StackOverflowError processing class {}, method {}{}", sootClass.getName(), sootMethod.getName(), "")
+          logger.error("StackOverflowError processing class {}, method {}{}",
+            sootClass.getName(), sootMethod.getName(), "")
           logger.error("Exception {}:", e)
         }
       }

@@ -9,9 +9,9 @@ import edu.colorado.plv.fixr.SootHelper
  * Regression tests for bug 22
  */
 class TestBug22 extends FunSuite with BeforeAndAfter {
-  
-   
-  def testExtraction(className : String, classPath : String) = 
+
+
+  def testExtraction(className : String, classPath : String) =
   {
     val options : ExtractorOptions = new ExtractorOptions();
       options.className = className;
@@ -22,15 +22,15 @@ class TestBug22 extends FunSuite with BeforeAndAfter {
       options.outputDir = null;
       options.provenanceDir = null;
       options.processDir = null;
-      
+
       var extractor : Extractor = new MultipleExtractor(options);
-      extractor.extract() 
-  }   
+      extractor.extract()
+  }
 
   before {
     SootHelper.reset();
   }
-  
+
   test("abstract_method") {testExtraction("bugs.Bug_022",
     "./src/test/resources/javasources")}
   test("interface") {testExtraction("bugs.Bug_022_02",

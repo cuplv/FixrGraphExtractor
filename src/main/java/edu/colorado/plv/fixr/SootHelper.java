@@ -18,6 +18,12 @@ import soot.toolkits.graph.DirectedGraph;
 import soot.util.cfgcmd.CFGToDotGraph;
 import soot.util.dot.DotGraph;
 
+import soot.tagkit.AbstractHost;
+import soot.tagkit.Tag;
+import soot.tagkit.SourceLnPosTag;
+import soot.tagkit.LineNumberTag;
+import soot.tagkit.SourceFileTag;
+
 public class SootHelper {
 
   public static void reset() {
@@ -30,7 +36,7 @@ public class SootHelper {
 
   public static void configure(String classpath, boolean readFromSources, java.util.List<String> processDir) {
     Options.v().set_verbose(false);
-    Options.v().set_keep_line_number(true);
+    Options.v().set_keep_line_number(true);    
     Options.v().set_src_prec(Options.src_prec_class);
     Options.v().set_soot_classpath(classpath);
 
@@ -240,5 +246,58 @@ public class SootHelper {
                       + " min. "
                       + ((runtime % 60000) / 1000)
                       + " sec.");
+  }
+
+  /** Returns the line number of the code element host
+    * or 0 if the line number tag does not exists
+    *
+    * @param host code element
+    * @return the line number of host if it exsits, 0 otherwise
+    */
+  public static int getLineNumber(AbstractHost code)
+  {
+    int lineNumber = 0;
+
+    /* solution that should works both on bytecode and on sources */
+    Tag lineNumberTag = code.getTag("SourceLnPosTag");
+    if (null != lineNumberTag && lineNumberTag instanceof SourceLnPosTag) {
+      lineNumber = ((SourceLnPosTag) lineNumberTag).startLn();
+    }
+    else {
+      lineNumberTag = code.getTag("LineNumberTag");
+      if (null != lineNumberTag && lineNumberTag instanceof LineNumberTag) {
+        lineNumber = ((LineNumberTag) lineNumberTag).getLineNumber();
+      }
+    }
+    
+    return lineNumber;
+  }
+
+
+  /** Returns the file name of the code element host
+    * or an empty string otherwise
+    *
+    * @param host code element
+    * @return the file name of host if it exsits, "" otherwise
+    */
+  public static String getFileName(AbstractHost code)
+  {
+    String fileName = "";
+    Tag fileNameTag = code.getTag("SourceFileTag");
+    if (null != fileNameTag && fileNameTag instanceof SourceFileTag) {
+      fileName = ((SourceFileTag) fileNameTag).getSourceFile();
+    }
+    return fileName;
+  }
+
+  public static String getAbsFileName(AbstractHost code)
+  {
+    String fileName = "";
+    Tag fileNameTag = code.getTag("SourceFileTag");
+    if (null != fileNameTag && fileNameTag instanceof SourceFileTag) {
+      fileName = ((SourceFileTag) fileNameTag).getAbsolutePath();
+      if (null == fileName) fileName = "";
+    }
+    return fileName;
   }
 }
