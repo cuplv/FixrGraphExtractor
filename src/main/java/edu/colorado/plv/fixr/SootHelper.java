@@ -23,6 +23,7 @@ import soot.tagkit.Tag;
 import soot.tagkit.SourceLnPosTag;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.SourceFileTag;
+import soot.tagkit.SourceLnNamePosTag;
 
 public class SootHelper {
 
@@ -36,7 +37,8 @@ public class SootHelper {
 
   public static void configure(String classpath, boolean readFromSources, java.util.List<String> processDir) {
     Options.v().set_verbose(false);
-    Options.v().set_keep_line_number(true);    
+    Options.v().set_keep_line_number(true);
+    Options.v().set_keep_offset(true);
     Options.v().set_src_prec(Options.src_prec_class);
     Options.v().set_soot_classpath(classpath);
 
@@ -287,6 +289,7 @@ public class SootHelper {
     if (null != fileNameTag && fileNameTag instanceof SourceFileTag) {
       fileName = ((SourceFileTag) fileNameTag).getSourceFile();
     }
+    
     return fileName;
   }
 
@@ -296,8 +299,15 @@ public class SootHelper {
     Tag fileNameTag = code.getTag("SourceFileTag");
     if (null != fileNameTag && fileNameTag instanceof SourceFileTag) {
       fileName = ((SourceFileTag) fileNameTag).getAbsolutePath();
-      if (null == fileName) fileName = "";
-    }
+      if (null == fileName) {
+        fileNameTag = code.getTag("SourceLnNamePosTag");
+        if (null != fileNameTag && fileNameTag instanceof SourceLnNamePosTag) {
+          fileName = ((SourceLnNamePosTag) fileNameTag).getFileName();
+          if (fileName == null) fileName = "";
+        }
+      } 
+    } 
+    
     return fileName;
   }
 }
