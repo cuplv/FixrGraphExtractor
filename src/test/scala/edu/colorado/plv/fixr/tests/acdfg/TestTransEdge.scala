@@ -51,7 +51,10 @@ abstract class TestTransEdge(classPath : String, testClassName : String,
     val viewgraph : DotGraph = toDot.drawCFG(cdfg, cdfg.getBody())
     viewgraph.plot("/tmp/test_cdfg.dot")
     // ACDFG
-    val acdfg: Acdfg = new Acdfg(cdfg, GitHubRecord("a", "b", "c", "d"))
+    val gr = GitHubRecord("a", "b", "c", "d")
+    val si = SourceInfo("PackageName", "ClassName", "MethodName",
+      1, 2, "SourceClassName", "AbsSourceClassName")
+    val acdfg: Acdfg = new Acdfg(cdfg, gr, si)
     // logger.debug("ACDFG: " + acdfg.toString)
     // logger.debug("Protobuf: " + acdfg.toProtobuf.toString)
     // logger.debug("Recovered ACDFG: " + new Acdfg(acdfg.toProtobuf).toString)

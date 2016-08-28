@@ -1,6 +1,7 @@
 package edu.colorado.plv.fixr.tests.acdfg
 
-import edu.colorado.plv.fixr.abstraction.{Acdfg, GitHubRecord, ControlEdge, Edge, TransControlEdge}
+import edu.colorado.plv.fixr.abstraction.{Acdfg, GitHubRecord, ControlEdge,
+  Edge, TransControlEdge, SourceInfo}
 
 import scala.collection.JavaConversions.seqAsJavaList
 import edu.colorado.plv.fixr.SootHelper
@@ -41,26 +42,11 @@ abstract class TestAcdfg(classPath : String, testClassName : String,
       val slicedJimple : Body = slicer.slice(new MethodPackageSeed(getPackages()))
       val cdfg : UnitCdfgGraph = new UnitCdfgGraph(slicedJimple)
 
-      // // DEBUG - Print all the meaningful graphs
-      // // Original CFG
-      // SootHelper.dumpToDot(jimpleUnitGraph, jimpleUnitGraph.getBody(),
-      //   "/tmp/cfg.dot")
-      // // Sliced CFG
-      // SootHelper.dumpToDot(new EnhancedUnitGraph(slicedJimple),
-      //     slicedJimple, "/tmp/sliced_cfg.dot")
-      // // PDG
-      // SootHelper.dumpToDot(slicer.getPdg(), slicer.getCfg().getBody(),
-      //   "/tmp/pdg.dot")
-      // // DDG
-      // SootHelper.dumpToDot(slicer.getDdg(), slicer.getCfg().getBody(),
-      //   "/tmp/ddg.dot")
-      // // CDFG
-      // val toDot : CDFGToDotGraph = new CDFGToDotGraph()
-      // val viewgraph : DotGraph = toDot.drawCFG(cdfg, cdfg.getBody())
-      // viewgraph.plot("/tmp/test_cdfg.dot")
-
       // ACDFG
-      val acdfg: Acdfg = new Acdfg(cdfg, GitHubRecord("a", "b", "c", "d"))
+      val gr = GitHubRecord("a", "b", "c", "d")
+      val si = SourceInfo("PackageName", "ClassName", "MethodName",
+        1, 2, "SourceClassName", "AbsSourceFileName")
+      val acdfg: Acdfg = new Acdfg(cdfg, gr, si)
       val newAcdfg = new Acdfg(acdfg.toProtobuf)
       info(acdfg.disjointUnion(newAcdfg).toString())
       assert(acdfg.==(newAcdfg))
