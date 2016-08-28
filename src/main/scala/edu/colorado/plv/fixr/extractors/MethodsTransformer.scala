@@ -242,24 +242,14 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       val slicedJimpleName : String = filePrefix + ".sliced.jimple";
       writeJimple(slicedBody, slicedJimpleName)
 
-      val provenance : Provenance = new Provenance(
-        null,
-        body,
-        slicedBody,
-        outFileNamePrefix,
-        cfg,
-        cdfg,
-        acdfg
-      )
+      val provenance : Provenance = new Provenance(null, body, slicedBody, 
+          outFileNamePrefix, cfg, cdfg, acdfg)
 
       try {
         val provFileName : String = filePrefix + ".html"
         val provFile : File = new File(provFileName)
         val writer: Writer = new BufferedWriter(
-          new OutputStreamWriter(
-            new FileOutputStream(provFile),
-            "utf-8"
-          )
+          new OutputStreamWriter(new FileOutputStream(provFile),"utf-8")
         )
         writer.write(provenance.toHtml.toString)
         writer.close()
