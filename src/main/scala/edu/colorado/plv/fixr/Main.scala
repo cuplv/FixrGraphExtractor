@@ -69,7 +69,6 @@ object Main {
         c.copy(iso = x) } text("Path to embedding/isomorphism protobuf")
 
       opt[String]('l', "cp").required().action { (x, c) =>
-
       c.copy(sootClassPath = x) } text("cp is the soot classpath")
       //
       opt[Boolean]('s', "read-from-sources") action { (x, c) =>
