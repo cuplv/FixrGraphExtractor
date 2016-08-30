@@ -32,6 +32,7 @@ import soot.jimple.CaughtExceptionRef;
 import soot.jimple.GotoStmt;
 import soot.jimple.IdentityStmt;
 import soot.jimple.IfStmt;
+import soot.jimple.InvokeExpr;
 import soot.jimple.Jimple;
 import soot.jimple.JimpleBody;
 import soot.jimple.LookupSwitchStmt;
@@ -154,8 +155,28 @@ public class APISlicer {
         SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
       }
 
+      /* Prune the method call in the slice that are not from the seed
+       * This is a workaround to remove from the slice the methods that
+       * do not belong to the android APIs, even if they are in the slice.
+       *
+       * */
+      Set<Unit> newUnitsInSlice = new HashSet<Unit>();
+      for (Unit u : unitsInSlice) {
+        boolean toAdd = true;
+
+        for (ValueBox valBox : u.getUseBoxes()) {
+          Value v = valBox.getValue();
+          if (v instanceof InvokeExpr &&
+              (! sc.is_seed(u))) {
+            toAdd = false;
+            break;
+          }
+        }
+        if (toAdd) newUnitsInSlice.add(u);
+      }
+
       /* 3. Construct the sliced body */
-      SlicerGraph sg = new SlicerGraph(this.cfg, unitsInSlice);
+      SlicerGraph sg = new SlicerGraph(this.cfg, newUnitsInSlice);
       Body slice = sg.getSlicedBody(caughtToTrap);
 
       /* Creates the unit graph
@@ -164,7 +185,6 @@ public class APISlicer {
 
          This has to be investigated further.
        */
-      testBug(slice.getUnits());
       EnhancedUnitGraph slicedGraph = new EnhancedUnitGraph(slice);
       if (PRINT_DEBUG_GRAPHS) {
         SootHelper.dumpToDot(slicedGraph, slice, "/tmp/sliced.dot");
@@ -181,55 +201,6 @@ public class APISlicer {
     return methodName + "__sliced__";
   }
 
-  protected void testBug(Chain<Unit> unitChain) {
-    Map<Unit,List<Unit>> unitToSuccs = new HashMap<Unit,List<Unit>>();
-    Map<Unit,List<Unit>> unitToPreds = new HashMap<Unit,List<Unit>>();
-
-    // Initialize the predecessor sets to empty
-    for (Unit u : unitChain) {
-      unitToPreds.put(u, new ArrayList<Unit>());
-    }
-
-    Iterator<Unit> unitIt = unitChain.iterator();
-    Unit currentUnit, nextUnit;
-
-    nextUnit = unitIt.hasNext() ? (Unit) unitIt.next(): null;
-
-    while(nextUnit != null) {
-      currentUnit = nextUnit;
-
-      nextUnit = unitIt.hasNext() ? (Unit) unitIt.next(): null;
-
-      List<Unit> successors = new ArrayList<Unit>();
-
-      if( currentUnit.fallsThrough() ) {
-        // Add the next unit as the successor
-        if(nextUnit != null) {
-          successors.add(nextUnit);
-          unitToPreds.get(nextUnit).add(currentUnit);
-        }
-      }
-
-      if( currentUnit.branches() ) {
-        for (soot.UnitBox targetBox : currentUnit.getUnitBoxes()) {
-          Unit target = targetBox.getUnit();
-          // Arbitrary bytecode can branch to the same
-          // target it falls through to, so we screen for duplicates:
-          if (! successors.contains(target)) {
-            successors.add(target);
-            List<Unit> preds = unitToPreds.get(target);
-            if (preds == null)
-              throw new RuntimeException("Unit graph contains jump to non-existing target");
-            preds.add(currentUnit);
-          }
-        }
-      }
-
-      // Store away successors
-     unitToSuccs.put(currentUnit, successors);
- }
-
-   }
   /**
    * Finds all the seeds (units) in the PDG according to the slicing criterion
    *
