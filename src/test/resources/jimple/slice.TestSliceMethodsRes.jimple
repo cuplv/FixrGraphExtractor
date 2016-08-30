@@ -47,8 +47,6 @@ public class slice.TestSliceMethodsRes extends java.lang.Object
 
         this := @this: slice.TestSliceMethods;
 
-        temp$0 = virtualinvoke this.<slice.TestSliceMethods: int innerMethod(int)>(0);
-
         n1 = temp$0;
 
         temp$1 = new java.util.Random;
