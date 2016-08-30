@@ -2,11 +2,11 @@ package edu.colorado.plv.fixr
 
 import java.io.FileInputStream
 import java.io.FileOutputStream
-import java.io.{FileWriter, File, FileInputStream, FileOutputStream}
+import java.io.{File, FileInputStream, FileOutputStream, FileWriter}
+import java.nio.file.Paths
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-
 import edu.colorado.plv.fixr.abstraction.Acdfg
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
 import edu.colorado.plv.fixr.extractors.Extractor
@@ -21,11 +21,13 @@ import soot.Scene
 import soot.SootClass
 import soot.toolkits.graph.pdg.EnhancedUnitGraph
 import edu.colorado.plv.fixr.extractors.MethodExtractor
+import edu.colorado.plv.fixr.visualization.Visualizer
 
 object Main {
   val logger : Logger = LoggerFactory.getLogger(this.getClass)
 
   case class MainOptions(
+    visualize : Boolean = false,
     sootClassPath : String = null,
     readFromSources : Boolean = true,
     useJPhantom : Boolean = false,
@@ -36,6 +38,9 @@ object Main {
     methodName : String = null,
     outputDir : String = null,
     provenanceDir : String = null,
+    graph1 : String = null,
+    graph2 : String = null,
+    iso : String = null,
     var userName : String = null,
     var repoName : String = null,
     var url : String = null,
@@ -51,7 +56,19 @@ object Main {
     val parser = new scopt.OptionParser[MainOptions]("scopt") {
       head("GraphExtractor", "0.1")
       //
-      opt[String]('l', "cp") action { (x, c) =>
+      opt[Boolean]('v', "visualize-iso") action { (x, c) =>
+        c.copy(visualize = x) } text("Set to true to visualize an embedding/isomorphism")
+
+      opt[String]('1', "graph1") action { (x, c) =>
+        c.copy(graph1 = x) } text("Path to first ACDFG protobuf")
+
+      opt[String]('2', "graph2") action { (x, c) =>
+        c.copy(graph2 = x) } text("Path to second ACDFG protobuf")
+
+      opt[String]('i', "graph2") action { (x, c) =>
+        c.copy(iso = x) } text("Path to embedding/isomorphism protobuf")
+
+      opt[String]('l', "cp").required().action { (x, c) =>
       c.copy(sootClassPath = x) } text("cp is the soot classpath")
       //
       opt[Boolean]('s', "read-from-sources") action { (x, c) =>
@@ -62,7 +79,7 @@ object Main {
       opt[String]('z', "jphantom-folder") action { (x, c) =>
         c.copy(outPhantomJar = x) } text("Path to the generated JPhantom classes")
       //
-      opt[String]('f', "slice-filter") action { (x, c) =>
+      opt[String]('f', "slice-filter").action { (x, c) =>
       c.copy(sliceFilter = x) } text("Package prefix to use as seed for slicing")
       //
       opt[String]('p', "process-dir") action { (x, c) =>
@@ -74,10 +91,10 @@ object Main {
       opt[String]('m', "method-name") action { (x, c) =>
       c.copy(methodName = x) } text("Name of the method to be processed.")
       //
-      opt[String]('o', "output-dir") action { (x, c) =>
+      opt[String]('o', "output-dir").required().action { (x, c) =>
       c.copy(outputDir = x) } text("Path of the output directory for the ACDFG.")
       //
-      opt[String]('d', "provenance-dir") action { (x, c) =>
+      opt[String]('d', "provenance-dir").action { (x, c) =>
       c.copy(provenanceDir = x) } text("Path of the directory used to store the provenance information.")
       //
       opt[Long]('t', "time-out") action { (x, c) =>
@@ -91,9 +108,43 @@ object Main {
         c.copy(url = x) } text("URL of the git repo; should be of the form `https://github.com/user_name/repo_name`.")
       opt[String]('h', "commit-hash") action { (x, c) =>
         c.copy(commitHash = x) } text("SHA-1 hash of the commit being ingested.")
+
     }
     parser.parse(args, MainOptions()) match {
-      case Some(mainopt) => {
+      case Some(mainopt) if mainopt.visualize => {
+        if (null == mainopt.graph1) {
+          logger.error("Embedder is set to visualize an embedding/isomorphism " +
+            "but first path to ACDFG protobuf was not specified")
+          System.exit(1)
+        }
+        if (null == mainopt.graph2) {
+          logger.error("Embedder is set to visualize an embedding/isomorphism " +
+            "but second path to ACDFG protobuf was not specified")
+          System.exit(1)
+        }
+        if (null == mainopt.iso) {
+          logger.error("Embedder is set to visualize an embedding/isomorphism " +
+            "but path to embedding/isomorphism protobuf was not specified")
+          System.exit(1)
+        }
+        if (null == mainopt.outputDir) {
+          logger.error("Embedder is set to visualize an embedding/isomorphism " +
+            "but output directory was not specified")
+          System.exit(1)
+        }
+        val graph1FileSt = new FileInputStream(new File(mainopt.graph1))
+        val graph2FileSt = new FileInputStream(new File(mainopt.graph2))
+        val isoFileSt    = new FileInputStream(new File(mainopt.iso))
+
+        val visualizer = new Visualizer(graph1FileSt, graph2FileSt, isoFileSt)
+
+        val graph1Id = visualizer.protoIso.getGraph1Id
+        val graph2Id = visualizer.protoIso.getGraph2Id
+        val outputName = graph1Id + "_" + graph2Id + ".iso.dot"
+
+        visualizer.draw().plot(Paths.get(mainopt.outputDir, outputName).toString())
+      }
+      case Some(mainopt) if !mainopt.visualize => {
         logger.debug("cp: {}", mainopt.sootClassPath)
         logger.debug("read-from-sources: {}", mainopt.readFromSources)
         logger.debug("jphantom: {}\n", mainopt.useJPhantom)
@@ -147,10 +198,15 @@ object Main {
           mainopt.commitHash = ""
         }
 
+        if (null == mainopt.processDir &&
+            (null == mainopt.className || null == mainopt.methodName)) {
+           logger.error("You must set one between process dir and class name and method")
+           System.exit(1)
+        }
         if (null != mainopt.processDir &&
             (null != mainopt.className || null != mainopt.methodName)) {
            logger.error("The process-dir option is mutually exclusive " +
-               "with the class-name and method-name options");
+               "with the class-name and method-name options")
            System.exit(1)
         }
         if ( (null != mainopt.className && null == mainopt.methodName) ||
@@ -166,7 +222,6 @@ object Main {
         options.useJPhantom = mainopt.useJPhantom
         options.outPhantomJar = mainopt.outPhantomJar
         options.readFromSources = mainopt.readFromSources
-        options.sliceFilter = mainopt.sliceFilter
         options.sootClassPath = mainopt.sootClassPath
         options.outputDir = mainopt.outputDir
         options.provenanceDir = mainopt.provenanceDir
@@ -176,8 +231,11 @@ object Main {
         options.url = mainopt.url
         options.commitHash = mainopt.commitHash
         
+        if (null != mainopt.sliceFilter) {
+          options.sliceFilter = mainopt.sliceFilter.split(":").toList
+        }
+
         if (null != mainopt.processDir) {
-          //List[String]("/home/sergio/works/projects/muse/repos/FixrGraphExtractor/src/test/resources/javasources")/
           val myArray : Array[String] = mainopt.processDir.split(":")
           options.processDir = myArray.toList
         }

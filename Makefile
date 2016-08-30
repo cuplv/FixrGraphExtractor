@@ -66,6 +66,10 @@ endif
 all:
 	sbt "run  -l ./src/test/resources/javasources/ -c slice.TestSlice -m m1 -f java.lang.Math -o ./output -d ./output"
 
+visual:
+	sbt "run -v true -1 ./output/slice.TestSlice_m1.acdfg.bin -2 ./output/slice.TestSlice_m1.acdfg.bin -i ./output/a__b.bin -o ./output"
+
+
 #all:
 #	sbt clean package "run $(RT):$(ANDROID):$(TEST) $(ANDROID_TEST_CLASS) $(ANDROID_TEST_METHOD)"
 

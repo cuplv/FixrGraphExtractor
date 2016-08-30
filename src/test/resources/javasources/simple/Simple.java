@@ -6,7 +6,7 @@ public class Simple {
       int a = 0;
       int b = 0;
       int cvar = 0;
-      
+
       if (a < b) {
         a = a + b;
       }

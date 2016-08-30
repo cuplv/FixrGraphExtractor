@@ -1,0 +1,224 @@
+public class slice.TestExceptionRes extends java.lang.Object
+{
+
+    public void tryCatch__sliced__()
+    {
+        java.lang.Exception e;
+        int i;
+        slice.TestException this;
+
+        nop;
+
+        this := @this: slice.TestException;
+
+        i = 0;
+
+        nop;
+
+        nop;
+
+     label1:
+        staticinvoke <java.lang.Math: int abs(int)>(i);
+
+     label2:
+        goto label4;
+
+     label3:
+        e := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(i);
+
+        goto label4;
+
+     label4:
+        nop;
+
+        catch java.lang.Exception from label1 to label2 with label3;
+    }
+
+
+    public void tryCatchNotImportant__sliced__()
+    {
+        java.lang.Exception e;
+        int i;
+        slice.TestException this;
+
+        nop;
+
+        this := @this: slice.TestException;
+
+        i = 0;
+
+        nop;
+
+        staticinvoke <java.lang.Math: int abs(int)>(i);
+
+        goto label1;
+
+     label1:
+        nop;
+    }
+
+    public void tryFinally__sliced__()
+    {
+        java.lang.Throwable temp$2;
+        int i, j;
+        slice.TestException this;
+
+        nop;
+
+        this := @this: slice.TestException;
+
+        i = 0;
+
+        j = 1;
+
+        nop;
+
+        nop;
+
+     label1:
+        staticinvoke <java.lang.Math: int abs(int)>(i);
+
+     label2:
+        staticinvoke <java.lang.Math: int abs(int)>(j);
+
+        goto label4;
+
+     label3:
+        temp$2 := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(j);
+
+        goto label1;
+
+     label4:
+        nop;
+
+        catch java.lang.Throwable from label1 to label2 with label3;
+    }
+
+    public void tryCatchFinally__sliced__()
+    {
+        java.lang.Throwable temp$4;
+        java.lang.Exception e;
+        int i, j, z;
+        slice.TestException this;
+
+        nop;
+
+        this := @this: slice.TestException;
+
+        i = 0;
+
+        j = 1;
+
+        z = 1;
+
+        nop;
+
+        nop;
+
+     label1:
+        staticinvoke <java.lang.Math: int abs(int)>(i);
+
+        nop;
+
+     label2:
+        staticinvoke <java.lang.Math: int abs(int)>(j);
+
+     label3:
+        goto label6;
+
+     label4:
+        e := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(z);
+
+        staticinvoke <java.lang.Math: int abs(int)>(j);
+
+        goto label6;
+
+     label5:
+        temp$4 := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(j);
+
+        goto label6;
+
+     label6:
+        nop;
+
+        catch java.lang.Exception from label1 to label2 with label4;
+        catch java.lang.Throwable from label2 to label3 with label5;
+    }
+
+    public void tryCatchNested__sliced__()
+    {
+        java.lang.Exception e2;
+        java.lang.IndexOutOfBoundsException e1;
+        int[] array, temp$0;
+        int firstCatch, secondCatch, temp$1, temp$2;
+        slice.TestException this;
+
+        nop;
+
+        this := @this: slice.TestException;
+
+        firstCatch = 1;
+
+        secondCatch = 1;
+
+        nop;
+
+        nop;
+
+     label1:
+        array = newarray (int)[10];
+
+     label2:
+        temp$0 = array;
+
+        temp$1 = 0;
+
+        temp$2 = temp$0[temp$1];
+
+        staticinvoke <java.lang.Math: int abs(int)>(temp$2);
+
+        goto label3;
+
+     label3:
+        goto label6;
+
+     label4:
+        e1 := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(firstCatch);
+
+        goto label3;
+
+     label5:
+        e2 := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(secondCatch);
+
+        goto label6;
+
+     label6:
+        nop;
+
+        catch java.lang.IndexOutOfBoundsException from label1 to label2 with label4;
+        catch java.lang.Exception from label1 to label2 with label5;
+    }
+
+    public void <init>()
+    {
+        slice.TestException this;
+
+        this := @this: slice.TestException;
+
+        specialinvoke this.<java.lang.Object: void <init>()>();
+
+        return;
+    }
+}

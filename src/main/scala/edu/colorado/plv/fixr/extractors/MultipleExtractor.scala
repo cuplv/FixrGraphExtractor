@@ -17,6 +17,7 @@ import soot.options.Options
   * @author Sergio Mover
   */
 class MultipleExtractor(options : ExtractorOptions) extends Extractor(options) {
+  val transformer = new MethodsTransformer(options)
 
   def extract() : Unit = {
     assert(null != options.processDir || null != options.className)
@@ -25,7 +26,7 @@ class MultipleExtractor(options : ExtractorOptions) extends Extractor(options) {
 
     // Inject the analysis tagger into Soot
     PackManager.v().getPack("jtp").add(new Transform("jtp.myTransforma",
-      new MethodsTransformer(options)));
+      transformer));
 
     PhaseOptions.v().setPhaseOption("jtp", "on");
 
@@ -38,4 +39,6 @@ class MultipleExtractor(options : ExtractorOptions) extends Extractor(options) {
 
     return
   }
+
+  def getTransformer : MethodsTransformer = transformer
 }

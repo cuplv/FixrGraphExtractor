@@ -6,17 +6,12 @@ import soot.jimple.internal.JimpleLocal
 
 import scala.collection.JavaConversions.asScalaIterator
 import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.Stack
-import scala.collection.mutable.HashMap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import edu.colorado.plv.fixr.protobuf.ProtoAcdfg
 
-import edu.colorado.plv.fixr.protobuf.ProtoAcdfg.Acdfg.RepoTag
-
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
-import scala.collection.immutable.HashMap
 
 /**
   * Acdfg
@@ -113,32 +108,42 @@ case class GitHubRecord(
   commitHash : String
 )
 
+case class SourceInfo(
+  packageName : String,
+  className : String,
+  methodName : String,
+  classLineNumber : Int,
+  methodLineNumber : Int,
+  sourceClassName : String,
+  absSourceClassName : String // Absolute path to the source file
+)
+
 case class AdjacencyList(nodes : Vector[Node], edges : Vector[Edge])
 
-class Acdfg(
-  adjacencyList: AdjacencyList,
+class Acdfg(adjacencyList: AdjacencyList,
   cdfg : UnitCdfgGraph,
   protobuf : ProtoAcdfg.Acdfg,
-  gitHubRecord : GitHubRecord
-) {
-  private lazy val ghr = gitHubRecord
+  gitHubRecord : GitHubRecord,
+  sourceInfo : SourceInfo) {
 
   val logger : Logger = LoggerFactory.getLogger(classOf[Acdfg])
-
-  /* Nodes */
-
-  // ControlEdge, ExceptionalEdge
-
-  // var edges : ArrayBuffer[Edge] = ArrayBuffer()
-  //var nodes : ArrayBuffer[Node] = ArrayBuffer()
 
   /*
    * Edges and nodes
    *   Design rationale: our graph will be very sparse; want indexing by ID to be fast
    */
-
   protected[fixr] var edges = scala.collection.mutable.HashMap[Long, Edge]()
   protected[fixr] var nodes = scala.collection.mutable.HashMap[Long, Node]()
+
+  var methodBag = new scala.collection.mutable.ArrayBuffer[String]()
+
+  def prepareMethodBag() = {
+    logger.debug("### Preparing bag of methods...")
+    nodes.filter(_._2.isInstanceOf[MethodNode]).foreach { case (_, node) =>
+      methodBag.append(node.asInstanceOf[MethodNode].name)
+    }
+    methodBag = methodBag.sorted
+  }
 
   /* Internal Protobuf value generated as needed */
   private lazy val pb : ProtoAcdfg.Acdfg = {
@@ -173,6 +178,8 @@ class Acdfg(
         protoTransEdge.setTo(edge.to)
         builder.addTransEdge(protoTransEdge)
     }
+    var methodBag : scala.collection.mutable.ArrayBuffer[String] =
+      new scala.collection.mutable.ArrayBuffer[String]()
     nodes.foreach {
       case (id : Long, node : DataNode) =>
         val protoDataNode : ProtoAcdfg.Acdfg.DataNode.Builder =
@@ -196,6 +203,8 @@ class Acdfg(
         node.argumentIds.foreach(protoMethodNode.addArgument)
         protoMethodNode.setName(node.name)
         builder.addMethodNode(protoMethodNode)
+        // add method to bag of methods representation
+        methodBag.append(node.name)
     }
 
     val protoRepoTag = ProtoAcdfg.Acdfg.RepoTag.newBuilder()
@@ -204,6 +213,11 @@ class Acdfg(
     protoRepoTag.setUrl(this.gitHubRecord.url)
     protoRepoTag.setCommitHash(this.gitHubRecord.commitHash)
     builder.setRepoTag(protoRepoTag)
+
+    // add bag of methods
+    val protoMethodBag = ProtoAcdfg.Acdfg.MethodBag.newBuilder()
+    methodBag.sorted.foreach(protoMethodBag.addMethod)
+    builder.setMethodBag(protoMethodBag)
 
     builder.build()
   }
@@ -247,11 +261,10 @@ class Acdfg(
     )
   def --(that : Acdfg) = diff(that)
 
-
   def equals(that : Acdfg) : Boolean = {
     val du = this +| that
     du.nodes.isEmpty && du.edges.isEmpty &&
-      this.ghr == that.ghr
+    this.gitHubRecord == that.getGitHubRecord
   }
 
   def ==(that : Acdfg) : Boolean =
@@ -269,13 +282,11 @@ class Acdfg(
       // Must maintain invariant: freshIds always has at least one fresh id
       freshIds.enqueue(newId + 1)
     }
-    // System.err.logger.info("ID #" + newId.toString + " issued")
     newId
   }
 
   def removeId(id : Long) = {
     freshIds.enqueue(id)
-    // System.err.logger.info("ID #" + id.toString + " revoked")
   }
 
   def addNode(id : Long, node : Node) : (Long, Node) = {
@@ -322,12 +333,13 @@ class Acdfg(
 
   def toProtobuf = pb
 
-  def getGitHubRecord = ghr
+  def getGitHubRecord = gitHubRecord
+  def getSourceInfo = sourceInfo
 
-  // unary argument constructors
-
-  def this(adjacencyList: AdjacencyList, gitHubRecord: GitHubRecord) = {
-    this(adjacencyList, null, null, gitHubRecord)
+  def this(adjacencyList: AdjacencyList,
+    gitHubRecord: GitHubRecord,
+    sourceInfo : SourceInfo) = {
+    this(adjacencyList, null, null, gitHubRecord, sourceInfo)
     assert(this.gitHubRecord == gitHubRecord)
 
     adjacencyList.nodes.foreach {node =>
@@ -337,10 +349,13 @@ class Acdfg(
     adjacencyList.edges.foreach {edge =>
       edges += ((edge.id, edge))
     }
+
+    prepareMethodBag()
   }
 
-  def this(cdfg : UnitCdfgGraph, gitHubRecord: GitHubRecord) = {
-    this(null, cdfg, null, gitHubRecord)
+  def this(cdfg : UnitCdfgGraph, gitHubRecord: GitHubRecord,
+    sourceInfo : SourceInfo) = {
+    this(null, cdfg, null, gitHubRecord, sourceInfo)
     assert(this.gitHubRecord == gitHubRecord)
 
     // the following are used to make lookup more efficient
@@ -352,24 +367,20 @@ class Acdfg(
     val defEdges = cdfg.defEdges()
     val useEdges = cdfg.useEdges()
 
-    def addDataNode(
-                     local : soot.Local,
-                     name : String,
-                     datatype : String
-                   ) = {
+    def addDataNode(local : soot.Local,
+      name : String,
+      datatype : String) = {
       val id = getNewId
       val node = new DataNode(id, name, datatype)
       localToId += ((local,id))
       addNode(id, node)
     }
 
-    def addMethodNode(
-                       unit : soot.Unit,
-                       assignee : Option[String],
-                       invokee : Option[Long],
-                       name : String,
-                       argumentStrings : Array[String]
-                     ) : (Long, Node) = {
+    def addMethodNode(unit : soot.Unit,
+      assignee : Option[String],
+      invokee : Option[Long],
+      name : String,
+      argumentStrings : Array[String]) : (Long, Node) = {
       val id   = getNewId
       val node = new MethodNode(
         id,
@@ -383,9 +394,7 @@ class Acdfg(
       (id, node)
     }
 
-    def addMiscNode(
-                     unit : soot.Unit
-                   ) : (Long, Node) = {
+    def addMiscNode(unit : soot.Unit) : (Long, Node) = {
       val id = getNewId
       val node = new MiscNode(id)
       addNode(id, node)
@@ -489,13 +498,11 @@ class Acdfg(
           }
           */
       }.foreach{ n =>
-        logger.debug("Starting node " + n.toString + " found.")
         stack.push(n)
       }
       // assemble adjacency matrix of commands w/out back-edges from DFS
       while (stack.nonEmpty) {
         val node = stack.pop()
-        logger.debug("Command node popped from stack: " + node.toString)
         if ((!discovered.contains(node)) && (!stack.contains(node))) {
           discovered += node
           edges.filter { case ((id, edge)) =>
@@ -504,11 +511,9 @@ class Acdfg(
             val fromId = idToAdjIndex.get(edge.from).get
             val toId   = idToAdjIndex.get(edge.to).get
             commandAdjMatrix(fromId)(toId) = true
-            logger.debug(commandAdjMatrix.toString)
             val newNode = commandNodes(toId)
             if (!discovered.contains(newNode)) {
               stack.push(newNode)
-              logger.debug("Command node pushed to stack: " + node.toString)
             }
           }
         }
@@ -536,9 +541,6 @@ class Acdfg(
               //changed = true
               transAdjMatrix(i)(j) = true
               addTransControlEdge(commandNodes(i).id, commandNodes(j).id)
-              logger.debug("   Adding transitive edge between " +
-                commandNodes(i).id + " and " + commandNodes(j).id
-              )
             }
           }
         }
@@ -552,54 +554,33 @@ class Acdfg(
       edgePairToId += (((fromId, toId), id))
     }
 
-    logger.debug("### Adding local/data nodes...")
     cdfg.localsIter().foreach {
       case n =>
-        logger.debug("Found local/data node " + n.getName + " : " + n.getType.toString)
-        logger.debug("  node type of " + n.getClass.toString)
         n match {
           case n : JimpleLocal =>
             addDataNode(n, n.getName, n.getType.toString)
-            logger.debug("    Node added!")
           case m =>
-            logger.debug("    Data node of unknown type; ignoring...")
         }
     }
 
-    logger.debug("### Adding unit/command nodes & def-edges ...")
     cdfg.unitIterator.foreach {
       case n =>
-        logger.debug("Found unit/command node of type " + n.getClass.toString)
         n match {
           case n : IdentityStmt =>
             // must have NO arguments to toString(), which MUST have parens;
             // otherwise needs a pointer to some printer object
-            logger.debug("    Data node of unknown type; adding misc node...")
             val (id, _) = addMiscNode(n)
-            logger.debug("    Node added!")
             addDefEdges(n, id)
-            logger.debug("    Def-edge added!")
           case n : InvokeStmt =>
             val declaringClass = n.getInvokeExpr.getMethod.getDeclaringClass.getName
             val methodName = n.getInvokeExpr.getMethod.getName
             // must have empty arguments to toString(); otherwise needs a pointer to some printer object
             val arguments = n.getInvokeExpr.getArgs
-            logger.debug("    declaringClass = " + declaringClass)
-            logger.debug("    methodName = " + methodName)
-            logger.debug("    Arguments:")
-            var i : Int = 1
-            arguments.iterator.foreach({argument =>
-              logger.debug("      " + i.toString + " = " + argument.toString())
-              i += 1
-            })
-            logger.debug("    " + n.toString())
             val argumentStrings = arguments.iterator.foldRight(new ArrayBuffer[String]())(
               (argument, array) => array += argument.toString
             )
             val (id, _) = addMethodNode(n, None, None, declaringClass + "." + methodName, argumentStrings.toArray)
-            logger.debug("    Node added!")
             addDefEdges(n, id)
-            logger.debug("    Def-edge added!")
           case n : AssignStmt =>
             val assignee  = n.getLeftOp.toString()
             if (n.containsInvokeExpr()) {
@@ -607,16 +588,6 @@ class Acdfg(
               val methodName = n.getInvokeExpr.getMethod.getName
               // must have empty arguments to toString(); otherwise needs a pointer to some printer object
               val arguments = n.getInvokeExpr.getArgs
-              logger.debug("    Assignee       = " + assignee)
-              logger.debug("    declaringClass = " + declaringClass)
-              logger.debug("    methodName     = " + methodName)
-              logger.debug("    Arguments:")
-              var i : Int = 1
-              arguments.iterator.foreach({argument =>
-                logger.debug("      " + i.toString + " = " + argument.toString())
-                i += 1
-              })
-              logger.debug("    " + n.toString())
               val argumentStrings = arguments.iterator.foldRight(new ArrayBuffer[String]())(
                 (argument, array) => array += argument.toString()
               )
@@ -627,45 +598,30 @@ class Acdfg(
                 declaringClass + "." + methodName,
                 argumentStrings.toArray
               )
-              logger.debug("    Node added!")
               addDefEdges(n, id)
-              logger.debug("    Def-edge added!")
             } else {
-              logger.debug("    Data node doesn't use invocation; adding empty misc node...")
               val (id, _) = addMiscNode(n)
-              logger.debug("    Node added!")
               addDefEdges(n, id)
-              logger.debug("    Def-edge added!")
             }
           case _ =>
-            logger.debug("    Data node of unknown type; adding misc node...")
             val (id, _) = addMiscNode(n)
-            logger.debug("    Node added!")
             addDefEdges(n, id)
-            logger.debug("    Def-edge added!")
         }
     }
 
-    logger.debug("### Adding use-edges...")
     cdfg.localsIter().foreach {
       case n =>
-        logger.debug("Found local/data node " + n.getName + " : " + n.getType.toString)
-        logger.debug("  node type of " + n.getClass.toString)
         n match {
           case n : JimpleLocal =>
             addUseEdges(n, localToId(n))
-            logger.debug("    Use-edge(s) added!")
           case m =>
             logger.debug("    Data node of unknown type; ignoring...")
         }
     }
-    logger.debug("### Adding control-edges...")
+
     cdfg.unitIterator.foreach { n =>
-      logger.debug("Found unit/command node of type " + n.getClass.toString)
       addControlEdges(n, unitToId(n))
-      logger.debug("Unadded control-edges added.")
     }
-    logger.debug("### Removing unconnected nodes...")
     nodes.foreach({ case (id, _) =>
       val connection = edges.values.find(edge => edge.from == id || edge.to == id)
       if (connection.isEmpty) {
@@ -673,23 +629,15 @@ class Acdfg(
       }
     })
 
-    logger.debug("### Extending method nodes w/ arg. ids from arg. names & use-edges...")
     nodes
       .filter(_._2.isInstanceOf[MethodNode])
       .foreach { case (id, methodNode : MethodNode) =>
         val argumentNames = idToMethodStrs(id)
-        logger.debug("Found method node " + methodNode.toString)
-        logger.debug("  Arguments: ")
-        argumentNames.foreach{ argumentName =>
-          logger.debug("  " + argumentName)
-        }
         argumentNames.zipWithIndex.foreach { case (argumentName, index) =>
-          logger.debug("  Finding id of argument " + index + " with name " + argumentName + "...")
           val argumentPairs = nodes
             .filter(_._2.isInstanceOf[DataNode])
             .filter(_._2.asInstanceOf[DataNode].name == argumentName)
           if (argumentPairs.nonEmpty) {
-            logger.debug("    Data node pair for argument is " + argumentPairs.head.toString())
             val argVal : Long = argumentPairs.head._1
             nodes.remove(methodNode.id)
             nodes += ((methodNode.id, MethodNode(
@@ -699,7 +647,6 @@ class Acdfg(
               methodNode.argumentIds.updated(index, argVal)
             )))
           } else {
-            logger.debug("    Argument is a hard string. Ignoring...")
             val argVal : Long = 0
             nodes.remove(methodNode.id)
             nodes += ((methodNode.id, MethodNode(
@@ -711,8 +658,6 @@ class Acdfg(
           }
         }
       }
-
-    logger.debug("### Adding argument ids from argument names and use-edges...")
 
     edges
       .filter(_._2.isInstanceOf[UseEdge])
@@ -731,32 +676,41 @@ class Acdfg(
     logger.debug("### Computing transitive closure down to DFS of command edges...")
     computeTransClosure()
 
+    prepareMethodBag()
+
     logger.debug("### Done")
   }
 
+  /* Creates the ACDFG structure from the protobuf representation */
   def this(protobuf : ProtoAcdfg.Acdfg) = {
     this(
       null,
       null,
       protobuf,
       GitHubRecord(
-        if (protobuf.getRepoTag.hasUserName())
+        if (protobuf.getRepoTag.hasUserName)
           protobuf.getRepoTag.getUserName else "",
-        if (protobuf.getRepoTag.hasRepoName())
+        if (protobuf.getRepoTag.hasRepoName)
           protobuf.getRepoTag.getRepoName else "",
-        if (protobuf.getRepoTag.hasUrl())
+        if (protobuf.getRepoTag.hasUrl)
           protobuf.getRepoTag.getUrl else "",
-        if (protobuf.getRepoTag.hasCommitHash())
+        if (protobuf.getRepoTag.hasCommitHash)
           protobuf.getRepoTag.getCommitHash else ""
+      ),
+      SourceInfo(protobuf.getSourceInfo.getPackageName,
+        protobuf.getSourceInfo.getClassName,
+        protobuf.getSourceInfo.getMethodName,
+        protobuf.getSourceInfo.getClassLineNumber,
+        protobuf.getSourceInfo.getMethodLineNumber,
+        protobuf.getSourceInfo.getSourceClassName,
+        protobuf.getSourceInfo.getAbsSourceClassName
       )
     )
 
     // for Protobuf
-    def addDataNode(
-                     id : Long,
-                     name : String,
-                     datatype : String
-                   ) = {
+    def addDataNode(id : Long,
+      name : String,
+      datatype : String) = {
       val node = new DataNode(id, name, datatype)
       addNode(id, node)
     }
@@ -851,5 +805,16 @@ class Acdfg(
     protobuf.getTransEdgeList.foreach { transEdge =>
       addTransControlEdge(transEdge.getId, transEdge.getFrom, transEdge.getTo)
     }
-  }
+
+    if (
+      (!protobuf.getMethodBag.isInitialized) ||
+        (protobuf.getMethodBag.getMethodCount == 0)
+    ) {
+      prepareMethodBag()
+    } else {
+      protobuf.getMethodBag.getMethodList.foreach {method =>
+        methodBag.append(method)
+      }
+    }
+  } /* end of constructor from protobuf */
 }

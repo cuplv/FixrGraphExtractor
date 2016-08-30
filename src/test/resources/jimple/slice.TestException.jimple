@@ -1,0 +1,198 @@
+public class slice.TestException extends java.lang.Object
+{
+    public void tryCatch()
+    {
+        slice.TestException this;
+        int i;
+        java.lang.Exception e;
+
+        this := @this: slice.TestException;
+
+        i = 0;
+
+     label1:
+        staticinvoke <java.lang.Math: int abs(int)>(i);
+
+        goto label3;
+
+     label2:
+        e := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(i);
+
+        goto label3;
+
+     label3:
+        return;
+
+        catch java.lang.Exception from label1 to label2 with label2;
+    }
+
+    public void tryCatchNotImportant()
+    {
+        slice.TestException this;
+        int i;
+        java.lang.Exception e;
+
+        this := @this: slice.TestException;
+
+        i = 0;
+
+     label1:
+        staticinvoke <java.lang.Math: int abs(int)>(i);
+
+        goto label3;
+
+     label2:
+        e := @caughtexception;
+
+        goto label3;
+
+     label3:
+        return;
+
+        catch java.lang.Exception from label1 to label2 with label2;
+    }
+
+    public void tryFinally()
+    {
+        slice.TestException this;
+        int i, j;
+        java.lang.Throwable temp$2;
+
+        this := @this: slice.TestException;
+
+        i = 0;
+
+        j = 1;
+
+     label1:
+        staticinvoke <java.lang.Math: int abs(int)>(i);
+
+        staticinvoke <java.lang.Math: int abs(int)>(j);
+
+        goto label3;
+
+     label2:
+        temp$2 := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(j);
+
+        throw temp$2;
+
+     label3:
+        return;
+
+        catch java.lang.Throwable from label1 to label2 with label2;
+    }
+
+    public void tryCatchFinally()
+    {
+        slice.TestException this;
+        int i, j, z;
+        java.lang.Exception e;
+        java.lang.Throwable temp$4;
+
+        this := @this: slice.TestException;
+
+        i = 0;
+
+        j = 1;
+
+        z = 1;
+
+     label1:
+        staticinvoke <java.lang.Math: int abs(int)>(i);
+
+     label2:
+        staticinvoke <java.lang.Math: int abs(int)>(j);
+
+        goto label6;
+
+     label3:
+        e := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(z);
+
+     label4:
+        staticinvoke <java.lang.Math: int abs(int)>(j);
+
+        goto label6;
+
+     label5:
+        temp$4 := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(j);
+
+        throw temp$4;
+
+     label6:
+        return;
+
+        catch java.lang.Exception from label1 to label2 with label3;
+        catch java.lang.Throwable from label1 to label2 with label5;
+        catch java.lang.Throwable from label2 to label4 with label5;
+    }
+
+    public void tryCatchNested()
+    {
+        slice.TestException this;
+        int firstCatch, secondCatch, temp$1, temp$2;
+        int[] array, temp$0;
+        java.lang.IndexOutOfBoundsException e1;
+        java.lang.Exception e2;
+
+        this := @this: slice.TestException;
+
+        firstCatch = 1;
+
+        secondCatch = 1;
+
+     label1:
+        array = newarray (int)[10];
+
+        temp$0 = array;
+
+        temp$1 = 0;
+
+        temp$2 = temp$0[temp$1];
+
+        staticinvoke <java.lang.Math: int abs(int)>(temp$2);
+
+        goto label3;
+
+     label2:
+        e1 := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(firstCatch);
+
+        goto label3;
+
+     label3:
+        goto label5;
+
+     label4:
+        e2 := @caughtexception;
+
+        staticinvoke <java.lang.Math: int abs(int)>(secondCatch);
+
+        goto label5;
+
+     label5:
+        return;
+
+        catch java.lang.IndexOutOfBoundsException from label1 to label2 with label2;
+        catch java.lang.Exception from label1 to label4 with label4;
+    }
+
+    public void <init>()
+    {
+        slice.TestException this;
+
+        this := @this: slice.TestException;
+
+        specialinvoke this.<java.lang.Object: void <init>()>();
+
+        return;
+    }
+}

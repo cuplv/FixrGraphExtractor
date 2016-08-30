@@ -4,16 +4,19 @@ message Iso {
   message MapNode {
     required uint64  id_1   = 1;
     required uint64  id_2   = 2;
-    optional fixed64 weight = 3;
+    optional double  weight = 3;
   }
   
   message MapEdge {
     required uint64 id_1 = 1;
     required uint64 id_2 = 2;
+    optional double weight = 3;
   }
 
   required string  graph_1_id = 1;
   required string  graph_2_id = 2;
   repeated MapNode map_node   = 3;
   repeated MapEdge map_edge   = 4;
+  optional double weight = 5;
+  optional double obj_value = 6;
 }

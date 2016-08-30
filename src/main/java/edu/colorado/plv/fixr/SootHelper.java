@@ -18,6 +18,13 @@ import soot.toolkits.graph.DirectedGraph;
 import soot.util.cfgcmd.CFGToDotGraph;
 import soot.util.dot.DotGraph;
 
+import soot.tagkit.AbstractHost;
+import soot.tagkit.Tag;
+import soot.tagkit.SourceLnPosTag;
+import soot.tagkit.LineNumberTag;
+import soot.tagkit.SourceFileTag;
+import soot.tagkit.SourceLnNamePosTag;
+
 public class SootHelper {
 <<<<<<< HEAD
 	public static void configure(String classpath) {
@@ -85,6 +92,7 @@ public class SootHelper {
   public static void configure(String classpath, boolean readFromSources, java.util.List<String> processDir) {
     Options.v().set_verbose(false);
     Options.v().set_keep_line_number(true);
+    Options.v().set_keep_offset(true);
     Options.v().set_src_prec(Options.src_prec_class);
     Options.v().set_soot_classpath(classpath);
 
@@ -220,8 +228,22 @@ public class SootHelper {
    * @return true if the string representation of b1 and b2 are equal
    */
   public static boolean compareBodies(Body b1, Body b2) {
-    String reprB1 = b1.toString();
-    String reprB2 = b2.toString();
+    if (b1.getLocalCount() != b2.getLocalCount()) return false;
+
+    for (soot.Local l1 : b1.getLocals()) {
+      boolean found = false;
+      for (soot.Local l2 : b1.getLocals()) {
+        if (l1.getName() == l2.getName() &&
+            l1.getType() == l2.getType() &&
+            l1.getNumber() == l2.getNumber()) {
+          found = true;
+        }
+      }
+      if (! found) return false;
+    }
+
+    String reprB1 = b1.getUnits().toString();
+    String reprB2 = b2.getUnits().toString();
 
     return 0 == reprB1.compareToIgnoreCase(reprB2);
   }
@@ -281,5 +303,69 @@ public class SootHelper {
                       + ((runtime % 60000) / 1000)
                       + " sec.");
   }
+<<<<<<< HEAD
 >>>>>>> 510c60ed9d5f7b277bd8b5996a9e17721e8f1009
+=======
+
+  /** Returns the line number of the code element host
+    * or 0 if the line number tag does not exists
+    *
+    * @param host code element
+    * @return the line number of host if it exsits, 0 otherwise
+    */
+  public static int getLineNumber(AbstractHost code)
+  {
+    int lineNumber = 0;
+
+    /* solution that should works both on bytecode and on sources */
+    Tag lineNumberTag = code.getTag("SourceLnPosTag");
+    if (null != lineNumberTag && lineNumberTag instanceof SourceLnPosTag) {
+      lineNumber = ((SourceLnPosTag) lineNumberTag).startLn();
+    }
+    else {
+      lineNumberTag = code.getTag("LineNumberTag");
+      if (null != lineNumberTag && lineNumberTag instanceof LineNumberTag) {
+        lineNumber = ((LineNumberTag) lineNumberTag).getLineNumber();
+      }
+    }
+    
+    return lineNumber;
+  }
+
+
+  /** Returns the file name of the code element host
+    * or an empty string otherwise
+    *
+    * @param host code element
+    * @return the file name of host if it exsits, "" otherwise
+    */
+  public static String getFileName(AbstractHost code)
+  {
+    String fileName = "";
+    Tag fileNameTag = code.getTag("SourceFileTag");
+    if (null != fileNameTag && fileNameTag instanceof SourceFileTag) {
+      fileName = ((SourceFileTag) fileNameTag).getSourceFile();
+    }
+    
+    return fileName;
+  }
+
+  public static String getAbsFileName(AbstractHost code)
+  {
+    String fileName = "";
+    Tag fileNameTag = code.getTag("SourceFileTag");
+    if (null != fileNameTag && fileNameTag instanceof SourceFileTag) {
+      fileName = ((SourceFileTag) fileNameTag).getAbsolutePath();
+      if (null == fileName) {
+        fileNameTag = code.getTag("SourceLnNamePosTag");
+        if (null != fileNameTag && fileNameTag instanceof SourceLnNamePosTag) {
+          fileName = ((SourceLnNamePosTag) fileNameTag).getFileName();
+          if (fileName == null) fileName = "";
+        }
+      } 
+    } 
+    
+    return fileName;
+  }
+>>>>>>> 619d5e96c01609c5b7c0412bdce90ba5f60b0ba9
 }

@@ -11,19 +11,19 @@ class TestBug27 extends FunSuite with BeforeAndAfter {
   before {
     SootHelper.reset();
   }
-  
+
   test("bug_027") {
-  	val options : ExtractorOptions = new ExtractorOptions();
-    options.className = "bugs.Bug_022";  
+    val options : ExtractorOptions = new ExtractorOptions();
+    options.className = "bugs.Bug_022";
     options.methodName = null;
     options.readFromSources = true;
-    options.sliceFilter = "";
+    options.sliceFilter = List("");
     options.sootClassPath = "./src/test/resources/javasources";
     options.outputDir = null;
     options.provenanceDir = null;
     options.processDir = null;
 
     var extractor : Extractor = new MultipleExtractor(options);
-  } 
-  
+  }
+
 }
