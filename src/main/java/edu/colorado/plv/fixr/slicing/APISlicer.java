@@ -12,6 +12,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.colorado.plv.fixr.graphs.DataDependencyGraph;
 import edu.colorado.plv.fixr.SootHelper;
 
@@ -67,7 +70,7 @@ public class APISlicer {
   private Map<Unit, Trap> caughtToTrap;
 
   public static boolean PRINT_DEBUG_GRAPHS = false;
-
+  private Logger logger = LoggerFactory.getLogger(APISlicer.class);
   /**
    * @return the cfg
    */
@@ -443,7 +446,7 @@ public class APISlicer {
         List<Unit> successors = g.getSuccsOf(u);
         id = unitToId.get(u).intValue();
 
-        LabelHandler handler = new LabelHandler(u, successors);
+        LabelHandler handler = new LabelHandler(u, g, successors);
 
         for (Unit succ : successors) {
           int dstId = unitToId.get(succ).intValue();
@@ -727,18 +730,21 @@ public class APISlicer {
               lastUnitInTrap = unitId;
             }
           }
-          assert firstUnitInTrap >= 0;
-          assert lastUnitInTrap >= 0;
+          if (firstUnitInTrap >= 0 && lastUnitInTrap >= 0) {
+            Unit dstFirstUnitInTrap = idToDstUnit[firstUnitInTrap];
+            Unit dstLastUnitInTrap = idToDstUnit[firstUnitInTrap];
+            dstLastUnitInTrap = dstChain.getSuccOf(dstLastUnitInTrap);
 
-          Unit dstFirstUnitInTrap = idToDstUnit[firstUnitInTrap];
-          Unit dstLastUnitInTrap = idToDstUnit[firstUnitInTrap];
-          dstLastUnitInTrap = dstChain.getSuccOf(dstLastUnitInTrap);
-
-          Trap dstTrap = new JTrap(trap.getException(),
-              dstFirstUnitInTrap, dstLastUnitInTrap,
-              dstHandler);
-          dstTrapsChain.addLast(dstTrap);
-          bindings.put(trap, dstTrap);
+            Trap dstTrap = new JTrap(trap.getException(),
+                dstFirstUnitInTrap, dstLastUnitInTrap,
+                dstHandler);
+            dstTrapsChain.addLast(dstTrap);
+            bindings.put(trap, dstTrap);          
+          }
+          else {
+            logger.warn("Skipping trap...");
+          }
+          
         }
 
         {
@@ -793,8 +799,7 @@ public class APISlicer {
           for (int j = 0; j < edges[srcUnitId].length; j++) {
             if (! unitsInSlice[j]) continue;
 
-            if (edges[srcUnitId][j] &&
-                !statusMap.containsKey(new Integer(j))) {
+            if (edges[srcUnitId][j] && !statusMap.containsKey(new Integer(j))) {
               int succStatus = getStatus(statusMap, idToUnit[j]);
               if (this.edgeLabels[srcUnitId][j].contains(LabelHandler.EMPTY_LABEL)) {
                 /* the empty label should be on just one edge */
@@ -844,7 +849,7 @@ public class APISlicer {
           dstUnit = idToDstUnit[srcUnitId];
 
           /* redirect gotos */
-          LabelHandler labelHandler = new LabelHandler(dstUnit, null);
+          LabelHandler labelHandler = new LabelHandler(dstUnit, null, null);
           Map<Object, List<Unit>> c2t = getConditions2Targets(srcUnitId, idToDstUnit);
           List<Unit> handlers = labelHandler.fixGotos(c2t, dstLast);
           for (Unit dstHandler : handlers) {
@@ -907,6 +912,7 @@ public class APISlicer {
     }
 
     private class LabelHandler {
+      UnitGraph g;
       Unit sourceUnit;
       List<Unit> successors;
       private Map<Unit,List<Object>> target2conditions;
@@ -917,12 +923,13 @@ public class APISlicer {
       private final static String CATCH_LABEL = "catch_label";
 
       public LabelHandler(Unit sourceUnit,
+                          UnitGraph g,
                           List<Unit> successors)
       {
         this.sourceUnit = sourceUnit;
         this.successors = successors;
+        this.g = g;
         buildMaps();
-
       }
 
       public List<Object> getConditions(Unit target) {
@@ -1015,6 +1022,7 @@ public class APISlicer {
 
       private void buildMaps()
       {
+        if (successors == null || g == null) return;
         target2conditions = new HashMap<Unit,List<Object>>();
         condition2targets = new HashMap<Object,List<Unit>>();
 
@@ -1032,7 +1040,8 @@ public class APISlicer {
         else if (sourceUnit instanceof GotoStmt) {
           GotoStmt gotoStmt = (GotoStmt) sourceUnit;
           Unit target = gotoStmt.getTarget();
-
+          target = this.getDefaultTarget(target);
+          
           /* use the target as label */
           addToMapO(condition2targets, DEFAULT_LABEL, target);
           addToMapU(target2conditions, target, DEFAULT_LABEL);
@@ -1040,6 +1049,7 @@ public class APISlicer {
         else if (sourceUnit instanceof IfStmt) {
           IfStmt ifstmt = (IfStmt) sourceUnit;
           Unit target = ifstmt.getTarget();
+          target = this.getDefaultTarget(target);
 
           addToMapO(condition2targets, DEFAULT_LABEL, target);
           addToMapU(target2conditions, target, DEFAULT_LABEL);
@@ -1084,6 +1094,30 @@ public class APISlicer {
         }
       }
 
+      /**
+       * Handle the default target in the case of exceptions
+       * 
+       * @param target
+       * @return
+       */
+      private Unit getDefaultTarget(Unit target) {
+        if (successors.contains(target)) {
+          return target;
+        }
+        else {
+          /* search the target up to one level */
+          for (Unit successor : successors) {
+            for(Unit nextSucc : g.getSuccsOf(successor)) {
+              if (nextSucc == target) {
+                return successor;
+              }
+            }
+          }
+          throw new RuntimeException("Default successors not found!");
+         
+        }
+      }
+      
       private void setDefaultTargetSwitch(Map<Object, List<Unit>> c2t,
           Unit defaultTarget, SwitchStmt switchStmt)
       {
