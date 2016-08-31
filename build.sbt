@@ -62,6 +62,7 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-core" % "1.0.10",
   "net.sf.jgrapht" % "jgrapht" % "0.8.3",
   "org.apache.commons" % "commons-lang3" % "3.1",
+  "org.apache.commons" % "commons-collections4" % "4.1",
   "com.google.code.findbugs" % "annotations" % "2.0.1",
   "org.ow2.asm" % "asm-debug-all" % "5.1"
 )
