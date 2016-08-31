@@ -59,6 +59,8 @@ The output of the extraction is an ACDFG saved in the output folder in protobuf 
 An example of run in these settings through sbt is:
 `sbt  "run -l /usr/lib/jvm/jdk1.7.0/jre/lib/rt.jar:./src/test/resources/javasources -c slice.TestSlice -m m1 -f java.lang.Math -o ./"`
 
+List of packages: java.lang.Math:java.util
+
 Dot representation on of the cdfg and of the intermediate results is produced in the provenance-dir, if this parameter is given as input.
 
 The classpath argument ('-l') must contain the source file of the class and method of interest.

@@ -1,6 +1,8 @@
 package edu.colorado.plv.fixr;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import edu.colorado.plv.fixr.graphs.CDFGToDotGraph;
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph;
@@ -26,7 +28,6 @@ import soot.tagkit.SourceFileTag;
 import soot.tagkit.SourceLnNamePosTag;
 
 public class SootHelper {
-
   public static void reset() {
     G.reset();
   }
@@ -251,11 +252,11 @@ public class SootHelper {
   }
 
   /** Returns the line number of the code element host
-    * or 0 if the line number tag does not exists
-    *
-    * @param host code element
-    * @return the line number of host if it exsits, 0 otherwise
-    */
+   * or 0 if the line number tag does not exists
+   *
+   * @param host code element
+   * @return the line number of host if it exsits, 0 otherwise
+   */
   public static int getLineNumber(AbstractHost code)
   {
     int lineNumber = 0;
@@ -271,17 +272,17 @@ public class SootHelper {
         lineNumber = ((LineNumberTag) lineNumberTag).getLineNumber();
       }
     }
-    
+
     return lineNumber;
   }
 
 
   /** Returns the file name of the code element host
-    * or an empty string otherwise
-    *
-    * @param host code element
-    * @return the file name of host if it exsits, "" otherwise
-    */
+   * or an empty string otherwise
+   *
+   * @param host code element
+   * @return the file name of host if it exsits, "" otherwise
+   */
   public static String getFileName(AbstractHost code)
   {
     String fileName = "";
@@ -289,7 +290,7 @@ public class SootHelper {
     if (null != fileNameTag && fileNameTag instanceof SourceFileTag) {
       fileName = ((SourceFileTag) fileNameTag).getSourceFile();
     }
-    
+
     return fileName;
   }
 
@@ -305,9 +306,9 @@ public class SootHelper {
           fileName = ((SourceLnNamePosTag) fileNameTag).getFileName();
           if (fileName == null) fileName = "";
         }
-      } 
-    } 
-    
+      }
+    }
+
     return fileName;
   }
 }
