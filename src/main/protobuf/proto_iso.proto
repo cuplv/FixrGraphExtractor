@@ -19,4 +19,13 @@ message Iso {
   repeated MapEdge map_edge   = 4;
   optional double weight = 5;
   optional double obj_value = 6;
+  optional uint64 dataNodeMatchCount=7;
+  optional uint64 dataEdgeMatchCount=8;
+  optional uint64 controlEdgeMatchCount=9;
+  optional uint64 methodNodeMatchCount=10;
+  optional double averageMatchWeight = 11;
+  optional double averageDataNodeInDegree = 12;	
+  optional double averageDataNodeOutDegree = 13;
+  optional double averageMethodNodeInDegree = 14;
+  optional  double averageMethodNodeOutDegree =15;
 }
