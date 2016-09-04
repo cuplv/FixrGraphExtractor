@@ -28,81 +28,29 @@ import soot.tagkit.SourceFileTag;
 import soot.tagkit.SourceLnNamePosTag;
 
 public class SootHelper {
-	public static void configure(String classpath) {
-		Options.v().set_verbose(true);
-		Options.v().set_keep_line_number(true);
-		Options.v().set_src_prec(Options.src_prec_class);
-		Options.v().set_soot_classpath(classpath);
-		Options.v().set_prepend_classpath(true);
+  public static void reset() {
+    G.reset();
+  }
 
-		//jj.uce
-		
-		PhaseOptions.v().setPhaseOption("jb", "off");		
-		PhaseOptions.v().setPhaseOption("bb", "off");
-		PhaseOptions.v().setPhaseOption("wjpp", "off");
-		PhaseOptions.v().setPhaseOption("wspp", "off");
-		PhaseOptions.v().setPhaseOption("cg", "off");
-		PhaseOptions.v().setPhaseOption("wstp", "off");
-		PhaseOptions.v().setPhaseOption("wsop", "off");
-		PhaseOptions.v().setPhaseOption("wjtp", "off");
-		PhaseOptions.v().setPhaseOption("wjop", "off");
-		PhaseOptions.v().setPhaseOption("wjap", "off");
-		PhaseOptions.v().setPhaseOption("shimple", "off");
-		PhaseOptions.v().setPhaseOption("stp", "off");
-		PhaseOptions.v().setPhaseOption("sop", "off");
-		PhaseOptions.v().setPhaseOption("jtp", "off");
-		PhaseOptions.v().setPhaseOption("jop", "off");
-		PhaseOptions.v().setPhaseOption("jap", "off");
-		PhaseOptions.v().setPhaseOption("gb", "off");
-		PhaseOptions.v().setPhaseOption("gop", "off");
-		PhaseOptions.v().setPhaseOption("bb", "off");
-		PhaseOptions.v().setPhaseOption("bop", "off");
-		PhaseOptions.v().setPhaseOption("tag", "off");
-		PhaseOptions.v().setPhaseOption("db", "off");
-		
-		PhaseOptions.v().setPhaseOption("tag.ln", "on");
-		PhaseOptions.v().setPhaseOption("jj.uce", "on");
+  public static void configure(String classpath, boolean readFromSources) {
+    configure(classpath, readFromSources, null);
+  }
 
-		Options.v().set_whole_program(true);
-	}	
-	
-	public static Body getMethodBody(String className, String methodName) {
-		SootClass c = Scene.v().loadClassAndSupport(className);
-  	c.setApplicationClass();
-  	SootMethod m = c.getMethodByName(methodName);
-  	Body b = m.retrieveActiveBody();
-  	return b;
-	}
-	
-	public static void dumpToDot(DirectedGraph g, Body b, String fileName) {
-		  	CFGToDotGraph gr = new CFGToDotGraph();
-			DotGraph viewgraph = gr.drawCFG(g,b);
-			viewgraph.plot(fileName);
-	}
-	
-    public static void reset() {
-	G.reset();
+  public static void configure(String classpath, boolean readFromSources, java.util.List<String> processDir) {
+    Options.v().set_verbose(false);
+    Options.v().set_keep_line_number(true);
+    Options.v().set_keep_offset(true);
+    Options.v().set_src_prec(Options.src_prec_class);
+    Options.v().set_soot_classpath(classpath);
+
+    Options.v().set_prepend_classpath(true);
+    //Options.v().set_allow_phantom_refs(true);
+
+    if (null != processDir) {
+      Options.v().set_process_dir(processDir);
     }
-    
-    public static void configure(String classpath, boolean readFromSources) {
-	configure(classpath, readFromSources, null);
-    }
-    
-    public static void configure(String classpath, boolean readFromSources, java.util.List<String> processDir) {
-	Options.v().set_verbose(false);
-	Options.v().set_keep_line_number(true);
-	Options.v().set_keep_offset(true);
-	Options.v().set_src_prec(Options.src_prec_class);
-	Options.v().set_soot_classpath(classpath);
-	
-	Options.v().set_prepend_classpath(true);
-	//Options.v().set_allow_phantom_refs(true);
-	
-	if (null != processDir) {
-	    Options.v().set_process_dir(processDir);
-	}
-	
-	if (readFromSources) {
+
+    if (readFromSources) {
       /* We want to parse the code from source
        * Phase
        * jj Creates a JimpleBody for each method directly from source
@@ -303,7 +251,6 @@ public class SootHelper {
                       + " sec.");
   }
 
-
   /** Returns the line number of the code element host
    * or 0 if the line number tag does not exists
    *
@@ -364,5 +311,4 @@ public class SootHelper {
 
     return fileName;
   }
->>>>>>> 619d5e96c01609c5b7c0412bdce90ba5f60b0ba9
 }
