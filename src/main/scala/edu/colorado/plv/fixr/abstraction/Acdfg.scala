@@ -11,17 +11,43 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import edu.colorado.plv.fixr.protobuf.ProtoAcdfg
 
+import scala.collection.mutable.{Set, HashSet}
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
 
 /**
   * Acdfg
-  *   Class implementing abstract control data flow graph (ACDFG)
+  * Class implementing abstract control data flow graph (ACDFG)
   *
-  *   @author Rhys Braginton Pettee Olsen <rhol9958@colorado.edu>
-  *   @group  University of Colorado at Boulder CUPLV
+  * The class represent a ACDFG as follows:
+  * - nodes: a hash table from the node id to the Node object
+  * - edges: a hash table from the edge id to the Edge object
+  *
+  * Kinds of nodes:
+  * - Node: abstract generic node
+  * - CommandNode: abstract class that represent a node
+  *   containing a statement
+  * - DataNode: represent a variable of the program
+  * - MethodNode: represent a method call
+  * - MiscNode: any statement different from a method call
+  *
+  * Kind of edges:
+  * - Edge: abstract generic edge
+  * - DefEdge: the source node defines the (variable in the) destination node
+  *   Edge from a control node to a data node
+  * - UseEdge: the source node uses the (variable in the) destination node
+  *   Edge from a control node to a data node
+  * - ControlEdge: edge from a control node to another control node
+  * - TransControlEdge: represent a transitive control edge (i.e. the
+  *   source node can reach the destination node through several
+  *   control edge in the original program).
+  *
+  * Additionally, the edges are labeled. The label contains a set of
+  * elements from Label.
+  *
+  * @author Rhys Braginton Pettee Olsen <rhol9958@colorado.edu>
+  * @group  University of Colorado at Boulder CUPLV
   */
-
 abstract class Node {
   def id : Long
   override def toString = this.getClass.getSimpleName + "(" + id.toString + ")"
@@ -83,7 +109,6 @@ case class ControlEdge(
   override val to   : Long
 ) extends Edge
 
-
 case class TransControlEdge(
   override val id   : Long,
   override val from : Long,
@@ -109,6 +134,11 @@ case class SourceInfo(
 
 case class AdjacencyList(nodes : Vector[Node], edges : Vector[Edge])
 
+object EdgeLabel extends Enumeration {
+  type EdgeLabel = Value
+  val EXCEPTIONAL_EDGE, SRC_DOMINATE_DST, DST_DOMINATE_SRC = Value
+}
+
 class Acdfg(adjacencyList: AdjacencyList,
   cdfg : UnitCdfgGraph,
   protobuf : ProtoAcdfg.Acdfg,
@@ -119,14 +149,20 @@ class Acdfg(adjacencyList: AdjacencyList,
 
   /*
    * Edges and nodes
-   *   Design rationale: our graph will be very sparse; want indexing by ID to be fast
+   * Design rationale: our graph will be very sparse; want indexing by
+   * ID to be fast
    */
-  protected[fixr] var edges = scala.collection.mutable.HashMap[Long, Edge]()
-  protected[fixr] var nodes = scala.collection.mutable.HashMap[Long, Node]()
+  var edges = scala.collection.mutable.HashMap[Long, Edge]()
+  var nodes = scala.collection.mutable.HashMap[Long, Node]()
+
+  /**
+    *  Map from the edge id to a set of labels
+    */
+  type LabelsSet = Set[EdgeLabel.Value]
+  var edgesLabel = scala.collection.mutable.HashMap[Long, LabelsSet]()
 
   var methodBag = new scala.collection.mutable.ArrayBuffer[String]()
   var freshIds = new scala.collection.mutable.PriorityQueue[Long]().+=(0)
-
 
 
   private def prepareMethodBag() = {
@@ -137,7 +173,13 @@ class Acdfg(adjacencyList: AdjacencyList,
     methodBag = methodBag.sorted
   }
 
-  /* Internal Protobuf value generated as needed */
+  /* Internal Protobuf value generated as needed
+
+   [SM] What does it happen if someone access the protobuffer field,
+   then changes the ACDFG, and re-access the pb field?
+   I think the pb field will not be updated.
+   This is a bug.
+  */
   private lazy val pb : ProtoAcdfg.Acdfg = {
     var builder : ProtoAcdfg.Acdfg.Builder = ProtoAcdfg.Acdfg.newBuilder()
 
@@ -232,6 +274,11 @@ class Acdfg(adjacencyList: AdjacencyList,
 
   private def removeId(id : Long) = freshIds.enqueue(id)
 
+  private def addEdge(id : Long, edge : Edge) = {
+    edges += ((edge.id, edge))
+    edgesLabel += ((edge.id, new HashSet[EdgeLabel.Value]()))
+  }
+
   def addNode(id : Long, node : Node) : (Long, Node) = {
     val oldCount = nodes.size
     nodes.+=((id, node))
@@ -249,7 +296,10 @@ class Acdfg(adjacencyList: AdjacencyList,
     val edgesOfId = edges.find({
       pair => (pair._2.from == id) || pair._2.to == id
     })
-    edgesOfId.foreach(pair => edges remove pair._1)
+    edgesOfId.foreach(pair => {
+      edges.remove(pair._1)
+      edgesLabel.remove(pair._1)
+    })
   }
 
   def removeDataNode(name : String) = {
@@ -275,7 +325,7 @@ class Acdfg(adjacencyList: AdjacencyList,
     this(adjacencyList, null, null, gitHubRecord, sourceInfo)
     assert(this.gitHubRecord == gitHubRecord)
     adjacencyList.nodes.foreach {node => nodes += ((node.id, node))}
-    adjacencyList.edges.foreach {edge => edges += ((edge.id, edge))}
+    adjacencyList.edges.foreach {edge => addEdge(edge.id, edge)}
     prepareMethodBag()
   }
 
@@ -325,7 +375,7 @@ class Acdfg(adjacencyList: AdjacencyList,
     def addUseEdge(fromId : Long, toId : Long): Unit = {
       val id = getNewId
       val edge = new UseEdge(id, fromId, toId)
-      edges += ((id, edge))
+      addEdge(id, edge)
       edgePairToId += (((fromId, toId), id))
     }
 
@@ -333,7 +383,7 @@ class Acdfg(adjacencyList: AdjacencyList,
       def addDefEdge(fromId : Long, toId : Long): Unit = {
         val id = getNewId
         val edge = new DefEdge(id, fromId, toId)
-        edges += ((id, edge))
+        addEdge(id, edge)
         edgePairToId += (((fromId, toId), id))
       }
 
@@ -364,7 +414,7 @@ class Acdfg(adjacencyList: AdjacencyList,
       def addControlEdge(fromId : Long, toId : Long): Unit = {
         val id = getNewId
         val edge = new ControlEdge(id, fromId, toId)
-        edges += ((id, edge))
+        addEdge(id, edge)
         edgePairToId += (((fromId, toId), id))
       }
 
@@ -465,7 +515,7 @@ class Acdfg(adjacencyList: AdjacencyList,
     def addTransControlEdge(fromId : Long, toId : Long): Unit = {
       val id = getNewId
       val edge = new TransControlEdge(id, fromId, toId)
-      edges += ((id, edge))
+      addEdge(id, edge)
       edgePairToId += (((fromId, toId), id))
     }
 
@@ -646,22 +696,22 @@ class Acdfg(adjacencyList: AdjacencyList,
     /* edges */
     protobuf.getControlEdgeList.foreach { protoEdge =>
       val edge = new ControlEdge(protoEdge.getId, protoEdge.getFrom, protoEdge.getTo)
-      edges += ((protoEdge.getId, edge))
+      addEdge(protoEdge.getId, edge)
     }
 
     protobuf.getUseEdgeList.foreach { protoEdge =>
       val edge = new UseEdge(protoEdge.getId, protoEdge.getFrom, protoEdge.getTo)
-      edges += ((protoEdge.getId, edge))
+      addEdge(protoEdge.getId, edge)
     }
 
     protobuf.getDefEdgeList.foreach { protoEdge =>
       val edge = new DefEdge(protoEdge.getId, protoEdge.getFrom, protoEdge.getTo)
-      edges += ((protoEdge.getId, edge))
+      addEdge(protoEdge.getId, edge)
     }
 
     protobuf.getTransEdgeList.foreach { protoEdge =>
       val edge = new TransControlEdge(protoEdge.getId, protoEdge.getFrom, protoEdge.getTo)
-      edges += ((protoEdge.getId, edge))
+      addEdge(protoEdge.getId, edge)
     }
 
 
