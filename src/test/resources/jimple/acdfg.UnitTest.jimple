@@ -1,0 +1,11 @@
+public class acdfg.UnitTest extends java.lang.Object
+{
+  public int testMethod(int, int, int) {
+    acdfg.UnitTest this;
+    int p1;
+    int p2;
+    int p3;
+
+    return p1;
+  }
+}

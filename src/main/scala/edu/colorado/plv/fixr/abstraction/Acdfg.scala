@@ -50,10 +50,7 @@ import scala.collection.JavaConverters._
   */
 abstract class Node {
   def id : Long
-  override def toString = this.getClass.getSimpleName + "(" + id.toString + ")"
-}
 
-abstract class CommandNode extends Node {
   override def toString = this match {
     case n : MethodNode =>
       n.getClass.getSimpleName + "(" +
@@ -62,9 +59,18 @@ abstract class CommandNode extends Node {
         "name: "      + n.name.toString + ", " +
         "arguments: [" + n.argumentIds.map(_.toString).mkString(", ") + "]" +
         ")"
-    case n => this.getClass.getSimpleName + "(" + id.toString + ")"
-  }
+    case n : DataNode =>
+      n.getClass.getSimpleName + "(" +
+        "id: "+ n.id.toString + ", " +
+        "name: "   + n.name +
+        "type: "   + n.datatype +
+        ")"        
+    case n => this.getClass.getSimpleName + "(" + id.toString + ")"    
+  }  
+  
 }
+
+abstract class CommandNode extends Node
 
 case class DataNode(override val id : Long, name : String, datatype : String) extends Node
 
@@ -83,7 +89,7 @@ abstract class Edge {
   val to   : Long
   val from : Long
   val id   : Long
-
+  
   override def toString = this.getClass.getSimpleName +
       "(id: "     + id.toString   +
       ", to: "    + to.toString   +
@@ -721,8 +727,9 @@ class Acdfg(adjacencyList: AdjacencyList,
     } else {
       protobuf.getMethodBag.getMethodList.foreach { method => methodBag.append(method) }
     }
-  } /* end of constructor from protobuf */
-
+  } /* end of constructor from protobuf */  
+ 
+  
   def union(that : Acdfg) : AdjacencyList =
     AdjacencyList(
       (this.nodes.values.toSet | this.nodes.values.toSet).toVector,

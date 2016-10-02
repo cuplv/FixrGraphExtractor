@@ -43,8 +43,7 @@ public class UnitCdfgGraph extends EnhancedUnitGraph {
     pruneDataDependent();
   }
 
-  public Map<Local, List<Unit>> useEdges(
-      ) {return useEdges;}
+  public Map<Local, List<Unit>> useEdges() {return useEdges;}
   public Map<Unit, List<Local>> defEdges() {return defEdges;}
 
 
@@ -75,9 +74,10 @@ public class UnitCdfgGraph extends EnhancedUnitGraph {
       defEdges.put(u, new ArrayList<Local>());
     }
 
-    /* Add the define edges -
-     * NOTE: now we are not computing the transitive closure
-     * */
+    /* Add the define snf use edges
+     * 
+     * NOTE: now we are not computing the transitive closure 
+     */
     for (Unit u : unitsList) {
       ReachingDefinitions rd = ddg.getReachingDefinitions();
       List<Local> defsInU = defEdges.get(u);
@@ -87,7 +87,10 @@ public class UnitCdfgGraph extends EnhancedUnitGraph {
       }
       defsInU.addAll(rd.getDefLocals(u, true));
 
-      /* Add the use edges - inefficient */
+      /* Add the use edges 
+       * We have a use edge 
+       * 
+       * */
       for (Unit pred : ddg.getPredsOf(u)) {
         Collection<Local> defsInPred = defEdges.get(pred);
         if (null != defsInPred) {
@@ -135,30 +138,41 @@ public class UnitCdfgGraph extends EnhancedUnitGraph {
    *
    */
   private void pruneDataDependent() {
+    /* set of locals that are in the CDFG */
     Set<Local> usedLocals = new HashSet<Local>();
     
+    /* Process all the use edges: 
+     *  - collects the list of used locals
+     *  - removes the duplicate units in the destination list
+     * */
     for (Map.Entry<Local, List<Unit>> entry : useEdges.entrySet()) {
       List<Unit> localUseEdges = entry.getValue();
       Local local = entry.getKey();
       
       if (localUseEdges.size() > 0) {
         usedLocals.add(local);
-        /* remove duplicates */
+
+        /* remove duplicates from localUseEdges */
         Set<Unit> setUnits = new HashSet<Unit>(localUseEdges);
         localUseEdges.clear();
         localUseEdges.addAll(setUnits);       
-      }          
+      }        
     }
     
+    /* Add the locals used in a def edge */
     for (Map.Entry<Unit, List<Local>> entry : defEdges.entrySet()) {
       List<Local> unitDefaEdges = entry.getValue();      
       usedLocals.addAll(unitDefaEdges);
     }
     
+    /* Remove all the use edges that contains locals that have not been
+     * in use/def edge
+     */
     Set<Local> toRemove = new HashSet<Local>(localsList);
-    toRemove.removeAll(usedLocals);                 
+    toRemove.removeAll(usedLocals);
     for (Local l : toRemove) useEdges.remove(l);
     
+    /* just keep the locals that are used in an edge */
     localsList.retainAll(usedLocals);
   }
 }
