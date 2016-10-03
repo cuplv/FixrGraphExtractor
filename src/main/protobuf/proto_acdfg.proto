@@ -48,6 +48,11 @@ message Acdfg {
     POSTDOMINATED = 2;
   }
 
+  message LabelMap {
+    required uint64 edge_id = 1;
+    repeated EdgeLabel labels = 2;
+  }
+
   message RepoTag {
     optional string repo_name   = 1;
     optional string user_name   = 2;
@@ -83,7 +88,7 @@ message Acdfg {
   repeated TransEdge   trans_edge   = 7;
 
   /* labels on edges */
-  repeated EdgeLabel edge_labels = 11;
+  repeated LabelMap edge_labels = 11;
 
   /* Provenance information */
   optional RepoTag     repo_tag     = 8;

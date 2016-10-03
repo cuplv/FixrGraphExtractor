@@ -44,6 +44,7 @@ import soot.jimple.SwitchStmt;
 import soot.jimple.TableSwitchStmt;
 import soot.jimple.internal.JTrap;
 import soot.toolkits.graph.Block;
+import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.graph.UnitGraph;
 import soot.toolkits.graph.pdg.ConditionalPDGNode;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
@@ -69,7 +70,7 @@ public class APISlicer {
   /* map from caught unit to trap */
   private Map<Unit, Trap> caughtToTrap;
 
-  public static boolean PRINT_DEBUG_GRAPHS = false;
+  public static boolean PRINT_DEBUG_GRAPHS = true;
   private Logger logger = LoggerFactory.getLogger(APISlicer.class);
   /**
    * @return the cfg
@@ -153,6 +154,9 @@ public class APISlicer {
 
       if (PRINT_DEBUG_GRAPHS)
       {
+        ExceptionalUnitGraph c = new ExceptionalUnitGraph(this.cfg.getBody());
+        SootHelper.dumpToDot(c, this.cfg.getBody(), "/tmp/eug.dot");
+            
         SootHelper.dumpToDot(this.cfg, this.cfg.getBody(), "/tmp/cfg.dot");
         SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");
         SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");

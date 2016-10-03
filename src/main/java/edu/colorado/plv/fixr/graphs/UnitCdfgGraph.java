@@ -15,6 +15,7 @@ import soot.Local;
 import soot.Unit;
 import soot.Value;
 import soot.ValueBox;
+import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
 import soot.toolkits.scalar.SimpleLocalDefs;
 
@@ -28,7 +29,8 @@ import soot.toolkits.scalar.SimpleLocalDefs;
  * @author Sergio Mover
  *
  */
-public class UnitCdfgGraph extends EnhancedUnitGraph {
+//public class UnitCdfgGraph extends EnhancedUnitGraph {
+public class UnitCdfgGraph extends ExceptionalUnitGraph {  
   protected List<Local> localsList = null;
   protected List<Unit>  unitsList  = null;
   protected Map<Local, List<Unit>> useEdges = null;
@@ -41,6 +43,9 @@ public class UnitCdfgGraph extends EnhancedUnitGraph {
     this.ddg = new DataDependencyGraph(this);
     addDataDependentNodes();
     pruneDataDependent();
+    
+    /* we require to have at least on tail */
+    assert (this.tails.size() > 0);
   }
 
   public Map<Local, List<Unit>> useEdges() {return useEdges;}

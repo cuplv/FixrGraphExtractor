@@ -77,6 +77,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
       toCall.makeRef(), List(l0,l1,l2))
     val invokeStmt = Jimple.v().newInvokeStmt(virtualInvoke)
     body.getUnits().add(invokeStmt);
+    body.getUnits.add(Jimple.v().newReturnVoidStmt())
 
     /* test the method call */
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
@@ -124,10 +125,11 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     body.getUnits.add(nC)
     body.getUnits.add(goto)
     body.getUnits.add(nB)
-    body.getUnits.add(nD)
+    body.getUnits.add(nD)       
+    body.getUnits.add(Jimple.v().newReturnVoidStmt())
     
     /* test the method call */
-    val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
+    val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)    
     val acdfg : Acdfg = new Acdfg(cdfg, null, null)
     
     val nA_ = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethodA", Vector())
@@ -140,19 +142,34 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     assert (AcdfgUnitTest.getNode(acdfg, nC_).size == 1)
     assert (AcdfgUnitTest.getNode(acdfg, nD_).size == 1)
 
+    def testRes(acdfg : Acdfg) = {
+      val domList = List(EdgeLabel.SRC_DOMINATE_DST)
+      val edges0 = AcdfgUnitTest.getEdges(acdfg, nA_, nB_)
+      assert(edges0.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges0.get(0), domList))
+      val edges1 = AcdfgUnitTest.getEdges(acdfg, nA_, nC_)
+      assert(edges1.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges1.get(0), domList))
+      val edges2 = AcdfgUnitTest.getEdges(acdfg, nA_, nD_)
+      assert(edges2.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges2.get(0), List(EdgeLabel.SRC_DOMINATE_DST, EdgeLabel.DST_POSDOMINATE_SRC)))
     
-    val domList = List(EdgeLabel.SRC_DOMINATE_DST)
-    val edges0 = AcdfgUnitTest.getEdges(acdfg, nA_, nB_)
-    assert(edges0.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges0.get(0), domList))
-    val edges1 = AcdfgUnitTest.getEdges(acdfg, nA_, nC_)
-    assert(edges1.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges1.get(0), domList))
-    val edges2 = AcdfgUnitTest.getEdges(acdfg, nA_, nD_)
-    assert(edges2.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges2.get(0), List(EdgeLabel.SRC_DOMINATE_DST, EdgeLabel.DST_POSDOMINATE_SRC)))
+      val edges3 = AcdfgUnitTest.getEdges(acdfg, nB_, nD_)
+      assert(edges3.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges3.get(0), List(EdgeLabel.DST_POSDOMINATE_SRC)))
+      val edges4 = AcdfgUnitTest.getEdges(acdfg, nB_, nD_)
+      assert(edges4.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges4.get(0), List(EdgeLabel.DST_POSDOMINATE_SRC)))
+    }
     
-    val edges3 = AcdfgUnitTest.getEdges(acdfg, nB_, nD_)
-    assert(edges3.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges3.get(0), List(EdgeLabel.DST_POSDOMINATE_SRC)))
-    val edges4 = AcdfgUnitTest.getEdges(acdfg, nB_, nD_)
-    assert(edges4.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges4.get(0), List(EdgeLabel.DST_POSDOMINATE_SRC)))
+    testRes(acdfg)
+  }
+  
+  test("ACDFGExceptionalFlow") {
+    val sootMethod = this.getTestClass().getMethodByName("testMethodE")
+    
+    val body = sootMethod.retrieveActiveBody()
+    
+
+    /* test the method call */
+    val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    System.out.println(body.getTraps().toString())
   }
 }
 

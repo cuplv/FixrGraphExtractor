@@ -26,4 +26,38 @@ public class acdfg.UnitTest extends java.lang.Object
     acdfg.UnitTest this;
     return 0;
   }
+
+  public void testMethodE() {
+      java.lang.Exception e;
+      int i;
+      slice.TestException this;
+
+      nop;
+
+      this := @this: slice.TestException;
+
+      i = 0;
+
+      nop;
+
+      nop;
+
+   label1:
+      staticinvoke <java.lang.Math: int abs(int)>(i);
+
+   label2:
+      goto label4;
+
+   label3:
+      e := @caughtexception;
+
+      staticinvoke <java.lang.Math: int abs(int)>(i);
+
+      goto label4;
+
+   label4:
+      nop;
+
+      catch java.lang.Exception from label1 to label2 with label3;
+  }
 }

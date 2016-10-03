@@ -221,6 +221,21 @@ class Acdfg(adjacencyList: AdjacencyList,
         builder.addTransEdge(protoTransEdge)
     }
 
+    /* Add the node labels */
+    edgesLabel.foreach {
+      case (id : Long, label : Acdfg.LabelsSet) => {
+        val edgeBuilder = ProtoAcdfg.Acdfg.LabelMap.newBuilder()
+        edgeBuilder.setEdgeId(id)
+        label.foreach { x => x match {
+          case x if x == EdgeLabel.SRC_DOMINATE_DST => edgeBuilder.addLabels(ProtoAcdfg.Acdfg.EdgeLabel.DOMINATE)
+          case x if x == EdgeLabel.DST_POSDOMINATE_SRC => edgeBuilder.addLabels(ProtoAcdfg.Acdfg.EdgeLabel.POSTDOMINATED) 
+          case _ => ???
+          }
+        }        
+        builder.addEdgeLabels(edgeBuilder)        
+      }
+    }
+    
     var methodBag : scala.collection.mutable.ArrayBuffer[String] =
       new scala.collection.mutable.ArrayBuffer[String]()
 
@@ -739,7 +754,23 @@ class Acdfg(adjacencyList: AdjacencyList,
       val edge = new TransControlEdge(protoEdge.getId, protoEdge.getFrom, protoEdge.getTo)
       addEdge(protoEdge.getId, edge)
     }
-
+    
+    /* get the edge labels */
+    protobuf.getEdgeLabelsList.foreach { labelMap => {        
+      val labelsList = labelMap.getLabelsList.foldLeft(List[EdgeLabel.Value]())({
+        (res, x) => {
+          x match {
+            case x if x == ProtoAcdfg.Acdfg.EdgeLabel.DOMINATE =>
+              EdgeLabel.SRC_DOMINATE_DST :: res
+            case x if x == ProtoAcdfg.Acdfg.EdgeLabel.POSTDOMINATED =>
+              EdgeLabel.DST_POSDOMINATE_SRC :: res
+            case _ => ???            
+          }
+        }
+      })
+      val labelSet = scala.collection.immutable.HashSet[EdgeLabel.Value]() ++ labelsList
+      this.edgesLabel += ((labelMap.getEdgeId, labelSet))      
+    }}
 
     if ((!protobuf.getMethodBag.isInitialized) ||
       (protobuf.getMethodBag.getMethodCount == 0)) {
@@ -795,12 +826,26 @@ class Acdfg(adjacencyList: AdjacencyList,
   def getSourceInfo = sourceInfo
 
   override def toString = {
+    // Inefficient - TODO: use buffer instead of string concat
     var output : String = "ACDFG:" + "\n"
+    
     output += ("  " + "Nodes:\n")
     nodes.foreach(node => output += ("    " + node.toString()) + "\n")
     output += "\n"
+    
     output += ("  " + "Edges:\n")
-    edges.foreach(edge => output += ("    " + edge.toString()) + "\n")
+    edges.foreach(edge => {
+      output += ("    " + edge.toString()) + "\n"
+      this.edgesLabel.get(edge._1) match {        
+        case Some(labelsList) => {
+          val labels = labelsList.foldLeft ("    Labels:"){ (res,x) => res + " " + x.toString }
+          
+          output += labels + "\n"        
+        }
+        case None => ()
+      }
+    })
+    
     output
   }
 
@@ -822,6 +867,11 @@ object Acdfg {
     val l1 = if (dominates) List(EdgeLabel.SRC_DOMINATE_DST) else List[EdgeLabel.Value]()
     val l2 = if (postDominated) EdgeLabel.DST_POSDOMINATE_SRC::l1 else l1
 
+//    println("FROM: " + fromUnit.toString())
+//    println("TO: " + toUnit.toString())
+//    println("Dominates: " + dominates.toString())
+//    println("PostDominated: " + postDominated.toString())
+    
     val labelSet = scala.collection.immutable.HashSet[EdgeLabel.Value]() ++ l2
     labelSet
   }
