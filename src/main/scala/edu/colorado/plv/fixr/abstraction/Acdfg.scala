@@ -4,6 +4,7 @@ package edu.colorado.plv.fixr.abstraction
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
 import soot.jimple.{AssignStmt, IdentityStmt, InvokeStmt}
 import soot.jimple.internal.JimpleLocal
+import soot.toolkits.graph.{MHGDominatorsFinder, MHGPostDominatorsFinder}
 
 import scala.collection.JavaConversions.asScalaIterator
 import scala.collection.mutable.ArrayBuffer
@@ -64,10 +65,10 @@ abstract class Node {
         "id: "+ n.id.toString + ", " +
         "name: "   + n.name +
         "type: "   + n.datatype +
-        ")"        
-    case n => this.getClass.getSimpleName + "(" + id.toString + ")"    
-  }  
-  
+        ")"
+    case n => this.getClass.getSimpleName + "(" + id.toString + ")"
+  }
+
 }
 
 abstract class CommandNode extends Node
@@ -89,7 +90,7 @@ abstract class Edge {
   val to   : Long
   val from : Long
   val id   : Long
-  
+
   override def toString = this.getClass.getSimpleName +
       "(id: "     + id.toString   +
       ", to: "    + to.toString   +
@@ -142,7 +143,7 @@ case class AdjacencyList(nodes : Vector[Node], edges : Vector[Edge])
 
 object EdgeLabel extends Enumeration {
   type EdgeLabel = Value
-  val EXCEPTIONAL_EDGE, SRC_DOMINATE_DST, DST_DOMINATE_SRC = Value
+  val EXCEPTIONAL_EDGE, SRC_DOMINATE_DST, DST_POSDOMINATE_SRC = Value
 }
 
 class Acdfg(adjacencyList: AdjacencyList,
@@ -164,8 +165,7 @@ class Acdfg(adjacencyList: AdjacencyList,
   /**
     *  Map from the edge id to a set of labels
     */
-  type LabelsSet = Set[EdgeLabel.Value]
-  var edgesLabel = scala.collection.mutable.HashMap[Long, LabelsSet]()
+  var edgesLabel = scala.collection.mutable.HashMap[Long, Acdfg.LabelsSet]()
 
   var methodBag = new scala.collection.mutable.ArrayBuffer[String]()
   var freshIds = new scala.collection.mutable.PriorityQueue[Long]().+=(0)
@@ -280,9 +280,13 @@ class Acdfg(adjacencyList: AdjacencyList,
 
   private def removeId(id : Long) = freshIds.enqueue(id)
 
-  private def addEdge(id : Long, edge : Edge) = {
+  private def addEdge(id : Long, edge : Edge) : Unit = {
+    addEdge(id, edge, scala.collection.immutable.HashSet[EdgeLabel.Value]())
+  }
+
+  private def addEdge(id : Long, edge : Edge, labels : Acdfg.LabelsSet) : Unit = {
     edges += ((edge.id, edge))
-    edgesLabel += ((edge.id, new HashSet[EdgeLabel.Value]()))
+    edgesLabel += ((edge.id, labels))
   }
 
   def addNode(id : Long, node : Node) : (Long, Node) = {
@@ -335,7 +339,7 @@ class Acdfg(adjacencyList: AdjacencyList,
     prepareMethodBag()
   }
 
- /**
+  /**
     * Creates a ACDFG from a CDFG
     */
   def this(cdfg : UnitCdfgGraph, gitHubRecord: GitHubRecord,
@@ -348,6 +352,12 @@ class Acdfg(adjacencyList: AdjacencyList,
     var localToId      = scala.collection.mutable.HashMap[soot.Local, Long]()
     var edgePairToId   = scala.collection.mutable.HashMap[(Long, Long), Long]()
     var idToMethodStrs = scala.collection.mutable.HashMap[Long, Array[String]]()
+
+    val ug = cdfg.asInstanceOf[soot.toolkits.graph.DirectedGraph[soot.Unit]]
+    val dominators : MHGDominatorsFinder[soot.Unit] =
+      new MHGDominatorsFinder[soot.Unit](ug)
+    val postDominators : MHGPostDominatorsFinder[soot.Unit] =
+      new MHGPostDominatorsFinder[soot.Unit](ug)
 
     val defEdges = cdfg.defEdges()
     val useEdges = cdfg.useEdges()
@@ -417,26 +427,29 @@ class Acdfg(adjacencyList: AdjacencyList,
     }
 
     def addControlEdges(unit : soot.Unit, unitId : Long): Unit = {
-      def addControlEdge(fromId : Long, toId : Long): Unit = {
+      def addControlEdge(fromId : Long, toId : Long, labels : Acdfg.LabelsSet): Unit = {
         val id = getNewId
         val edge = new ControlEdge(id, fromId, toId)
-        addEdge(id, edge)
+        addEdge(id, edge, labels)
         edgePairToId += (((fromId, toId), id))
       }
 
       // add predecessor edges, if not extant
       val unitId = unitToId(unit)
-      cdfg.getPredsOf(unit).iterator().foreach{ (predUnit) =>
+
+      cdfg.getPredsOf(unit).iterator().foreach{ (predUnit) => 
+        val labelSet = Acdfg.getLabelSet(predUnit, unit, dominators, postDominators)
         val predUnitId = unitToId(predUnit)
         if (!edgePairToId.contains(predUnitId, unitId)) {
-          addControlEdge(predUnitId, unitId)
+          addControlEdge(predUnitId, unitId, labelSet)
         }
       }
       // add succesor edges, if not extant
       cdfg.getSuccsOf(unit).iterator().foreach{ (succUnit) =>
+        val labelSet = Acdfg.getLabelSet(unit, succUnit, dominators, postDominators)
         val succUnitId = unitToId(succUnit)
         if (!edgePairToId.contains(unitId, succUnitId)) {
-          addControlEdge(unitId, succUnitId)
+          addControlEdge(unitId, succUnitId, labelSet)
         }
       }
     }
@@ -445,6 +458,9 @@ class Acdfg(adjacencyList: AdjacencyList,
       val commandNodesMap = nodes.filter(_._2.isInstanceOf[CommandNode])
       val commandNodes = commandNodesMap.values.toVector
       val commandNodeCount = commandNodes.size
+
+      var idToUnit = unitToId map {_.swap}
+
       var idToAdjIndex = new scala.collection.mutable.HashMap[Long, Int]
       commandNodesMap.zipWithIndex.foreach {
         case (((id : Long, _),index : Int)) =>
@@ -511,17 +527,21 @@ class Acdfg(adjacencyList: AdjacencyList,
             ) {
               //changed = true
               transAdjMatrix(i)(j) = true
-              addTransControlEdge(commandNodes(i).id, commandNodes(j).id)
+              val fromNode = idToUnit(commandNodes(i).id)
+              val toNode = idToUnit(commandNodes(j).id)
+              val labelSet = Acdfg.getLabelSet(fromNode, toNode,
+                dominators, postDominators)
+              addTransControlEdge(commandNodes(i).id, commandNodes(j).id, labelSet)
             }
           }
         }
       }
     }
 
-    def addTransControlEdge(fromId : Long, toId : Long): Unit = {
+    def addTransControlEdge(fromId : Long, toId : Long, labels : Acdfg.LabelsSet): Unit = {
       val id = getNewId
       val edge = new TransControlEdge(id, fromId, toId)
-      addEdge(id, edge)
+      addEdge(id, edge, labels)
       edgePairToId += (((fromId, toId), id))
     }
 
@@ -727,9 +747,9 @@ class Acdfg(adjacencyList: AdjacencyList,
     } else {
       protobuf.getMethodBag.getMethodList.foreach { method => methodBag.append(method) }
     }
-  } /* end of constructor from protobuf */  
- 
-  
+  } /* end of constructor from protobuf */
+
+
   def union(that : Acdfg) : AdjacencyList =
     AdjacencyList(
       (this.nodes.values.toSet | this.nodes.values.toSet).toVector,
@@ -784,4 +804,25 @@ class Acdfg(adjacencyList: AdjacencyList,
     output
   }
 
+}
+
+object Acdfg {
+  type LabelsSet = scala.collection.immutable.Set[EdgeLabel.Value]
+
+  /** Return the set of labels for the edge fromfromUnit to toUnit
+    *
+    */
+  def getLabelSet(fromUnit : soot.Unit, toUnit : soot.Unit,
+    dominators : MHGDominatorsFinder[soot.Unit],
+    postDominators : MHGPostDominatorsFinder[soot.Unit]) : Acdfg.LabelsSet = {
+
+    val dominates = dominators.isDominatedBy(toUnit, fromUnit)
+    val postDominated = postDominators.isDominatedBy(fromUnit, toUnit)
+
+    val l1 = if (dominates) List(EdgeLabel.SRC_DOMINATE_DST) else List[EdgeLabel.Value]()
+    val l2 = if (postDominated) EdgeLabel.DST_POSDOMINATE_SRC::l1 else l1
+
+    val labelSet = scala.collection.immutable.HashSet[EdgeLabel.Value]() ++ l2
+    labelSet
+  }
 }

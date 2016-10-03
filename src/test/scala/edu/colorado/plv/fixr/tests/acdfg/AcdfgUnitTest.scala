@@ -3,12 +3,13 @@ package edu.colorado.plv.fixr.tests.acdfg
 import edu.colorado.plv.fixr.tests.{TestClassBase}
 
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
-import edu.colorado.plv.fixr.abstraction.{Acdfg, AdjacencyList}
+import edu.colorado.plv.fixr.abstraction.{Acdfg, AdjacencyList, EdgeLabel}
 import edu.colorado.plv.fixr.abstraction.{Node, Edge, DataNode, MethodNode, UseEdge, MiscNode}
 
 import soot.{SootClass, SootMethod, Body}
 import soot.{IntType, Type, RefType, ArrayType, VoidType}
 import soot.jimple.IntConstant
+import soot.jimple.ConditionExpr
 import soot.{Modifier}
 import java.util.Arrays
 import soot.jimple.JimpleBody
@@ -98,6 +99,61 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     assert(AcdfgUnitTest.getEdges(acdfg, l2Node, callNode).size == 1)
     assert(AcdfgUnitTest.getEdges(acdfg, thisNode, callNode).size == 1)
   }
+  
+   
+  test("ACDFGDom") {
+    val body = getEmptyMethod.getActiveBody
+    val l0 = SootHelper.addLocal(body, "l0", IntType.v())
+        
+    val toCallA : SootMethod = this.getTestClass().getMethodByName("testMethodA")
+    val toCallB : SootMethod = this.getTestClass().getMethodByName("testMethodB")
+    val toCallC : SootMethod = this.getTestClass().getMethodByName("testMethodC")
+    val toCallD : SootMethod = this.getTestClass().getMethodByName("testMethodD")
+    
+    val nA = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(body.getThisLocal, toCallA.makeRef(), List[soot.Value]()))                
+    val nB = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(body.getThisLocal, toCallB.makeRef(), List[soot.Value]()))
+    val nC = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(body.getThisLocal, toCallC.makeRef(), List[soot.Value]()))
+    val nD = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(body.getThisLocal, toCallD.makeRef(), List[soot.Value]()))   
+    val goto= Jimple.v().newGotoStmt(Jimple.v().newStmtBox(nD))
+    val condition = Jimple.v().newEqExpr(l0, IntConstant.v(0))
+    
+    val nif = Jimple.v().newIfStmt(condition, nB)
+    
+    body.getUnits.add(nA)
+    body.getUnits.add(nif)
+    body.getUnits.add(nC)
+    body.getUnits.add(goto)
+    body.getUnits.add(nB)
+    body.getUnits.add(nD)
+    
+    /* test the method call */
+    val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    
+    val nA_ = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethodA", Vector())
+    val nB_ = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethodB", Vector())
+    val nC_ = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethodC", Vector())
+    val nD_ = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethodD", Vector())
+    
+    assert (AcdfgUnitTest.getNode(acdfg, nA_).size == 1)
+    assert (AcdfgUnitTest.getNode(acdfg, nB_).size == 1)
+    assert (AcdfgUnitTest.getNode(acdfg, nC_).size == 1)
+    assert (AcdfgUnitTest.getNode(acdfg, nD_).size == 1)
+
+    
+    val domList = List(EdgeLabel.SRC_DOMINATE_DST)
+    val edges0 = AcdfgUnitTest.getEdges(acdfg, nA_, nB_)
+    assert(edges0.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges0.get(0), domList))
+    val edges1 = AcdfgUnitTest.getEdges(acdfg, nA_, nC_)
+    assert(edges1.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges1.get(0), domList))
+    val edges2 = AcdfgUnitTest.getEdges(acdfg, nA_, nD_)
+    assert(edges2.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges2.get(0), List(EdgeLabel.SRC_DOMINATE_DST, EdgeLabel.DST_POSDOMINATE_SRC)))
+    
+    val edges3 = AcdfgUnitTest.getEdges(acdfg, nB_, nD_)
+    assert(edges3.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges3.get(0), List(EdgeLabel.DST_POSDOMINATE_SRC)))
+    val edges4 = AcdfgUnitTest.getEdges(acdfg, nB_, nD_)
+    assert(edges4.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges4.get(0), List(EdgeLabel.DST_POSDOMINATE_SRC)))
+  }
 }
 
 object AcdfgUnitTest {
@@ -173,9 +229,20 @@ object AcdfgUnitTest {
         if (AcdfgUnitTest.eqNodes(node, nodeAcdfg)) {
           nodeAcdfg :: res
         }
-        else res
+        else res        
       })
     }
     getNodeAux(acdfg, node, List[Node]())
   }
+  
+  def hasLabel(acdfg : Acdfg,  e : Edge, refLabels : List[EdgeLabel.Value]) = {
+    acdfg.edgesLabel.get(e.id) match {
+      case Some(labelSet : Acdfg.LabelsSet) => {
+        val refSet = scala.collection.immutable.HashSet[EdgeLabel.Value]() ++ refLabels
+        labelSet.equals(refSet)
+      }
+      case _ => false
+    }
+  }
+  
 }

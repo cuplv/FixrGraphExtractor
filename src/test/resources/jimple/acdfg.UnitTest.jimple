@@ -8,4 +8,22 @@ public class acdfg.UnitTest extends java.lang.Object
 
     return p1;
   }
+
+
+  public int testMethodA() {
+    acdfg.UnitTest this;
+    return 0;
+  }
+  public int testMethodB() {
+    acdfg.UnitTest this;
+    return 0;
+  }
+  public int testMethodC() {
+    acdfg.UnitTest this;
+    return 0;
+  }
+  public int testMethodD() {
+    acdfg.UnitTest this;
+    return 0;
+  }
 }
