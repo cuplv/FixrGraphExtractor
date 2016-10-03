@@ -89,16 +89,22 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     val thisNode = new DataNode(3, "this", "acdfg.UnitTest")
     val callNode = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethod", Vector(0,1,2))
 
-    assert (AcdfgUnitTest.getNode(acdfg, callNode).size == 1)
-    assert (AcdfgUnitTest.getNode(acdfg, l0Node).size == 1)
-    assert (AcdfgUnitTest.getNode(acdfg, l1Node).size == 1)
-    assert (AcdfgUnitTest.getNode(acdfg, l2Node).size == 1)
-    assert (AcdfgUnitTest.getNode(acdfg, thisNode).size == 1)
+    def testRes(acdfg : Acdfg) = {
+      assert (AcdfgUnitTest.getNode(acdfg, callNode).size == 1)    
+      assert (AcdfgUnitTest.getNode(acdfg, l0Node).size == 1)
+      assert (AcdfgUnitTest.getNode(acdfg, l1Node).size == 1)
+      assert (AcdfgUnitTest.getNode(acdfg, l2Node).size == 1)
+      assert (AcdfgUnitTest.getNode(acdfg, thisNode).size == 1)
 
-    assert(AcdfgUnitTest.getEdges(acdfg, l0Node, callNode).size == 1)
-    assert(AcdfgUnitTest.getEdges(acdfg, l1Node, callNode).size == 1)
-    assert(AcdfgUnitTest.getEdges(acdfg, l2Node, callNode).size == 1)
-    assert(AcdfgUnitTest.getEdges(acdfg, thisNode, callNode).size == 1)
+      assert(AcdfgUnitTest.getEdges(acdfg, l0Node, callNode).size == 1)
+      assert(AcdfgUnitTest.getEdges(acdfg, l1Node, callNode).size == 1)
+      assert(AcdfgUnitTest.getEdges(acdfg, l2Node, callNode).size == 1)
+      assert(AcdfgUnitTest.getEdges(acdfg, thisNode, callNode).size == 1)
+    }
+    testRes(acdfg)
+    
+    val acdfgFromProto = new Acdfg(acdfg.toProtobuf)
+    testRes(acdfgFromProto)
   }
   
    
@@ -171,7 +177,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     /* test the method call */
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
     val acdfg : Acdfg = new Acdfg(cdfg, null, null)
-    System.out.println(body.getTraps().toString())
+    //System.out.println(body.getTraps().toString())
   }
 }
 
