@@ -70,7 +70,7 @@ public class APISlicer {
   /* map from caught unit to trap */
   private Map<Unit, Trap> caughtToTrap;
 
-  public static boolean PRINT_DEBUG_GRAPHS = true;
+  public static boolean PRINT_DEBUG_GRAPHS = false;
   private Logger logger = LoggerFactory.getLogger(APISlicer.class);
   /**
    * @return the cfg

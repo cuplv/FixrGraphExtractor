@@ -151,7 +151,7 @@ class Acdfg(adjacencyList: AdjacencyList,
   protobuf : ProtoAcdfg.Acdfg,
   gitHubRecord : GitHubRecord,
   sourceInfo : SourceInfo) {
-
+  
   val logger : Logger = LoggerFactory.getLogger(classOf[Acdfg])
 
   /*
@@ -269,13 +269,27 @@ class Acdfg(adjacencyList: AdjacencyList,
     }
 
     /* copy the repotag informations */
-    val protoRepoTag = ProtoAcdfg.Acdfg.RepoTag.newBuilder()
-    protoRepoTag.setUserName(this.gitHubRecord.userName)
-    protoRepoTag.setRepoName(this.gitHubRecord.repoName)
-    protoRepoTag.setUrl(this.gitHubRecord.url)
-    protoRepoTag.setCommitHash(this.gitHubRecord.commitHash)
-    builder.setRepoTag(protoRepoTag)
+    if (null != this.gitHubRecord) {
+      val protoRepoTag = ProtoAcdfg.Acdfg.RepoTag.newBuilder()
+      protoRepoTag.setUserName(this.gitHubRecord.userName)
+      protoRepoTag.setRepoName(this.gitHubRecord.repoName)
+      protoRepoTag.setUrl(this.gitHubRecord.url)
+      protoRepoTag.setCommitHash(this.gitHubRecord.commitHash)
+      builder.setRepoTag(protoRepoTag)
+    }
 
+    if (null != this.sourceInfo) {
+      val protoSrcTag = ProtoAcdfg.Acdfg.SourceInfo.newBuilder()
+      protoSrcTag.setPackageName(sourceInfo.packageName)
+      protoSrcTag.setClassName(sourceInfo.className)
+      protoSrcTag.setMethodName(sourceInfo.methodName)
+      protoSrcTag.setClassLineNumber(sourceInfo.classLineNumber)
+      protoSrcTag.setMethodLineNumber(sourceInfo.methodLineNumber)
+      protoSrcTag.setSourceClassName(sourceInfo.sourceClassName)
+      protoSrcTag.setAbsSourceClassName(sourceInfo.absSourceClassName)
+      builder.setSourceInfo(protoSrcTag)
+    }
+    
     // add bag of methods
     val protoMethodBag = ProtoAcdfg.Acdfg.MethodBag.newBuilder()
     methodBag.sorted.foreach(protoMethodBag.addMethod)
@@ -813,8 +827,12 @@ class Acdfg(adjacencyList: AdjacencyList,
 
   def equals(that : Acdfg) : Boolean = {
     val du = this +| that
-    du.nodes.isEmpty && du.edges.isEmpty &&
-    this.gitHubRecord == that.getGitHubRecord
+    val eqnodes = du.nodes.isEmpty
+    val eqedges = du.edges.isEmpty
+    val eqgh = this.gitHubRecord.equals(that.getGitHubRecord)
+    val eqsource = this.sourceInfo.equals(that.getSourceInfo)
+    
+    eqnodes && eqedges && eqgh && eqsource
   }
 
   def == (that : Acdfg) : Boolean =

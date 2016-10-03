@@ -155,9 +155,11 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
       assert(edges3.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges3.get(0), List(EdgeLabel.DST_POSDOMINATE_SRC)))
       val edges4 = AcdfgUnitTest.getEdges(acdfg, nB_, nD_)
       assert(edges4.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges4.get(0), List(EdgeLabel.DST_POSDOMINATE_SRC)))
-    }
-    
+    }    
     testRes(acdfg)
+    
+    val acdfgFromProto = new Acdfg(acdfg.toProtobuf)
+    testRes(acdfgFromProto)
   }
   
   test("ACDFGExceptionalFlow") {
