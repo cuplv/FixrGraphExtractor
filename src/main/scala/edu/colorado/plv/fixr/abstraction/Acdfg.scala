@@ -364,21 +364,21 @@ class Acdfg(adjacencyList: AdjacencyList,
 
   private def removeId(id : Long) = freshIds.enqueue(id)
 
-  private def addEdge(id : Long, edge : Edge) : Unit = {
-    addEdge(id, edge, scala.collection.immutable.HashSet[EdgeLabel.Value]())
+  def addEdge(edge : Edge) : Unit = {
+    addEdge(edge, scala.collection.immutable.HashSet[EdgeLabel.Value]())
   }
 
-  private def addEdge(id : Long, edge : Edge, labels : Acdfg.LabelsSet) : Unit = {
+  def addEdge(edge : Edge, labels : Acdfg.LabelsSet) : Unit = {
     edges += ((edge.id, edge))
     edgesLabel += ((edge.id, labels))
   }
 
-  def addNode(id : Long, node : Node) : (Long, Node) = {
+  def addNode(node : Node) : (Long, Node) = {
     val oldCount = nodes.size
-    nodes.+=((id, node))
+    nodes.+=((node.id, node))
     val newCount = nodes.size
     assert(oldCount + 1 == newCount)
-    (id, node)
+    (node.id, node)
   }
 
   def removeEdge(to : Long, from : Long) = {
@@ -419,7 +419,7 @@ class Acdfg(adjacencyList: AdjacencyList,
     this(adjacencyList, null, null, gitHubRecord, sourceInfo)
     assert(this.gitHubRecord == gitHubRecord)
     adjacencyList.nodes.foreach {node => nodes += ((node.id, node))}
-    adjacencyList.edges.foreach {edge => addEdge(edge.id, edge)}
+    adjacencyList.edges.foreach {edge => addEdge(edge)}
     prepareMethodBag()
   }
 
@@ -459,7 +459,7 @@ class Acdfg(adjacencyList: AdjacencyList,
         name,
         Vector.fill(argumentStrings.length)(0) : Vector[Long]
       )
-      addNode(id, node)
+      addNode(node)
       unitToId += ((unit, id))
       idToMethodStrs += ((id, argumentStrings))
       (id, node)
@@ -468,7 +468,7 @@ class Acdfg(adjacencyList: AdjacencyList,
     def addMiscNode(unit : soot.Unit) : (Long, Node) = {
       val id = getNewId
       val node = new MiscNode(id)
-      addNode(id, node)
+      addNode(node)
       unitToId += ((unit, id))
       (id, node)
     }
@@ -476,7 +476,7 @@ class Acdfg(adjacencyList: AdjacencyList,
     def addUseEdge(fromId : Long, toId : Long): Unit = {
       val id = getNewId
       val edge = new UseEdge(id, fromId, toId)
-      addEdge(id, edge)
+      addEdge(edge)
       edgePairToId += (((fromId, toId), id))
     }
 
@@ -484,7 +484,7 @@ class Acdfg(adjacencyList: AdjacencyList,
       def addDefEdge(fromId : Long, toId : Long): Unit = {
         val id = getNewId
         val edge = new DefEdge(id, fromId, toId)
-        addEdge(id, edge)
+        addEdge(edge)
         edgePairToId += (((fromId, toId), id))
       }
 
@@ -515,7 +515,7 @@ class Acdfg(adjacencyList: AdjacencyList,
       def addControlEdge(fromId : Long, toId : Long, labels : Acdfg.LabelsSet): Unit = {
         val id = getNewId
         val edge = new ControlEdge(id, fromId, toId)
-        addEdge(id, edge, labels)
+        addEdge(edge, labels)
         edgePairToId += (((fromId, toId), id))
       }
 
@@ -523,7 +523,7 @@ class Acdfg(adjacencyList: AdjacencyList,
         exceptions : List[String], labels : Acdfg.LabelsSet): Unit = {
         val id = getNewId
         val edge = new ExceptionalControlEdge(id, fromId, toId, exceptions)
-        addEdge(id, edge, labels)
+        addEdge(edge, labels)
         edgePairToId += (((fromId, toId), id))
       }
 
@@ -638,17 +638,17 @@ class Acdfg(adjacencyList: AdjacencyList,
     def addTransControlEdge(fromId : Long, toId : Long, labels : Acdfg.LabelsSet): Unit = {
       val id = getNewId
       val edge = new TransControlEdge(id, fromId, toId)
-      addEdge(id, edge, labels)
+      addEdge(edge, labels)
       edgePairToId += (((fromId, toId), id))
     }
 
     /* Data nodes */
     cdfg.localsIter().foreach {
       case local : JimpleLocal => {
-        val id = getNewId        
+        val id = getNewId
         val node = new VarDataNode(id, local.getName, local.getType.toString)
         localToId += ((local, id))
-        addNode(id, node)
+        addNode(node)
       }
       case m =>
         logger.debug("    Local of unknown type; ignoring...")
@@ -800,49 +800,49 @@ class Acdfg(adjacencyList: AdjacencyList,
     protobuf.getDataNodeList.foreach { dataNode =>
       // TODO change to check for constants
       val node = new VarDataNode(dataNode.getId, dataNode.getName, dataNode.getType)
-      addNode(dataNode.getId, node)
+      addNode(node)
     }
     /* method nodes */
     protobuf.getMethodNodeList.foreach { methodNode =>
       val invokee = if (methodNode.hasInvokee) Some(methodNode.getInvokee) else None
       val node = new MethodNode(methodNode.getId, invokee, methodNode.getName,
         methodNode.getArgumentList.asScala.toVector.map(_.longValue()))
-      addNode(methodNode.getId, node)
+      addNode(node)
       (methodNode.getId, node)
     }
     /* misc nodes */
     protobuf.getMiscNodeList.foreach { miscNode =>
       val node = new MiscNode(miscNode.getId)
-      addNode(miscNode.getId, node)
+      addNode(node)
       (miscNode.getId, node)
     }
 
     /* edges */
     protobuf.getControlEdgeList.foreach { protoEdge =>
       val edge = new ControlEdge(protoEdge.getId, protoEdge.getFrom, protoEdge.getTo)
-      addEdge(protoEdge.getId, edge)
+      addEdge(edge)
     }
 
     protobuf.getUseEdgeList.foreach { protoEdge =>
       val edge = new UseEdge(protoEdge.getId, protoEdge.getFrom, protoEdge.getTo)
-      addEdge(protoEdge.getId, edge)
+      addEdge(edge)
     }
 
     protobuf.getDefEdgeList.foreach { protoEdge =>
       val edge = new DefEdge(protoEdge.getId, protoEdge.getFrom, protoEdge.getTo)
-      addEdge(protoEdge.getId, edge)
+      addEdge(edge)
     }
 
     protobuf.getTransEdgeList.foreach { protoEdge =>
       val edge = new TransControlEdge(protoEdge.getId, protoEdge.getFrom, protoEdge.getTo)
-      addEdge(protoEdge.getId, edge)
+      addEdge(edge)
     }
 
     protobuf.getExceptionalEdgeList.foreach { protoEdge =>
       val exception = protoEdge.getExceptionsList.toList
       val edge = new ExceptionalControlEdge(protoEdge.getId, protoEdge.getFrom,
           protoEdge.getTo, exception)
-      addEdge(protoEdge.getId, edge)
+      addEdge(edge)
     }
 
     /* get the edge labels */
