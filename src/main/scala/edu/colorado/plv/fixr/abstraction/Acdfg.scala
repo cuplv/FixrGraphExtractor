@@ -1,11 +1,6 @@
-
 package edu.colorado.plv.fixr.abstraction
 
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
-import soot.jimple.{AssignStmt, IdentityStmt, InvokeStmt}
-import soot.jimple.internal.JimpleLocal
-import soot.toolkits.graph.{MHGDominatorsFinder, MHGPostDominatorsFinder}
-
 import scala.collection.JavaConversions.asScalaIterator
 import scala.collection.mutable.ArrayBuffer
 import org.slf4j.Logger
