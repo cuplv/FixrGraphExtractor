@@ -173,6 +173,12 @@ class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
         dotEdge.setAttribute("Damping", "0.7")
         edgeToDraw
       }
+      case (edge : ExceptionalControlEdge) => {
+        var dotEdge : DotGraphEdge = canvas.drawEdge(e.from.toString, e.to.toString)
+        dotEdge.setAttribute("color", "purple")
+        dotEdge.setAttribute("Damping", "0.7")
+        edgeToDraw
+      }      
       case _ => edgeToDraw
     }
   }
@@ -181,8 +187,8 @@ class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
 
     var canvas : DotGraph = initDotGraph(null)
     var sourceInfo = acdfg.getSourceInfo
-    var acdfgLabel = if (sourceInfo.className != "" ||
-      sourceInfo.methodName != "")
+    var acdfgLabel = if (null != sourceInfo && (sourceInfo.className != "" ||
+      sourceInfo.methodName != ""))
       s"${sourceInfo.className}.${sourceInfo.methodName}"
     else "ACDFG"
 

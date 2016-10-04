@@ -20,6 +20,8 @@ import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
 import soot.options.Options
 import scala.collection.JavaConversions._
+import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
+import edu.colorado.plv.fixr.abstraction.ExceptionalControlEdge
 
 /**
   * The class invokes Soot and parses the acdfg.UnitTest class in the testClass
@@ -90,7 +92,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     val callNode = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethod", Vector(0,1,2))
 
     def testRes(acdfg : Acdfg) = {
-      assert (AcdfgUnitTest.getNode(acdfg, callNode).size == 1)    
+      assert (AcdfgUnitTest.getNode(acdfg, callNode).size == 1)
       assert (AcdfgUnitTest.getNode(acdfg, l0Node).size == 1)
       assert (AcdfgUnitTest.getNode(acdfg, l1Node).size == 1)
       assert (AcdfgUnitTest.getNode(acdfg, l2Node).size == 1)
@@ -102,47 +104,47 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
       assert(AcdfgUnitTest.getEdges(acdfg, thisNode, callNode).size == 1)
     }
     testRes(acdfg)
-    
+
     val acdfgFromProto = new Acdfg(acdfg.toProtobuf)
     testRes(acdfgFromProto)
   }
-  
-   
+
+
   test("ACDFGDom") {
     val body = getEmptyMethod.getActiveBody
     val l0 = SootHelper.addLocal(body, "l0", IntType.v())
-        
+
     val toCallA : SootMethod = this.getTestClass().getMethodByName("testMethodA")
     val toCallB : SootMethod = this.getTestClass().getMethodByName("testMethodB")
     val toCallC : SootMethod = this.getTestClass().getMethodByName("testMethodC")
     val toCallD : SootMethod = this.getTestClass().getMethodByName("testMethodD")
-    
-    val nA = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(body.getThisLocal, toCallA.makeRef(), List[soot.Value]()))                
+
+    val nA = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(body.getThisLocal, toCallA.makeRef(), List[soot.Value]()))
     val nB = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(body.getThisLocal, toCallB.makeRef(), List[soot.Value]()))
     val nC = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(body.getThisLocal, toCallC.makeRef(), List[soot.Value]()))
-    val nD = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(body.getThisLocal, toCallD.makeRef(), List[soot.Value]()))   
+    val nD = Jimple.v().newInvokeStmt(Jimple.v().newVirtualInvokeExpr(body.getThisLocal, toCallD.makeRef(), List[soot.Value]()))
     val goto= Jimple.v().newGotoStmt(Jimple.v().newStmtBox(nD))
     val condition = Jimple.v().newEqExpr(l0, IntConstant.v(0))
-    
+
     val nif = Jimple.v().newIfStmt(condition, nB)
-    
+
     body.getUnits.add(nA)
     body.getUnits.add(nif)
     body.getUnits.add(nC)
     body.getUnits.add(goto)
     body.getUnits.add(nB)
-    body.getUnits.add(nD)       
+    body.getUnits.add(nD)
     body.getUnits.add(Jimple.v().newReturnVoidStmt())
-    
+
     /* test the method call */
-    val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)    
+    val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
     val acdfg : Acdfg = new Acdfg(cdfg, null, null)
-    
+
     val nA_ = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethodA", Vector())
     val nB_ = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethodB", Vector())
     val nC_ = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethodC", Vector())
     val nD_ = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethodD", Vector())
-    
+
     assert (AcdfgUnitTest.getNode(acdfg, nA_).size == 1)
     assert (AcdfgUnitTest.getNode(acdfg, nB_).size == 1)
     assert (AcdfgUnitTest.getNode(acdfg, nC_).size == 1)
@@ -156,28 +158,37 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
       assert(edges1.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges1.get(0), domList))
       val edges2 = AcdfgUnitTest.getEdges(acdfg, nA_, nD_)
       assert(edges2.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges2.get(0), List(EdgeLabel.SRC_DOMINATE_DST, EdgeLabel.DST_POSDOMINATE_SRC)))
-    
+
       val edges3 = AcdfgUnitTest.getEdges(acdfg, nB_, nD_)
       assert(edges3.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges3.get(0), List(EdgeLabel.DST_POSDOMINATE_SRC)))
       val edges4 = AcdfgUnitTest.getEdges(acdfg, nB_, nD_)
       assert(edges4.size == 1 && AcdfgUnitTest.hasLabel(acdfg, edges4.get(0), List(EdgeLabel.DST_POSDOMINATE_SRC)))
-    }    
+    }
     testRes(acdfg)
-    
+
     val acdfgFromProto = new Acdfg(acdfg.toProtobuf)
     testRes(acdfgFromProto)
   }
-  
+
   test("ACDFGExceptionalFlow") {
     val sootMethod = this.getTestClass().getMethodByName("testMethodE")
-    
+
     val body = sootMethod.retrieveActiveBody()
-    
 
     /* test the method call */
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
-    //System.out.println(body.getTraps().toString())
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null)    
+    
+    val absNode = new MethodNode(4, None, "java.lang.Math.abs", Vector())
+    val caughtNode = new MethodNode(4, None, "java.lang.Math.abs", Vector())
+    val absNodes = AcdfgUnitTest.getNode(acdfg, absNode)
+    assert (absNodes.size == 1)
+    
+    val node = absNodes.get(0)    
+    val nodeEdges = AcdfgUnitTest.getEdges(acdfg, node)
+    assert (nodeEdges.size == 5)
+    val exEdges = nodeEdges.filter (x => x.isInstanceOf[ExceptionalControlEdge])
+    assert (exEdges.size == 1)
   }
 }
 
@@ -218,8 +229,19 @@ object AcdfgUnitTest {
     }) /* foldLeft on nodesFrom */
 
     edgeList
+  }  
+
+  def getEdges(acdfg : Acdfg, fromNode : Node) : List[Edge] = {
+    val nodesFrom = AcdfgUnitTest.getNode(acdfg, fromNode)
+    val edgeList = nodesFrom.foldLeft(List[Edge]()) ( (edgeList, fromNode) => {
+      acdfg.edges.foldLeft (edgeList) ({
+        (res,edge) => if (edge._2.from == fromNode.id) edge._2 :: res else res
+      })
+    })      
+    edgeList
   }
 
+  
   /**
     * Eq n1 and n2.
     * The equality is shallow, since it does not compare subnodes (they are ids)
@@ -254,12 +276,12 @@ object AcdfgUnitTest {
         if (AcdfgUnitTest.eqNodes(node, nodeAcdfg)) {
           nodeAcdfg :: res
         }
-        else res        
+        else res
       })
     }
     getNodeAux(acdfg, node, List[Node]())
   }
-  
+
   def hasLabel(acdfg : Acdfg,  e : Edge, refLabels : List[EdgeLabel.Value]) = {
     acdfg.edgesLabel.get(e.id) match {
       case Some(labelSet : Acdfg.LabelsSet) => {
@@ -269,5 +291,5 @@ object AcdfgUnitTest {
       case _ => false
     }
   }
-  
+
 }

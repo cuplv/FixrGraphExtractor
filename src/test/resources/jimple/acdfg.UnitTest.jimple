@@ -51,7 +51,7 @@ public class acdfg.UnitTest extends java.lang.Object
    label3:
       e := @caughtexception;
 
-      staticinvoke <java.lang.Math: int abs(int)>(i);
+      staticinvoke <java.lang.Math: int max(int,int)>(i,i);
 
       goto label4;
 
