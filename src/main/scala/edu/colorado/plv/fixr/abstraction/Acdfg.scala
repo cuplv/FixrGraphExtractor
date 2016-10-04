@@ -15,6 +15,9 @@ import edu.colorado.plv.fixr.protobuf.ProtoAcdfg
 import scala.collection.mutable.{Set, HashSet}
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
+import soot.toolkits.exceptions.ThrowableSet
+import soot.Trap
+import soot.toolkits.exceptions.ThrowAnalysisFactory
 
 /**
   * Acdfg
@@ -122,6 +125,27 @@ case class TransControlEdge(
   override val to   : Long
 ) extends Edge
 
+/** Represent an exceptional control flow edge
+ *  The edge represent the change of control flow from a node to another
+ *  node due to an exception.
+ *
+ *  The same edge can be labeled with multiple exceptions.
+ */
+case class ExceptionalControlEdge (
+  override val id   : Long,
+  override val from : Long,
+  override val to   : Long,
+  /* list of exceptions (string) catched by the exceptional edge */
+  val exceptions : List[String]
+) extends Edge {
+  override def toString = this.getClass.getSimpleName +
+      "(id: "     + id.toString   +
+      ", to: "    + to.toString   +
+      ", from: "  + from.toString +
+      ", exceptions: [" + exceptions.mkString(",") +
+      "])"
+}
+
 case class GitHubRecord(
   userName   : String,
   repoName   : String,
@@ -143,7 +167,7 @@ case class AdjacencyList(nodes : Vector[Node], edges : Vector[Edge])
 
 object EdgeLabel extends Enumeration {
   type EdgeLabel = Value
-  val EXCEPTIONAL_EDGE, SRC_DOMINATE_DST, DST_POSDOMINATE_SRC = Value
+  val SRC_DOMINATE_DST, DST_POSDOMINATE_SRC = Value
 }
 
 class Acdfg(adjacencyList: AdjacencyList,
@@ -151,7 +175,7 @@ class Acdfg(adjacencyList: AdjacencyList,
   protobuf : ProtoAcdfg.Acdfg,
   gitHubRecord : GitHubRecord,
   sourceInfo : SourceInfo) {
-  
+
   val logger : Logger = LoggerFactory.getLogger(classOf[Acdfg])
 
   /*
@@ -219,6 +243,12 @@ class Acdfg(adjacencyList: AdjacencyList,
         protoTransEdge.setFrom(edge.from)
         protoTransEdge.setTo(edge.to)
         builder.addTransEdge(protoTransEdge)
+      case (id : Long, edge : ExceptionalControlEdge) =>
+        val protoEdge = ProtoAcdfg.Acdfg.ExceptionalControlEdge.newBuilder()
+        protoEdge.setId(id)
+        protoEdge.setFrom(edge.from)
+        protoEdge.setTo(edge.to)
+        edge.exceptions.foreach { x => protoEdge.addExceptions(x) }
     }
 
     /* Add the node labels */
@@ -228,14 +258,14 @@ class Acdfg(adjacencyList: AdjacencyList,
         edgeBuilder.setEdgeId(id)
         label.foreach { x => x match {
           case x if x == EdgeLabel.SRC_DOMINATE_DST => edgeBuilder.addLabels(ProtoAcdfg.Acdfg.EdgeLabel.DOMINATE)
-          case x if x == EdgeLabel.DST_POSDOMINATE_SRC => edgeBuilder.addLabels(ProtoAcdfg.Acdfg.EdgeLabel.POSTDOMINATED) 
+          case x if x == EdgeLabel.DST_POSDOMINATE_SRC => edgeBuilder.addLabels(ProtoAcdfg.Acdfg.EdgeLabel.POSTDOMINATED)
           case _ => ???
           }
-        }        
-        builder.addEdgeLabels(edgeBuilder)        
+        }
+        builder.addEdgeLabels(edgeBuilder)
       }
     }
-    
+
     var methodBag : scala.collection.mutable.ArrayBuffer[String] =
       new scala.collection.mutable.ArrayBuffer[String]()
 
@@ -289,7 +319,7 @@ class Acdfg(adjacencyList: AdjacencyList,
       protoSrcTag.setAbsSourceClassName(sourceInfo.absSourceClassName)
       builder.setSourceInfo(protoSrcTag)
     }
-    
+
     // add bag of methods
     val protoMethodBag = ProtoAcdfg.Acdfg.MethodBag.newBuilder()
     methodBag.sorted.foreach(protoMethodBag.addMethod)
@@ -387,6 +417,7 @@ class Acdfg(adjacencyList: AdjacencyList,
       new MHGDominatorsFinder[soot.Unit](ug)
     val postDominators : MHGPostDominatorsFinder[soot.Unit] =
       new MHGPostDominatorsFinder[soot.Unit](ug)
+    val exceptionMap = Acdfg.getExceptionMap(cdfg)
 
     val defEdges = cdfg.defEdges()
     val useEdges = cdfg.useEdges()
@@ -463,23 +494,35 @@ class Acdfg(adjacencyList: AdjacencyList,
         edgePairToId += (((fromId, toId), id))
       }
 
+      def addExceptionalEdge(fromId : Long, toId : Long,
+        exceptions : List[String], labels : Acdfg.LabelsSet): Unit = {
+        val id = getNewId
+        val edge = new ExceptionalControlEdge(id, fromId, toId, exceptions)
+        addEdge(id, edge, labels)
+        edgePairToId += (((fromId, toId), id))
+      }
+
+      def addControEdgeAux(from : soot.Unit, to : soot.Unit,
+        fromId : Long, toId : Long) : Unit= {
+        val labelSet = Acdfg.getLabelSet(from, to, dominators, postDominators)
+
+        if (! edgePairToId.contains(fromId, toId)) {
+          exceptionMap.get((from,to)) match {
+            case Some(exceptions) =>
+              addExceptionalEdge(fromId, toId, exceptions, labelSet)
+            case None => addControlEdge(fromId, toId, labelSet)
+          }
+        }
+      }
+
       // add predecessor edges, if not extant
       val unitId = unitToId(unit)
-
-      cdfg.getPredsOf(unit).iterator().foreach{ (predUnit) => 
-        val labelSet = Acdfg.getLabelSet(predUnit, unit, dominators, postDominators)
-        val predUnitId = unitToId(predUnit)
-        if (!edgePairToId.contains(predUnitId, unitId)) {
-          addControlEdge(predUnitId, unitId, labelSet)
-        }
+      cdfg.getPredsOf(unit).iterator().foreach{ (predUnit) =>
+        addControEdgeAux(predUnit, unit, unitToId(predUnit), unitId)
       }
       // add succesor edges, if not extant
       cdfg.getSuccsOf(unit).iterator().foreach{ (succUnit) =>
-        val labelSet = Acdfg.getLabelSet(unit, succUnit, dominators, postDominators)
-        val succUnitId = unitToId(succUnit)
-        if (!edgePairToId.contains(unitId, succUnitId)) {
-          addControlEdge(unitId, succUnitId, labelSet)
-        }
+        addControEdgeAux(unit, succUnit, unitId, unitToId(succUnit))
       }
     }
 
@@ -768,9 +811,16 @@ class Acdfg(adjacencyList: AdjacencyList,
       val edge = new TransControlEdge(protoEdge.getId, protoEdge.getFrom, protoEdge.getTo)
       addEdge(protoEdge.getId, edge)
     }
-    
+
+    protobuf.getExceptionalEdgeList.foreach { protoEdge =>
+      val exception = protoEdge.getExceptionsList.toList
+      val edge = new ExceptionalControlEdge(protoEdge.getId, protoEdge.getFrom,
+          protoEdge.getTo, exception)
+      addEdge(protoEdge.getId, edge)
+    }
+
     /* get the edge labels */
-    protobuf.getEdgeLabelsList.foreach { labelMap => {        
+    protobuf.getEdgeLabelsList.foreach { labelMap => {
       val labelsList = labelMap.getLabelsList.foldLeft(List[EdgeLabel.Value]())({
         (res, x) => {
           x match {
@@ -778,12 +828,12 @@ class Acdfg(adjacencyList: AdjacencyList,
               EdgeLabel.SRC_DOMINATE_DST :: res
             case x if x == ProtoAcdfg.Acdfg.EdgeLabel.POSTDOMINATED =>
               EdgeLabel.DST_POSDOMINATE_SRC :: res
-            case _ => ???            
+            case _ => ???
           }
         }
       })
       val labelSet = scala.collection.immutable.HashSet[EdgeLabel.Value]() ++ labelsList
-      this.edgesLabel += ((labelMap.getEdgeId, labelSet))      
+      this.edgesLabel += ((labelMap.getEdgeId, labelSet))
     }}
 
     if ((!protobuf.getMethodBag.isInitialized) ||
@@ -831,7 +881,7 @@ class Acdfg(adjacencyList: AdjacencyList,
     val eqedges = du.edges.isEmpty
     val eqgh = this.gitHubRecord.equals(that.getGitHubRecord)
     val eqsource = this.sourceInfo.equals(that.getSourceInfo)
-    
+
     eqnodes && eqedges && eqgh && eqsource
   }
 
@@ -846,24 +896,24 @@ class Acdfg(adjacencyList: AdjacencyList,
   override def toString = {
     // Inefficient - TODO: use buffer instead of string concat
     var output : String = "ACDFG:" + "\n"
-    
+
     output += ("  " + "Nodes:\n")
     nodes.foreach(node => output += ("    " + node.toString()) + "\n")
     output += "\n"
-    
+
     output += ("  " + "Edges:\n")
     edges.foreach(edge => {
       output += ("    " + edge.toString()) + "\n"
-      this.edgesLabel.get(edge._1) match {        
+      this.edgesLabel.get(edge._1) match {
         case Some(labelsList) => {
           val labels = labelsList.foldLeft ("    Labels:"){ (res,x) => res + " " + x.toString }
-          
-          output += labels + "\n"        
+
+          output += labels + "\n"
         }
         case None => ()
       }
     })
-    
+
     output
   }
 
@@ -871,6 +921,9 @@ class Acdfg(adjacencyList: AdjacencyList,
 
 object Acdfg {
   type LabelsSet = scala.collection.immutable.Set[EdgeLabel.Value]
+  type TrapMap = scala.collection.immutable.HashMap[(soot.Unit,soot.Unit),
+    List[String]]
+
 
   /** Return the set of labels for the edge fromfromUnit to toUnit
     *
@@ -889,8 +942,64 @@ object Acdfg {
 //    println("TO: " + toUnit.toString())
 //    println("Dominates: " + dominates.toString())
 //    println("PostDominated: " + postDominated.toString())
-    
+
     val labelSet = scala.collection.immutable.HashSet[EdgeLabel.Value]() ++ l2
     labelSet
+  }
+
+  /** Return a map from couples of units to a list of exceptions */
+  def getExceptionMap(cdfg : UnitCdfgGraph) : TrapMap = {
+    /* Process all the traps in cdfg */
+
+    val units = cdfg.getBody().getUnits()
+    val trapList = cdfg.getBody().getTraps().toList
+    /* Possible optimization: reuse the throwable analyis in the exceptional
+     control flow graph */
+    val throwAnalysis = ThrowAnalysisFactory.checkInitThrowAnalysis();
+
+
+    val initMap = new scala.collection.immutable.HashMap[(soot.Unit,soot.Unit),List[String]]()
+    val exceptionMap = trapList.foldLeft (initMap) {
+      (exceptionMap, trap) => {
+        val catcher : soot.RefType = trap.getException().getType()
+        var handler : soot.Unit = trap.getHandlerUnit();
+        val trapException : String = trap.getException().toString
+        val lastUnitInTrap : soot.Unit = units.getPredOf(trap.getEndUnit())
+
+        def processUnits(trapUnitIter : Iterator[soot.Unit],
+          trapMap : TrapMap) : TrapMap = {
+          if (trapUnitIter.hasNext) {
+            val srcUnit = trapUnitIter.next()
+            val thrownSet : ThrowableSet = throwAnalysis.mightThrow(srcUnit)
+            val caughtException : ThrowableSet =
+              thrownSet.whichCatchableAs(catcher).getCaught()
+
+            if (! caughtException.equals(ThrowableSet.Manager.v().EMPTY)) {
+              val key = (srcUnit, handler)
+
+              val newTrapMap : TrapMap = trapMap.get(key) match {
+                case Some(exceptionList) => {
+                  val newList = trapException :: exceptionList                
+                  trapMap + (key -> newList)
+                }
+                case None => trapMap + (key -> List[String](trapException))
+              }
+
+              processUnits(trapUnitIter, newTrapMap)
+            }
+            else processUnits(trapUnitIter, trapMap)
+          }
+          else {
+            trapMap
+          }
+        } /* processUnits */
+
+        val trapUnitIter = units.iterator(trap.getBeginUnit(), lastUnitInTrap)
+
+        processUnits(trapUnitIter, exceptionMap)
+      } /* foldLeft on traps */
+    }
+
+    exceptionMap
   }
 }

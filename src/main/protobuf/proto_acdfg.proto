@@ -42,10 +42,16 @@ message Acdfg {
     required uint64 to   = 3;
   }
 
+  message ExceptionalControlEdge {
+    required uint64 id   = 1;
+    required uint64 from = 2;
+    required uint64 to   = 3;
+    repeated string exceptions = 4;
+  }
+
   enum EdgeLabel {
-    EXCEPTIONAL = 0;
-    DOMINATE = 1;
-    POSTDOMINATED = 2;
+    DOMINATE = 0;
+    POSTDOMINATED = 1;
   }
 
   message LabelMap {
@@ -86,6 +92,7 @@ message Acdfg {
   repeated DefEdge     def_edge     = 5;
   repeated UseEdge     use_edge     = 6;
   repeated TransEdge   trans_edge   = 7;
+  repeated ExceptionalControlEdge exceptional_edge = 12;  
 
   /* labels on edges */
   repeated LabelMap edge_labels = 11;
