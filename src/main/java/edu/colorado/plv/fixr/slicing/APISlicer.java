@@ -156,7 +156,7 @@ public class APISlicer {
       {
         ExceptionalUnitGraph c = new ExceptionalUnitGraph(this.cfg.getBody());
         SootHelper.dumpToDot(c, this.cfg.getBody(), "/tmp/eug.dot");
-            
+
         SootHelper.dumpToDot(this.cfg, this.cfg.getBody(), "/tmp/cfg.dot");
         SootHelper.dumpToDot(ddg, this.cfg.getBody(), "/tmp/ddg.dot");
         SootHelper.dumpToDot(pdg, this.cfg.getBody(), "/tmp/pdg.dot");
@@ -743,12 +743,12 @@ public class APISlicer {
                 dstFirstUnitInTrap, dstLastUnitInTrap,
                 dstHandler);
             dstTrapsChain.addLast(dstTrap);
-            bindings.put(trap, dstTrap);          
+            bindings.put(trap, dstTrap);
           }
           else {
             logger.warn("Skipping trap...");
           }
-          
+
         }
 
         {
@@ -1045,7 +1045,7 @@ public class APISlicer {
           GotoStmt gotoStmt = (GotoStmt) sourceUnit;
           Unit target = gotoStmt.getTarget();
           target = this.getDefaultTarget(target);
-          
+
           /* use the target as label */
           addToMapO(condition2targets, DEFAULT_LABEL, target);
           addToMapU(target2conditions, target, DEFAULT_LABEL);
@@ -1100,7 +1100,7 @@ public class APISlicer {
 
       /**
        * Handle the default target in the case of exceptions
-       * 
+       *
        * @param target
        * @return
        */
@@ -1118,10 +1118,10 @@ public class APISlicer {
             }
           }
           throw new RuntimeException("Default successors not found!");
-         
+
         }
       }
-      
+
       private void setDefaultTargetSwitch(Map<Object, List<Unit>> c2t,
           Unit defaultTarget, SwitchStmt switchStmt)
       {
