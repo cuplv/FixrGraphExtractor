@@ -63,6 +63,13 @@ abstract class Node {
         "name: "      + n.name.toString + ", " +
         "arguments: [" + n.argumentIds.map(_.toString).mkString(", ") + "]" +
         ")"
+    case n : ConstDataNode =>
+      n.getClass.getSimpleName + "(" +
+        "id: " + n.id.toString + ", " +
+        "name: " + n.name +
+        "value:" + n.value
+        "type: " + n.datatype +
+        ")"
     case n : DataNode =>
       n.getClass.getSimpleName + "(" +
         "id: "+ n.id.toString + ", " +
@@ -71,12 +78,25 @@ abstract class Node {
         ")"
     case n => this.getClass.getSimpleName + "(" + id.toString + ")"
   }
-
 }
 
 abstract class CommandNode extends Node
 
-case class DataNode(override val id : Long, name : String, datatype : String) extends Node
+abstract class DataNode() extends Node {
+  override val id : Long
+  val name : String
+  val datatype : String
+}
+
+case class VarDataNode(override val id : Long,
+  override val name : String,
+  override val datatype : String) extends DataNode
+
+case class ConstDataNode(
+  override val id : Long,
+  override val name : String,
+  override val datatype : String,
+  val value : String) extends DataNode
 
 case class MethodNode(override val id : Long,
   //  note: assignee is NOT used to generate Protobuf
@@ -94,12 +114,24 @@ abstract class Edge {
   val from : Long
   val id   : Long
 
-  override def toString = this.getClass.getSimpleName +
+  override def toString = this match {
+    case n : ExceptionalControlEdge =>
+      this.getClass.getSimpleName +
+      "(id: "     + n.id.toString   +
+      ", to: "    + n.to.toString   +
+      ", from: "  + n.from.toString +
+      ", exceptions: [" + n.exceptions.mkString(",") +
+      "])"
+    case n =>
+      this.getClass.getSimpleName +
       "(id: "     + id.toString   +
       ", to: "    + to.toString   +
       ", from: "  + from.toString +
       ")"
+  }
 }
+
+
 
 case class DefEdge(
   override val id   : Long,
@@ -137,14 +169,7 @@ case class ExceptionalControlEdge (
   override val to   : Long,
   /* list of exceptions (string) catched by the exceptional edge */
   val exceptions : List[String]
-) extends Edge {
-  override def toString = this.getClass.getSimpleName +
-      "(id: "     + id.toString   +
-      ", to: "    + to.toString   +
-      ", from: "  + from.toString +
-      ", exceptions: [" + exceptions.mkString(",") +
-      "])"
-}
+) extends Edge
 
 case class GitHubRecord(
   userName   : String,
@@ -620,8 +645,8 @@ class Acdfg(adjacencyList: AdjacencyList,
     /* Data nodes */
     cdfg.localsIter().foreach {
       case local : JimpleLocal => {
-        val id = getNewId
-        val node = new DataNode(id, local.getName, local.getType.toString)
+        val id = getNewId        
+        val node = new VarDataNode(id, local.getName, local.getType.toString)
         localToId += ((local, id))
         addNode(id, node)
       }
@@ -773,7 +798,8 @@ class Acdfg(adjacencyList: AdjacencyList,
 
     /* add data nodes */
     protobuf.getDataNodeList.foreach { dataNode =>
-      val node = new DataNode(dataNode.getId, dataNode.getName, dataNode.getType)
+      // TODO change to check for constants
+      val node = new VarDataNode(dataNode.getId, dataNode.getName, dataNode.getType)
       addNode(dataNode.getId, node)
     }
     /* method nodes */

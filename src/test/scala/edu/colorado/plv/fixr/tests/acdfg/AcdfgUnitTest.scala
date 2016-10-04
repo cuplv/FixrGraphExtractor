@@ -4,7 +4,7 @@ import edu.colorado.plv.fixr.tests.{TestClassBase}
 
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
 import edu.colorado.plv.fixr.abstraction.{Acdfg, AdjacencyList, EdgeLabel}
-import edu.colorado.plv.fixr.abstraction.{Node, Edge, DataNode, MethodNode, UseEdge, MiscNode}
+import edu.colorado.plv.fixr.abstraction.{Node, Edge, MethodNode, UseEdge, MiscNode}
 
 import soot.{SootClass, SootMethod, Body}
 import soot.{IntType, Type, RefType, ArrayType, VoidType}
@@ -22,6 +22,7 @@ import soot.options.Options
 import scala.collection.JavaConversions._
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
 import edu.colorado.plv.fixr.abstraction.ExceptionalControlEdge
+import edu.colorado.plv.fixr.abstraction.{DataNode, VarDataNode}
 
 /**
   * The class invokes Soot and parses the acdfg.UnitTest class in the testClass
@@ -85,10 +86,10 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
     val acdfg : Acdfg = new Acdfg(cdfg, null, null)
 
-    val l0Node = new DataNode(0, "l0", "int")
-    val l1Node = new DataNode(1, "l1", "int")
-    val l2Node = new DataNode(2, "l2", "int")
-    val thisNode = new DataNode(3, "this", "acdfg.UnitTest")
+    val l0Node = new VarDataNode(0, "l0", "int")
+    val l1Node = new VarDataNode(1, "l1", "int")
+    val l2Node = new VarDataNode(2, "l2", "int")
+    val thisNode = new VarDataNode(3, "this", "acdfg.UnitTest")
     val callNode = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethod", Vector(0,1,2))
 
     def testRes(acdfg : Acdfg) = {

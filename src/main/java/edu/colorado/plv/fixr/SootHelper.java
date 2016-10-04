@@ -30,6 +30,13 @@ import soot.tagkit.LineNumberTag;
 import soot.tagkit.SourceFileTag;
 import soot.tagkit.SourceLnNamePosTag;
 
+import soot.tagkit.ConstantValueTag;
+import soot.tagkit.DoubleConstantValueTag;
+import soot.tagkit.FloatConstantValueTag;
+import soot.tagkit.IntegerConstantValueTag;
+import soot.tagkit.LongConstantValueTag;
+import soot.tagkit.StringConstantValueTag;
+
 public class SootHelper {
   public static void reset() {
     G.reset();
@@ -256,11 +263,55 @@ public class SootHelper {
 
   public static Local addLocal(Body body, String name, Type type) {
     Local local = Jimple.v().newLocal(name, type);
-    body.getLocals().add(local);    
+    body.getLocals().add(local);
     return local;
   }
-  
-  
+
+  /** Returns a true if the local l is a constant
+   *
+   * A constant is a final static local
+   *
+   * @param l a local
+   * @return true if l is a constant
+   */
+  public static boolean isLocalConstant(Local l) {    
+    return false;
+  }
+
+  /** Returns a <bf>String</bf> representation of the constant value
+   *  associated to the host code
+   *
+   * @param host code element
+   * @return the constant value of code if it exsits, null otherwise
+   */
+  public static String getConstantValue(AbstractHost code) {
+    /* solution that should works both on bytecode and on sources */
+    String value = null;
+    Tag tag = code.getTag("ConstantValue");
+
+    if (null != tag && tag instanceof ConstantValueTag) {
+      if (tag instanceof DoubleConstantValueTag) {
+        double val = ((DoubleConstantValueTag) tag).getDoubleValue();
+        value = String.valueOf(val);
+      } else if (tag instanceof FloatConstantValueTag) {
+        float val = ((FloatConstantValueTag) tag).getFloatValue();
+        value = String.valueOf(val);
+      } else if (tag instanceof IntegerConstantValueTag) {
+        int val = ((IntegerConstantValueTag) tag).getIntValue();
+        value = String.valueOf(val);
+      } else if (tag instanceof LongConstantValueTag) {
+        long val = ((LongConstantValueTag) tag).getLongValue();
+        value = String.valueOf(val);
+      } else if (tag instanceof StringConstantValueTag) {
+        value = ((StringConstantValueTag) tag).getStringValue();
+      } else {
+        /* do nothing */
+      }
+    }
+
+    return value;
+  }
+
   /** Returns the line number of the code element host
    * or 0 if the line number tag does not exists
    *
