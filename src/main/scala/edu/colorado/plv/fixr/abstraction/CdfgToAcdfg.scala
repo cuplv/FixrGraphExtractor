@@ -35,6 +35,8 @@ import soot.jimple.Stmt
 import soot.jimple.StmtSwitch
 import soot.jimple.TableSwitchStmt
 import soot.jimple.ThrowStmt
+import soot.jimple.FieldRef
+import soot.jimple.InstanceFieldRef
 import soot.jimple.internal.AbstractInstanceInvokeExpr
 
 import soot.toolkits.exceptions.ThrowAnalysisFactory
@@ -479,6 +481,24 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
     val assignee = stmt.getLeftOp
     if (stmt.containsInvokeExpr()) {
       addMethod(stmt, Some(assignee))
+    }
+    else if (assignee.isInstanceOf[InstanceFieldRef]) {
+      /* set field */
+      val field = assignee.asInstanceOf[InstanceFieldRef]
+      val base = field.getBase
+      val baseId = cdfgToAcdfg.lookupOrCreateNode(base)
+      val typeStr = field.getField.getType.toString()
+      val fieldName = field.getField.getName
+      val declClass = field.getField.getDeclaringClass
+
+      val methodName =
+        FakeMethods.SET_METHOD + "." +
+        declClass + "."  +
+        fieldName + "_" +
+        typeStr
+
+      val mNode = cdfgToAcdfg.addMethodNode(stmt, None,
+          Some(baseId), methodName, List[Long]())
     }
     else {
       addMisc(stmt)

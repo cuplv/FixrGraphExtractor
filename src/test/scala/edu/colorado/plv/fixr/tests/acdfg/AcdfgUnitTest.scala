@@ -244,7 +244,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
 
     def testRes(acdfg : Acdfg) {
       val access = new MethodNode(4, None, None,
-        FakeMethods.GET_METHOD + ".acdfg.AcdfgUnittest.pero", Vector())
+        FakeMethods.GET_METHOD + ".acdfg.UnitTest.pero_int", Vector())
       val nodes = AcdfgUnitTest.getNode(acdfg, access)
       assert (nodes.size == 1)
     }
@@ -262,7 +262,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
 
     def testRes(acdfg : Acdfg) {
       val set = new MethodNode(4, None, None,
-        FakeMethods.SET_METHOD +".acdfg.AcdfgUnittest.pero", Vector())
+        FakeMethods.SET_METHOD +".acdfg.UnitTest.pero_int", Vector())
       val nodes = AcdfgUnitTest.getNode(acdfg, set)
       assert (nodes.size == 1)
     }
