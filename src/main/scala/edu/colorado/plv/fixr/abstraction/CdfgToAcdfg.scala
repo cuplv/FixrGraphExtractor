@@ -477,14 +477,12 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
     cdfgToAcdfg.addDefEdges(stmt, mNode.id)
   }
 
+
   override def caseAssignStmt(stmt : AssignStmt): Unit = {
-    val assignee = stmt.getLeftOp
-    if (stmt.containsInvokeExpr()) {
-      addMethod(stmt, Some(assignee))
-    }
-    else if (assignee.isInstanceOf[InstanceFieldRef]) {
-      /* set field */
-      val field = assignee.asInstanceOf[InstanceFieldRef]
+    def fieldAsMethodCall(stmt : AssignStmt,
+        field : InstanceFieldRef,
+        prefix : String,
+        assignee : Option[Long]) = {
       val base = field.getBase
       val baseId = cdfgToAcdfg.lookupOrCreateNode(base)
       val typeStr = field.getField.getType.toString()
@@ -492,13 +490,28 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
       val declClass = field.getField.getDeclaringClass
 
       val methodName =
-        FakeMethods.SET_METHOD + "." +
+        prefix + "." +
         declClass + "."  +
         fieldName + "_" +
         typeStr
 
-      val mNode = cdfgToAcdfg.addMethodNode(stmt, None,
+      val mNode = cdfgToAcdfg.addMethodNode(stmt, assignee,
           Some(baseId), methodName, List[Long]())
+    }
+
+    val assignee = stmt.getLeftOp
+    val rhs = stmt.getRightOp
+    if (stmt.containsInvokeExpr()) {
+      addMethod(stmt, Some(assignee))
+    }
+    else if (assignee.isInstanceOf[InstanceFieldRef]) {
+      fieldAsMethodCall(stmt, assignee.asInstanceOf[InstanceFieldRef],
+        FakeMethods.SET_METHOD, None)
+    }
+    else if (rhs.isInstanceOf[InstanceFieldRef]) {
+        val assigneeId = cdfgToAcdfg.lookupOrCreateNode(assignee)
+        fieldAsMethodCall(stmt, rhs.asInstanceOf[InstanceFieldRef],
+          FakeMethods.GET_METHOD, Some(assigneeId))
     }
     else {
       addMisc(stmt)

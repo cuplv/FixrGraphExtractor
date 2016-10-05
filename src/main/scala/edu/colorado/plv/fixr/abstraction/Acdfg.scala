@@ -638,4 +638,10 @@ class Acdfg(adjacencyList: AdjacencyList,
 
 object Acdfg {
   type LabelsSet = scala.collection.immutable.Set[EdgeLabel.Value]
+
+  def isFakeMethod(methodName : String) = {
+    methodName.startsWith(FakeMethods.RETURN_METHOD) ||
+    methodName.startsWith(FakeMethods.GET_METHOD) ||
+    methodName.startsWith(FakeMethods.SET_METHOD)
+  }
 }
