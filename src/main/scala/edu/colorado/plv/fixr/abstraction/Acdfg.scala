@@ -61,8 +61,7 @@ abstract class Node {
     case n : ConstDataNode =>
       n.getClass.getSimpleName + "(" +
         "id: " + n.id.toString + ", " +
-        "name: " + n.name +
-        "value:" + n.value
+        "value: " + n.name +
         "type: " + n.datatype +
         ")"
     case n : DataNode =>
@@ -89,10 +88,10 @@ case class VarDataNode(override val id : Long,
 
 case class ConstDataNode(
   override val id : Long,
-  override val name : String,
-  override val datatype : String,
-  val value : String) extends DataNode
+  override val name : String, /* the value of the constant */
+  override val datatype : String) extends DataNode
 
+// TODO add assignee
 case class MethodNode(override val id : Long,
   //  note: assignee is NOT used to generate Protobuf
   //  assignee : Option[String],
@@ -297,6 +296,12 @@ class Acdfg(adjacencyList: AdjacencyList,
         protoDataNode.setId(id)
         protoDataNode.setName(node.name)
         protoDataNode.setType(node.datatype)
+
+        node match {
+          case x : VarDataNode => protoDataNode.setDataType(ProtoAcdfg.Acdfg.DataNode.DataType.DATA_VAR)
+          case x : ConstDataNode => protoDataNode.setDataType(ProtoAcdfg.Acdfg.DataNode.DataType.DATA_CONST)
+        }
+
         builder.addDataNode(protoDataNode)
       case (id : Long, node : MiscNode) =>
         val protoMiscNode : ProtoAcdfg.Acdfg.MiscNode.Builder =
@@ -464,8 +469,13 @@ class Acdfg(adjacencyList: AdjacencyList,
 
     /* add data nodes */
     protobuf.getDataNodeList.foreach { dataNode =>
-      // TODO change to check for constants
-      val node = new VarDataNode(dataNode.getId, dataNode.getName, dataNode.getType)
+      var node = dataNode.getDataType match {
+        case x if x == ProtoAcdfg.Acdfg.DataNode.DataType.DATA_VAR =>
+          new VarDataNode(dataNode.getId, dataNode.getName, dataNode.getType)
+        case x if x == ProtoAcdfg.Acdfg.DataNode.DataType.DATA_CONST =>
+          new ConstDataNode(dataNode.getId, dataNode.getName, dataNode.getType)
+      }
+
       addNode(node)
     }
     /* method nodes */

@@ -49,6 +49,7 @@ abstract class TestAcdfg(classPath : String, testClassName : String,
       val acdfg: Acdfg = new Acdfg(cdfg, gr, si)
       val newAcdfg = new Acdfg(acdfg.toProtobuf)
       info(acdfg.disjointUnion(newAcdfg).toString())
+      
       assert(acdfg.==(newAcdfg))
     }    
   }

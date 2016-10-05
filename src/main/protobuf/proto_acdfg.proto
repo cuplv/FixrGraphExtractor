@@ -5,6 +5,13 @@ message Acdfg {
     required uint64 id   = 1;
     required string name = 2;
     required string type = 3;
+
+    enum DataType {
+      DATA_VAR = 0;
+      DATA_CONST = 1;
+    }
+
+    optional DataType data_type = 4;
   }
 
   message MiscNode {
