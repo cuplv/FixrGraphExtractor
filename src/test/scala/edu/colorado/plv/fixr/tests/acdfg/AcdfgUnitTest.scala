@@ -90,7 +90,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     val l1Node = new VarDataNode(1, "l1", "int")
     val l2Node = new VarDataNode(2, "l2", "int")
     val thisNode = new VarDataNode(3, "this", "acdfg.UnitTest")
-    val callNode = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethod", Vector(0,1,2))
+    val callNode = new MethodNode(4, None, Some(3), "acdfg.UnitTest.testMethod", Vector(0,1,2))
 
     def testRes(acdfg : Acdfg) = {
       assert (AcdfgUnitTest.getNode(acdfg, callNode).size == 1)
@@ -141,10 +141,10 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
     val acdfg : Acdfg = new Acdfg(cdfg, null, null)
 
-    val nA_ = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethodA", Vector())
-    val nB_ = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethodB", Vector())
-    val nC_ = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethodC", Vector())
-    val nD_ = new MethodNode(4, Some(3), "acdfg.UnitTest.testMethodD", Vector())
+    val nA_ = new MethodNode(4, None, Some(3), "acdfg.UnitTest.testMethodA", Vector())
+    val nB_ = new MethodNode(4, None, Some(3), "acdfg.UnitTest.testMethodB", Vector())
+    val nC_ = new MethodNode(4, None, Some(3), "acdfg.UnitTest.testMethodC", Vector())
+    val nD_ = new MethodNode(4, None, Some(3), "acdfg.UnitTest.testMethodD", Vector())
 
     assert (AcdfgUnitTest.getNode(acdfg, nA_).size == 1)
     assert (AcdfgUnitTest.getNode(acdfg, nB_).size == 1)
@@ -178,14 +178,14 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
 
     /* test the method call */
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)    
-    
-    val absNode = new MethodNode(4, None, "java.lang.Math.abs", Vector())
-    val caughtNode = new MethodNode(4, None, "java.lang.Math.abs", Vector())
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+
+    val absNode = new MethodNode(4, None, None, "java.lang.Math.abs", Vector())
+    val caughtNode = new MethodNode(4, None, None, "java.lang.Math.abs", Vector())
     val absNodes = AcdfgUnitTest.getNode(acdfg, absNode)
     assert (absNodes.size == 1)
-    
-    val node = absNodes.get(0)    
+
+    val node = absNodes.get(0)
     val nodeEdges = AcdfgUnitTest.getEdges(acdfg, node)
     assert (nodeEdges.size == 5)
     val exEdges = nodeEdges.filter (x => x.isInstanceOf[ExceptionalControlEdge])
@@ -230,7 +230,7 @@ object AcdfgUnitTest {
     }) /* foldLeft on nodesFrom */
 
     edgeList
-  }  
+  }
 
   def getEdges(acdfg : Acdfg, fromNode : Node) : List[Edge] = {
     val nodesFrom = AcdfgUnitTest.getNode(acdfg, fromNode)
@@ -238,11 +238,11 @@ object AcdfgUnitTest {
       acdfg.edges.foldLeft (edgeList) ({
         (res,edge) => if (edge._2.from == fromNode.id) edge._2 :: res else res
       })
-    })      
+    })
     edgeList
   }
 
-  
+
   /**
     * Eq n1 and n2.
     * The equality is shallow, since it does not compare subnodes (they are ids)

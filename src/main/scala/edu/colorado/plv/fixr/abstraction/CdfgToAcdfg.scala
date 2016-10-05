@@ -1,6 +1,5 @@
 package edu.colorado.plv.fixr.abstraction
 
-
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
 
 import scala.collection.JavaConversions.asScalaIterator
@@ -90,13 +89,13 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
             acdfg.addNode(node)
             id
           }
-          case unit : soot.Unit => {            
+          case unit : soot.Unit => {
             unit.apply(nodeCreator)
             val nodeId = lookupNodeId(v)
             nodeId match {
               case Some(id) => id
               case None => ??? // TODO raise exception
-            }            
+            }
           }
           case _ => ??? // TODO raise exception
         }
@@ -111,7 +110,7 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
   def addMethodNode(unit : soot.Unit, assignee : Option[Long],
       invokee : Option[Long], name : String, arguments : List[Long])  : Node = {
     val id = acdfg.getNewId
-    val node = new MethodNode(id, invokee, name, arguments.toVector)
+    val node = new MethodNode(id, assignee, invokee, name, arguments.toVector)
     acdfg.addNode(node)
     sootObjToId += ((unit, id))
     node
@@ -144,12 +143,12 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
       return
         // defensive programming; don't know if defEdges has a value for every unit
     }
-    val localIds : Array[Long] = defEdges.get(unit).iterator().map({local : soot.Local =>      
+    val localIds : Array[Long] = defEdges.get(unit).iterator().map({local : soot.Local =>
       val toId = sootObjToId.get(local)
       toId match {
         case Some(id) => id
         case None => lookupOrCreateNode(local)
-      }      
+      }
     }).toArray
     localIds.foreach({localId : Long => addDefEdge(unitId, localId)
     })
@@ -292,7 +291,7 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
             val toNode = idToUnit(commandNodes(j).id)
             assert(fromNode.isInstanceOf[soot.Unit])
             assert(toNode.isInstanceOf[soot.Unit])
-            
+
             val labelSet = CdfgToAcdfg.getLabelSet(
                 fromNode.asInstanceOf[soot.Unit],
                 toNode.asInstanceOf[soot.Unit], dominators, postDominators)
@@ -371,7 +370,7 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
 //          val argumentStrings = arguments.iterator.foldRight(new ArrayBuffer[String]())(
 //            (argument, array) => array += argument.toString()
 //          )
-//          
+//
 //          //val mNode = addMethodNode(n, Some(assignee), None,
 //          //  declaringClass + "." + methodName, argumentStrings.toArray)
 //          //addDefEdges(n, mNode.id)
@@ -563,23 +562,23 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
         cdfgToAcdfg.lookupOrCreateNode(arg) :: nodeArgs
     }
     val nodeArgs = reversedNodeArgs.reverse
-    
+
     val assigneeId = assignee match {
       case Some(a) => Some(cdfgToAcdfg.lookupOrCreateNode(a))
       case None => None
     }
-    
+
 
     /* TODO check for static method invocation, better way to get the invokee */
     val invokee = invokeExpr match {
       case x : AbstractInstanceInvokeExpr => Some(cdfgToAcdfg.lookupOrCreateNode(x.getBase()))
       case _ => None
     }
-    
+
     val mNode = cdfgToAcdfg.addMethodNode(stmt, assigneeId,
         invokee, fullyQualName, nodeArgs)
     cdfgToAcdfg.addDefEdges(stmt, mNode.id)
-    
+
     /* add a use edge for all the method nodes */
     nodeArgs.foreach { fromId => cdfgToAcdfg.addUseEdge(fromId, mNode.id) }
   }

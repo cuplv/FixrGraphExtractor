@@ -54,8 +54,9 @@ abstract class Node {
     case n : MethodNode =>
       n.getClass.getSimpleName + "(" +
         "id: "+ n.id.toString + ", " +
-        "invokee: "   + n.invokee.toString + ", " +
-        "name: "      + n.name.toString + ", " +
+        "assignee" + n.assignee + ", " +
+        "invokee: " + n.invokee.toString + ", " +
+        "name: " + n.name.toString + ", " +
         "arguments: [" + n.argumentIds.map(_.toString).mkString(", ") + "]" +
         ")"
     case n : ConstDataNode =>
@@ -91,10 +92,8 @@ case class ConstDataNode(
   override val name : String, /* the value of the constant */
   override val datatype : String) extends DataNode
 
-// TODO add assignee
 case class MethodNode(override val id : Long,
-  //  note: assignee is NOT used to generate Protobuf
-  //  assignee : Option[String],
+  assignee : Option[Long],
   invokee : Option[Long],
   name : String,
   argumentIds : Vector[Long]
@@ -312,6 +311,9 @@ class Acdfg(adjacencyList: AdjacencyList,
         val protoMethodNode : ProtoAcdfg.Acdfg.MethodNode.Builder =
           ProtoAcdfg.Acdfg.MethodNode.newBuilder()
         protoMethodNode.setId(id)
+        if (node.assignee.isDefined) {
+          protoMethodNode.setAssignee(node.assignee.get)
+        }
         if (node.invokee.isDefined) {
           protoMethodNode.setInvokee(node.invokee.get)
         }
@@ -481,7 +483,8 @@ class Acdfg(adjacencyList: AdjacencyList,
     /* method nodes */
     protobuf.getMethodNodeList.foreach { methodNode =>
       val invokee = if (methodNode.hasInvokee) Some(methodNode.getInvokee) else None
-      val node = new MethodNode(methodNode.getId, invokee, methodNode.getName,
+      val assignee = if (methodNode.hasAssignee) Some(methodNode.getAssignee) else None
+      val node = new MethodNode(methodNode.getId, assignee, invokee, methodNode.getName,
         methodNode.getArgumentList.asScala.toVector.map(_.longValue()))
       addNode(node)
       (methodNode.getId, node)

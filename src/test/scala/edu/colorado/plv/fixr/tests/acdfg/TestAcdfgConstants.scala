@@ -22,12 +22,12 @@ class TestAcdfgConstants() extends TestClassBase("./src/test/resources/javasourc
     def testRes(acdfg : Acdfg) = {
       val constNode = new ConstDataNode(0, "0", "int")
       assert (AcdfgUnitTest.getNode(acdfg, constNode).size == 1)
-      val methodNode = new MethodNode(4, None, "java.lang.Math.abs", Vector())
+      val methodNode = new MethodNode(4, None, None, "java.lang.Math.abs", Vector())
       val useEdges = AcdfgUnitTest.getEdges(acdfg, constNode, methodNode)
       assert (useEdges.size == 1)
     }
     testRes(acdfg)
-    
+
     val acdfgFromProto = new Acdfg(acdfg.toProtobuf)
     testRes(acdfgFromProto)
   }
