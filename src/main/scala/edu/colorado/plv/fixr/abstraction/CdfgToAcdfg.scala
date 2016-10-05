@@ -14,6 +14,7 @@ import org.slf4j.Logger
 import soot.Value
 import soot.RefType
 import soot.Local
+import soot.jimple.{StmtSwitch, ExprSwitch}
 import soot.jimple.Constant
 import soot.jimple.AssignStmt
 import soot.jimple.AssignStmt
@@ -32,12 +33,43 @@ import soot.jimple.RetStmt
 import soot.jimple.ReturnStmt
 import soot.jimple.ReturnVoidStmt
 import soot.jimple.Stmt
-import soot.jimple.StmtSwitch
 import soot.jimple.TableSwitchStmt
 import soot.jimple.ThrowStmt
 import soot.jimple.FieldRef
 import soot.jimple.InstanceFieldRef
 import soot.jimple.internal.AbstractInstanceInvokeExpr
+import soot.jimple.EqExpr
+import soot.jimple.NeExpr
+import soot.jimple.GeExpr
+import soot.jimple.GtExpr
+import soot.jimple.LeExpr
+import soot.jimple.LtExpr
+import soot.jimple.AndExpr
+import soot.jimple.OrExpr
+import soot.jimple.XorExpr
+import soot.jimple.InterfaceInvokeExpr
+import soot.jimple.SpecialInvokeExpr
+import soot.jimple.StaticInvokeExpr
+import soot.jimple.VirtualInvokeExpr
+import soot.jimple.DynamicInvokeExpr
+import soot.jimple.CmpExpr
+import soot.jimple.CmpgExpr
+import soot.jimple.CmplExpr
+import soot.jimple.RemExpr
+import soot.jimple.LengthExpr
+import soot.jimple.ShlExpr
+import soot.jimple.ShrExpr
+import soot.jimple.UshrExpr
+import soot.jimple.SubExpr
+import soot.jimple.NewExpr
+import soot.jimple.NewArrayExpr
+import soot.jimple.NewMultiArrayExpr
+import soot.jimple.DivExpr
+import soot.jimple.MulExpr
+import soot.jimple.AddExpr
+import soot.jimple.NegExpr
+import soot.jimple.InstanceOfExpr
+import soot.jimple.CastExpr
 
 import soot.toolkits.exceptions.ThrowAnalysisFactory
 import soot.toolkits.exceptions.ThrowableSet
@@ -322,7 +354,7 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
   /** Fill the ACDFG visiting the graph
     */
   def fillAcdfg() = {
-    /* creates all the nodes and some use edges?!?  */
+    /* creates all the nodes and some def edges  */
     cdfg.getHeads().foreach(head => createNodes(head, HashSet[soot.Unit]()))
 
     /* Add use edges */
@@ -528,7 +560,12 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
 
   override def caseIdentityStmt(stmt: IdentityStmt): Unit = addMisc(stmt)
 
-  override def caseIfStmt(stmt: IfStmt): Unit = addMisc(stmt)
+  override def caseIfStmt(stmt: IfStmt): Unit = {
+    /* handle the predicates of interest */
+
+
+    addMisc(stmt)
+  }
 
   override def caseInvokeStmt(stmt: InvokeStmt): Unit = addMethod(stmt, None)
 
@@ -557,5 +594,53 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
 
   override def caseThrowStmt(stmt: ThrowStmt): Unit = addMisc(stmt)
 
-  override def defaultCase(stmt: Any): Unit = ???
+  override def defaultCase(stmt: Any): Unit = ()
 }
+
+class AcdfgSootExprSwitch(cdfgToAcdfg : CdfgToAcdfg) extends ExprSwitch {
+
+  /* base cases */
+  def caseEqExpr(v : EqExpr) : Unit = defaultCase(v)
+  def caseNeExpr(v : NeExpr) : Unit = defaultCase(v)
+  def caseGeExpr(v : GeExpr) : Unit = defaultCase(v)
+  def caseGtExpr(v : GtExpr) : Unit = defaultCase(v)
+  def caseLeExpr(v : LeExpr) : Unit = defaultCase(v)
+  def caseLtExpr(v : LtExpr) : Unit = defaultCase(v)
+
+  /* recursive cases */
+  def caseAndExpr(v : AndExpr) : Unit = defaultCase(v)
+  def caseOrExpr(v : OrExpr) : Unit = defaultCase(v)
+  def caseXorExpr(v : XorExpr) : Unit = defaultCase(v)
+
+  def caseInterfaceInvokeExpr(v : InterfaceInvokeExpr) : Unit = defaultCase(v)
+  def caseSpecialInvokeExpr(v : SpecialInvokeExpr) : Unit = defaultCase(v)
+  def caseStaticInvokeExpr(v : StaticInvokeExpr) : Unit = defaultCase(v)
+  def caseVirtualInvokeExpr(v : VirtualInvokeExpr) : Unit = defaultCase(v)
+  def caseDynamicInvokeExpr(v : DynamicInvokeExpr) : Unit = defaultCase(v)
+
+  /* unknown */
+  def caseCmpExpr(v : CmpExpr) : Unit = defaultCase(v)
+  def caseCmpgExpr(v : CmpgExpr) : Unit = defaultCase(v)
+  def caseCmplExpr(v : CmplExpr) : Unit = defaultCase(v)
+  def caseRemExpr(v : RemExpr) : Unit = defaultCase(v)
+  def caseLengthExpr(v : LengthExpr) : Unit = defaultCase(v)
+  def caseShlExpr(v : ShlExpr) : Unit = defaultCase(v)
+  def caseShrExpr(v : ShrExpr) : Unit = defaultCase(v)
+  def caseUshrExpr(v : UshrExpr) : Unit = defaultCase(v)
+  def caseSubExpr(v : SubExpr) : Unit = defaultCase(v)
+
+  /* Not important cases - for now  */
+  def caseNewExpr(v : NewExpr) : Unit = defaultCase(v)
+  def caseNewArrayExpr(v : NewArrayExpr) : Unit = defaultCase(v)
+  def caseNewMultiArrayExpr(v : NewMultiArrayExpr) : Unit = defaultCase(v)
+  def caseDivExpr(v : DivExpr) : Unit = defaultCase(v)
+  def caseMulExpr(v : MulExpr) : Unit = defaultCase(v)
+  def caseAddExpr(v : AddExpr) : Unit = defaultCase(v)
+  def caseNegExpr(v : NegExpr) : Unit = defaultCase(v)
+  def caseInstanceOfExpr(v : InstanceOfExpr) : Unit = defaultCase(v)
+  def caseCastExpr(v : CastExpr) : Unit = defaultCase(v)
+
+  def defaultCase(obj : Object) : Unit = ()
+}
+
+
