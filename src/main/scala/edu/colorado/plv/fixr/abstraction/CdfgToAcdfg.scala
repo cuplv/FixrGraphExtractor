@@ -91,13 +91,23 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
           }
           case unit : soot.Unit => {
             unit.apply(nodeCreator)
-            val nodeId = lookupNodeId(v)
+            val nodeId = lookupNodeId(unit)
             nodeId match {
               case Some(id) => id
-              case None => ??? // TODO raise exception
+              case None =>
+                /* The lookupNodeId statemebt on unit must not fail.
+                 * If it fails, it means that something went wrong inside the
+                 * call to unit.apply (look at the cases in AcdfgSootStmtSwitch)
+                 */
+                new RuntimeException("Error creating ACDFG node from unit")
+                0
             }
           }
-          case _ => ??? // TODO raise exception
+          case _ =>
+            /* We do not know the type of v here, so we cannot create
+             * a node. */
+            new RuntimeException("Cannot create an ACDFG node for this object")
+            0
         }
         nodeId
       }
@@ -337,125 +347,6 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
       cdfg.getSuccsOf(unit).iterator().foreach{ (succ) => createNodes(succ, visited) }
     }
   }
-
-//  def fillAcdfgOld() = {
-//    /* Data nodes */
-//    cdfg.localsIter().foreach {
-//      case local : Local => {
-//        val id = acdfg.getNewId
-//        val node = new VarDataNode(id, local.getName, local.getType.toString)
-//        sootObjToId += ((local, id))
-//        acdfg.addNode(node)
-//      }
-//      case m =>
-//        logger.debug("    Local of unknown type; ignoring...")
-//    }
-//
-//    /* Creates nodes */
-//    cdfg.unitIterator.foreach {
-//      case n : IdentityStmt =>
-//        // must have NO arguments to toString(), which MUST have parens;
-//        // otherwise needs a pointer to some printer object
-//        val miscNode = addMiscNode(n)
-//        addDefEdges(n, miscNode.id)
-//      case n : InvokeStmt =>
-//
-//      case n : AssignStmt =>
-//        val assignee  = n.getLeftOp.toString()
-//        if (n.containsInvokeExpr()) {
-//          val declaringClass = n.getInvokeExpr.getMethod.getDeclaringClass.getName
-//          val methodName = n.getInvokeExpr.getMethod.getName
-//          // must have empty arguments to toString(); otherwise needs a pointer to some printer object
-//          val arguments = n.getInvokeExpr.getArgs
-//          val argumentStrings = arguments.iterator.foldRight(new ArrayBuffer[String]())(
-//            (argument, array) => array += argument.toString()
-//          )
-//
-//          //val mNode = addMethodNode(n, Some(assignee), None,
-//          //  declaringClass + "." + methodName, argumentStrings.toArray)
-//          //addDefEdges(n, mNode.id)
-//        } else {
-//          val miscNode = addMiscNode(n)
-//          addDefEdges(n, miscNode.id)
-//        }
-//      case n =>
-//        val miscNode = addMiscNode(n)
-//        addDefEdges(n, miscNode.id)
-//    }
-//
-//    /* Add use edges */
-//    cdfg.localsIter().foreach {
-//      case n : Local => addUseEdges(n, sootObjToId(n))
-//      case m =>
-//        logger.debug("    Data node of unknown type; ignoring...")
-//    }
-//
-//    /* add the control edges */
-//    cdfg.unitIterator.foreach { n => addControlEdges(n, sootObjToId(n)) }
-//
-//    /* Remove nodes without incoming/outgoing edges */
-//    acdfg.nodes.foreach({ case (id, _) =>
-//      val connection = acdfg.edges.values.find(edge => edge.from == id || edge.to == id)
-//      if (connection.isEmpty) acdfg.removeNode(id)
-//    })
-//
-//    /* Creates the edges from method nodes to data nodes
-//
-//     [SM] This seems very inefficient.
-//     For every method node, every argument we remove the method node
-//     and we add a new one.
-//     */
-//    val dataNodes = acdfg.nodes.filter(_._2.isInstanceOf[DataNode])
-//    val methodNodes = acdfg.nodes.filter(_._2.isInstanceOf[MethodNode])
-//    methodNodes.foreach {
-//      case (id, methodNode : MethodNode) =>
-//        val argumentNames = idToMethodStrs(id)
-//        argumentNames.zipWithIndex.foreach { case (argumentName, index) =>
-//          val argumentPairs = dataNodes
-//            .filter(_._2.asInstanceOf[DataNode].name == argumentName)
-//          if (argumentPairs.nonEmpty) {
-//            val argVal : Long = argumentPairs.head._1
-//            acdfg.nodes.remove(methodNode.id)
-//            acdfg.nodes += ((methodNode.id, MethodNode(
-//              methodNode.id,
-//              methodNode.invokee,
-//              methodNode.name,
-//              methodNode.argumentIds.updated(index, argVal)
-//            )))
-//          } else {
-//            val argVal : Long = 0
-//            acdfg.nodes.remove(methodNode.id)
-//            acdfg.nodes += ((methodNode.id, MethodNode(
-//              methodNode.id,
-//              methodNode.invokee,
-//              methodNode.name,
-//              methodNode.argumentIds.updated(index, argVal)
-//            )))
-//          }
-//        }
-//    }
-//
-//    /* Assign invokee
-//
-//     [SM] to check
-//     */
-//    acdfg.edges
-//      .filter(_._2.isInstanceOf[UseEdge])
-//      .foreach { case (_, edge : UseEdge) => acdfg.nodes.get(edge.to).get match {
-//        case node : MethodNode =>
-//          if (! node.argumentIds.toStream.exists(_.equals(edge.from))) {
-//            val invokee = Some(edge.from)
-//            acdfg.nodes.remove(node.id)
-//            acdfg.nodes += ((node.id,
-//              MethodNode(node.id, invokee, node.name, node.argumentIds)
-//            ))
-//          }
-//        case _ => Nil
-//      }}
-//
-//    logger.debug("### Computing transitive closure down to DFS of command edges...")
-//    computeTransClosure()
-//  }
 }
 
 object CdfgToAcdfg {
@@ -568,10 +459,10 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
       case None => None
     }
 
-
     /* TODO check for static method invocation, better way to get the invokee */
     val invokee = invokeExpr match {
-      case x : AbstractInstanceInvokeExpr => Some(cdfgToAcdfg.lookupOrCreateNode(x.getBase()))
+      case x : AbstractInstanceInvokeExpr =>
+        Some(cdfgToAcdfg.lookupOrCreateNode(x.getBase()))
       case _ => None
     }
 
@@ -615,7 +506,11 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
 
   override def caseReturnStmt(stmt: ReturnStmt): Unit = addMisc(stmt)
 
-  override def caseReturnVoidStmt(stmt: ReturnVoidStmt): Unit = addMisc(stmt)
+  override def caseReturnVoidStmt(stmt: ReturnVoidStmt): Unit = {
+    /* add a fake method node for the void return */
+    val mNode = cdfgToAcdfg.addMethodNode(stmt, None, None,
+      FakeMethods.RETURN_METHOD, List[Long]())
+  }
 
   override def caseTableSwitchStmt(stmt: TableSwitchStmt): Unit = addMisc(stmt)
 

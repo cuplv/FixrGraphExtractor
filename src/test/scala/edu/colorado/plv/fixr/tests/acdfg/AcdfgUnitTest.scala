@@ -3,7 +3,7 @@ package edu.colorado.plv.fixr.tests.acdfg
 import edu.colorado.plv.fixr.tests.{TestClassBase}
 
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
-import edu.colorado.plv.fixr.abstraction.{Acdfg, AdjacencyList, EdgeLabel}
+import edu.colorado.plv.fixr.abstraction.{Acdfg, AdjacencyList, EdgeLabel, FakeMethods}
 import edu.colorado.plv.fixr.abstraction.{Node, Edge, MethodNode, UseEdge, MiscNode}
 
 import soot.{SootClass, SootMethod, Body}
@@ -190,6 +190,17 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     assert (nodeEdges.size == 5)
     val exEdges = nodeEdges.filter (x => x.isInstanceOf[ExceptionalControlEdge])
     assert (exEdges.size == 1)
+  }
+
+  test("ACDFGVoidRet") {
+    val sootMethod = this.getTestClass().getMethodByName("voidMethod")
+    val body = sootMethod.retrieveActiveBody()
+    val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+
+    val returnNode = new MethodNode(4, None, None, FakeMethods.RETURN_METHOD, Vector())
+
+    assert (AcdfgUnitTest.getNode(acdfg, returnNode).size == 1)
   }
 }
 

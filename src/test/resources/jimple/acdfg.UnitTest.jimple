@@ -9,6 +9,11 @@ public class acdfg.UnitTest extends java.lang.Object
     return p1;
   }
 
+  public void voidMethod(int) {
+    acdfg.UnitTest this;
+
+    return;
+  }
 
   public int testMethodA() {
     acdfg.UnitTest this;

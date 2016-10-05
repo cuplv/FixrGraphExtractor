@@ -188,6 +188,15 @@ object EdgeLabel extends Enumeration {
   val SRC_DOMINATE_DST, DST_POSDOMINATE_SRC = Value
 }
 
+
+/** Defines the name of the artificial methods introduced
+  * when building the ACDFG
+  */
+object FakeMethods {
+  val RETURN_METHOD = "return"
+}
+
+
 class Acdfg(adjacencyList: AdjacencyList,
   cdfg : UnitCdfgGraph,
   protobuf : ProtoAcdfg.Acdfg,
