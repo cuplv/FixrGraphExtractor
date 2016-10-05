@@ -276,6 +276,7 @@ class Acdfg(adjacencyList: AdjacencyList,
         protoEdge.setFrom(edge.from)
         protoEdge.setTo(edge.to)
         edge.exceptions.foreach { x => protoEdge.addExceptions(x) }
+        builder.addExceptionalEdge(protoEdge)
     }
 
     /* Add the node labels */
