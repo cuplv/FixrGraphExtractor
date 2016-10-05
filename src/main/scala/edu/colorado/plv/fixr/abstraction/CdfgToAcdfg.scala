@@ -123,6 +123,10 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
     val node = new MethodNode(id, assignee, invokee, name, arguments.toVector)
     acdfg.addNode(node)
     sootObjToId += ((unit, id))
+
+    /* add a use edge for all the method nodes */
+    arguments.foreach { fromId => addUseEdge(fromId, id) }
+
     node
   }
 
@@ -469,9 +473,6 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
     val mNode = cdfgToAcdfg.addMethodNode(stmt, assigneeId,
         invokee, fullyQualName, nodeArgs)
     cdfgToAcdfg.addDefEdges(stmt, mNode.id)
-
-    /* add a use edge for all the method nodes */
-    nodeArgs.foreach { fromId => cdfgToAcdfg.addUseEdge(fromId, mNode.id) }
   }
 
   override def caseAssignStmt(stmt : AssignStmt): Unit = {
@@ -504,7 +505,14 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
 
   override def caseRetStmt(stmt: RetStmt): Unit = addMisc(stmt)
 
-  override def caseReturnStmt(stmt: ReturnStmt): Unit = addMisc(stmt)
+  override def caseReturnStmt(stmt: ReturnStmt): Unit = {
+    val retVal = stmt.getOp()
+    val retValId = cdfgToAcdfg.lookupOrCreateNode(retVal)
+
+    /* add a fake method node for the return with parameter */
+    val mNode = cdfgToAcdfg.addMethodNode(stmt, None, None,
+      FakeMethods.RETURN_METHOD, List[Long](retValId))
+  }
 
   override def caseReturnVoidStmt(stmt: ReturnVoidStmt): Unit = {
     /* add a fake method node for the void return */

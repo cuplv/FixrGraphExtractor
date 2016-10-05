@@ -22,7 +22,7 @@ import soot.options.Options
 import scala.collection.JavaConversions._
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
 import edu.colorado.plv.fixr.abstraction.ExceptionalControlEdge
-import edu.colorado.plv.fixr.abstraction.{DataNode, VarDataNode}
+import edu.colorado.plv.fixr.abstraction.{DataNode, VarDataNode, ConstDataNode}
 
 /**
   * The class invokes Soot and parses the acdfg.UnitTest class in the testClass
@@ -180,19 +180,24 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
     val acdfg : Acdfg = new Acdfg(cdfg, null, null)
 
-    val absNode = new MethodNode(4, None, None, "java.lang.Math.abs", Vector())
-    val caughtNode = new MethodNode(4, None, None, "java.lang.Math.abs", Vector())
-    val absNodes = AcdfgUnitTest.getNode(acdfg, absNode)
-    assert (absNodes.size == 1)
+    def testRes(acdfg : Acdfg) {
+      val absNode = new MethodNode(4, None, None, "java.lang.Math.abs", Vector())
+      val caughtNode = new MethodNode(4, None, None, "java.lang.Math.abs", Vector())
+      val absNodes = AcdfgUnitTest.getNode(acdfg, absNode)
+      assert (absNodes.size == 1)
 
-    val node = absNodes.get(0)
-    val nodeEdges = AcdfgUnitTest.getEdges(acdfg, node)
-    assert (nodeEdges.size == 5)
-    val exEdges = nodeEdges.filter (x => x.isInstanceOf[ExceptionalControlEdge])
-    assert (exEdges.size == 1)
+      val node = absNodes.get(0)
+      val nodeEdges = AcdfgUnitTest.getEdges(acdfg, node)
+      assert (nodeEdges.size == 5)
+      val exEdges = nodeEdges.filter (x => x.isInstanceOf[ExceptionalControlEdge])
+      assert (exEdges.size == 1)
+    }
+    testRes(acdfg)
+    val acdfgFromProto = new Acdfg(acdfg.toProtobuf)
+    testRes(acdfgFromProto)
   }
 
-  test("ACDFGVoidRet") {
+  test("ACDFGVoidReturn") {
     val sootMethod = this.getTestClass().getMethodByName("voidMethod")
     val body = sootMethod.retrieveActiveBody()
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
@@ -200,7 +205,34 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
 
     val returnNode = new MethodNode(4, None, None, FakeMethods.RETURN_METHOD, Vector())
 
-    assert (AcdfgUnitTest.getNode(acdfg, returnNode).size == 1)
+    def testRes(acdfg : Acdfg) {
+      assert (AcdfgUnitTest.getNode(acdfg, returnNode).size == 1)
+    }
+    testRes(acdfg)
+    val acdfgFromProto = new Acdfg(acdfg.toProtobuf)
+    testRes(acdfgFromProto)
+  }
+
+  test("ACDFGReturn") {
+    val sootMethod = this.getTestClass().getMethodByName("testMethodA")
+    val body = sootMethod.retrieveActiveBody()
+    val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+
+    val retNode = new MethodNode(4, None, None, FakeMethods.RETURN_METHOD, Vector())
+    val constNode = new ConstDataNode(0, "0", "int")
+
+    def testRes(acdfg : Acdfg) {
+      val retNodes = AcdfgUnitTest.getNode(acdfg, retNode)
+      assert (retNodes.size == 1)
+      val constNodes = AcdfgUnitTest.getNode(acdfg, constNode)
+      assert (constNodes.size == 1)
+      val useEdges = AcdfgUnitTest.getEdges(acdfg, constNode, retNode)
+      assert (useEdges.size == 1)
+    }
+    testRes(acdfg  : Acdfg)
+    val acdfgFromProto = new Acdfg(acdfg.toProtobuf)
+    testRes(acdfgFromProto)
   }
 }
 
