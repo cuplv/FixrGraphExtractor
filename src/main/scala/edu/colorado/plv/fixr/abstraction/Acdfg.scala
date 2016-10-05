@@ -194,6 +194,8 @@ object EdgeLabel extends Enumeration {
   */
 object FakeMethods {
   val RETURN_METHOD = "return"
+  val GET_METHOD = "<get>"
+  val SET_METHOD = "<set>"
 }
 
 

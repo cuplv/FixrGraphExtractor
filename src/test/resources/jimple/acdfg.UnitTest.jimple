@@ -1,5 +1,7 @@
 public class acdfg.UnitTest extends java.lang.Object
 {
+  public int pero;
+
   public int testMethod(int, int, int) {
     acdfg.UnitTest this;
     int p1;
@@ -64,5 +66,43 @@ public class acdfg.UnitTest extends java.lang.Object
       nop;
 
       catch java.lang.Exception from label1 to label2 with label3;
+  }
+
+  public int testFieldAccess()
+  {
+      acdfg.UnitTest this;
+      int i, temp$0, temp$1;
+
+      this := @this: acdfg.UnitTest;
+
+      i = this.<acdfg.UnitTest: int pero>;
+
+      temp$0 = i;
+
+      temp$1 = temp$0 + 1;
+
+      i = temp$1;
+
+      return i;
+  }
+
+  public int testFieldSet()
+  {
+      acdfg.UnitTest this;
+      int i, temp$0, temp$1;
+
+      this := @this: acdfg.UnitTest;
+
+      i = 0;
+
+      temp$0 = i;
+
+      temp$1 = temp$0 + 1;
+
+      i = temp$1;
+
+      this.<acdfg.UnitTest: int pero> = i;
+
+      return i;
   }
 }

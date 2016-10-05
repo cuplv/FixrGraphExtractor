@@ -23,6 +23,7 @@ import scala.collection.JavaConversions._
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
 import edu.colorado.plv.fixr.abstraction.ExceptionalControlEdge
 import edu.colorado.plv.fixr.abstraction.{DataNode, VarDataNode, ConstDataNode}
+import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
 
 /**
   * The class invokes Soot and parses the acdfg.UnitTest class in the testClass
@@ -230,6 +231,42 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
       val useEdges = AcdfgUnitTest.getEdges(acdfg, constNode, retNode)
       assert (useEdges.size == 1)
     }
+    testRes(acdfg  : Acdfg)
+    val acdfgFromProto = new Acdfg(acdfg.toProtobuf)
+    testRes(acdfgFromProto)
+  }
+
+  test("ACDFGFieldAccess") {
+    val sootMethod = this.getTestClass().getMethodByName("testFieldAccess")
+    val body = sootMethod.retrieveActiveBody()
+    val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+
+    def testRes(acdfg : Acdfg) {
+      val access = new MethodNode(4, None, None,
+        FakeMethods.GET_METHOD + ".acdfg.AcdfgUnittest.pero", Vector())
+      val nodes = AcdfgUnitTest.getNode(acdfg, access)
+      assert (nodes.size == 1)
+    }
+
+    testRes(acdfg  : Acdfg)
+    val acdfgFromProto = new Acdfg(acdfg.toProtobuf)
+    testRes(acdfgFromProto)
+  }
+
+  test("ACDFGFieldSet") {
+    val sootMethod = this.getTestClass().getMethodByName("testFieldSet")
+    val body = sootMethod.retrieveActiveBody()
+    val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+
+    def testRes(acdfg : Acdfg) {
+      val set = new MethodNode(4, None, None,
+        FakeMethods.SET_METHOD +".acdfg.AcdfgUnittest.pero", Vector())
+      val nodes = AcdfgUnitTest.getNode(acdfg, set)
+      assert (nodes.size == 1)
+    }
+
     testRes(acdfg  : Acdfg)
     val acdfgFromProto = new Acdfg(acdfg.toProtobuf)
     testRes(acdfgFromProto)
