@@ -42,8 +42,6 @@ class TestBug058 extends FunSuite with BeforeAndAfter {
           else {
             count
           }
-
-count + 1
         }
         else count
       })
