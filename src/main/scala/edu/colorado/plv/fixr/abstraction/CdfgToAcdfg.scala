@@ -7,6 +7,7 @@ import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
+import scala.collection.mutable.DoubleLinkedList
 
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
@@ -14,6 +15,7 @@ import org.slf4j.Logger
 import soot.Value
 import soot.RefType
 import soot.Local
+import soot.Body
 import soot.jimple.{StmtSwitch, ExprSwitch}
 import soot.jimple.Constant
 import soot.jimple.AssignStmt
@@ -77,6 +79,23 @@ import soot.toolkits.graph.MHGDominatorsFinder
 import soot.toolkits.graph.MHGPostDominatorsFinder
 
 
+/** Represent a simple transformation on the acdfg.
+  * The semantic of remap info is the following:
+  * - srcNode and dstNode are two nodes with a control edge
+  * - intNodesList is a list of intermediate nodes used to create
+  *   new edges
+  *
+  * The transformation tells to replace the edge (srcNode, dstNode)
+  * with the set of edges:
+  * (srcNode, n1), (n1,n2), ..., (n_k-1, n_k), (n_k, dstNode)
+  * where n1,...,nk are the nodes in intNodesList
+  */
+case class RemapInfo(
+  srcNode : soot.Unit,
+  dstNode : soot.Unit,
+  intNodesList : List[Long]
+)
+
 /**
   *  Populates a acdfg from a cdfg
   *
@@ -95,9 +114,32 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
   val defEdges = cdfg.defEdges()
   val useEdges = cdfg.useEdges()
 
+  /* Map from a soot object (value, unit) to a node id */
   var sootObjToId = scala.collection.mutable.HashMap[Any, Long]()
+  /* Map from node IDs to the corresponding edge */
   var edgePairToId = scala.collection.mutable.HashMap[(Long, Long), Long]()
 
+  /* Map from unit (the source node of the edges) to a list of remap 
+   * info.
+   *
+   * This is a representation of a list of edges that has been removed
+   * from the cdfg and replaced in the acdfg
+   *
+   * These edges should be ignored in the creation of control edges.
+   *
+   * NOTE: this is a list and not a set, since we may have multiple
+   * edges in from the same source/destination nodes.
+   *
+   */
+  var remappedEdges = scala.collection.mutable.HashMap[soot.Unit,List[RemapInfo]]()
+
+  /* Map from acdfg node ids to cdfg units.
+   * The map is used to compute the domniator/post-dominator relationship
+   */
+  var unitsForDominator = scala.collection.mutable.HashMap[Long, soot.Unit]()
+
+
+  /* helper class used to create an acdfg node from a node unit */
   val nodeCreator = new AcdfgSootStmtSwitch(this)
 
   def lookupNodeId(v : Any) : Option[Long] = sootObjToId.get(v)
@@ -235,23 +277,93 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
     }
 
     def addControEdgeAux(from : soot.Unit, to : soot.Unit,
-      fromId : Long, toId : Long) : Unit= {
-      val labelSet = CdfgToAcdfg.getLabelSet(from, to, dominators, postDominators)
+      fromId : Long, toId : Long) : Unit = {
 
-      if (! edgePairToId.contains(fromId, toId)) {
-        exceptionMap.get((from,to)) match {
-          case Some(exceptions) =>
-            addExceptionalEdge(fromId, toId, exceptions, labelSet)
-          case None => addControlEdge(fromId, toId, labelSet)
-        }
+      val labelSet = CdfgToAcdfg.getLabelSet(from, to,
+        dominators, postDominators)
+
+      exceptionMap.get((from,to)) match {
+        case Some(exceptions) =>
+          addExceptionalEdge(fromId, toId, exceptions, labelSet)
+        case None => addControlEdge(fromId, toId, labelSet)
       }
+
+    }
+
+    /** Find the first element in succToSkip that has succUnit as
+      * dstNode.
+      * Return in a pair the list without the found element and the
+      * element (a list with the original elements and None if
+      * succUnit is not found)
+      *
+      * NOTE: the order of the list is reversed at every call.
+      */
+    def findElem (succToSkip : List[RemapInfo], succUnit : soot.Unit) = {
+      succToSkip.foldLeft ((succToSkip, Option.empty[RemapInfo])) ({ (res, x) => {
+        res match {
+          case (succToSkip, intEdge) =>
+            if (! intEdge.isDefined) {
+              if (x.dstNode == succUnit) (succToSkip, Some(x))
+              else (x::succToSkip, intEdge)
+            }
+            else (x::succToSkip, intEdge)
+        }
+      }})
     }
 
     val unitId = sootObjToId(unit)
-    // add succesor edges
-    cdfg.getSuccsOf(unit).iterator().foreach{ (succUnit) =>
-      addControEdgeAux(unit, succUnit, unitId, sootObjToId(succUnit))
+
+    /* find the list of nodes that should be remapped */
+    val succToSkip : List[RemapInfo] = remappedEdges.get(unit) match {
+      case Some(l) => l
+      case _ => List[RemapInfo]()
     }
+
+    /* Iterates through the successsors of unit.
+     For the same unit, we try to find the edges to be redefined.
+     Note that in each iteration of the foldLeft we remove such edge
+     if it has been found.
+     */
+    cdfg.getSuccsOf(unit).iterator().foldLeft (succToSkip) (
+      (succToSkip, succUnit) => {
+
+        /* find the edges to be redifend */
+        val res = findElem(succToSkip, succUnit)
+
+        res match {
+          case (newSuccToSkip, intEdge) =>
+            intEdge match {
+              case Some(remapEdge) => {
+                def addRemapEdge(first : Option[soot.Unit], last : soot.Unit, intNodes : List[Long]) : Unit = {
+                  intNodes match {
+                    case x::Nil => {
+                      /* last element */
+                      val srcUnit : soot.Unit = unitsForDominator.get(x).get
+                      addControEdgeAux(srcUnit, last, x, sootObjToId(last))
+                      /* avoid rec call, nothing to do */
+                    }
+                    case x :: xs if first.isDefined => {
+                      /* first element */
+                      addControEdgeAux(first.get, succUnit, sootObjToId(unitId), x)
+                      addRemapEdge(None, last, xs)
+                    }
+                    case x :: y :: xs => {
+                      /* intermediary element  */
+                      val srcUnit = unitsForDominator.get(x).get
+                      val dstUnit = unitsForDominator.get(y).get
+                      addControEdgeAux(srcUnit, dstUnit, x, y)
+                      addRemapEdge(None, last, xs)
+                    }
+                    case _ => ()
+                  }
+                }
+                addRemapEdge(Some(unit), succUnit, remapEdge.intNodesList)
+              }
+              case None => addControEdgeAux(unit, succUnit, unitId, sootObjToId(succUnit))
+            }
+            newSuccToSkip
+        }
+      })
   }
 
   private def addTransControlEdge(fromId : Long, toId : Long,
@@ -350,7 +462,6 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
     }
   }
 
-
   /** Fill the ACDFG visiting the graph
     */
   def fillAcdfg() = {
@@ -390,7 +501,6 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
 object CdfgToAcdfg {
   type TrapMap = scala.collection.immutable.HashMap[(soot.Unit,soot.Unit),
     List[String]]
-
 
   /** Return the set of labels for the edge fromfromUnit to toUnit
     *
@@ -461,7 +571,6 @@ object CdfgToAcdfg {
         processUnits(trapUnitIter, exceptionMap)
       } /* foldLeft on traps */
     }
-
     exceptionMap
   }
 }
@@ -470,10 +579,14 @@ object CdfgToAcdfg {
   * Implements the case switch on the soot statement found in the cdfg units
   *
   */
-class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
-  private def addMisc(stmt : Stmt) : Unit = {
+class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends
+    StmtSwitch {
+  private def getBody() : Body = cdfgToAcdfg.cdfg.getBody()
+
+  private def addMisc(stmt : Stmt) : Node = {
     val miscNode = cdfgToAcdfg.addMiscNode(stmt)
     cdfgToAcdfg.addDefEdges(stmt, miscNode.id)
+    miscNode
   }
 
   private def addMethod(stmt : Stmt, assignee : Option[Value]) = {
@@ -561,10 +674,32 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
   override def caseIdentityStmt(stmt: IdentityStmt): Unit = addMisc(stmt)
 
   override def caseIfStmt(stmt: IfStmt): Unit = {
-    /* handle the predicates of interest */
+    /* condition of the if */
+    val condition = stmt.getCondition()
+    /* true branch */
+    val target = stmt.getTarget()
+    /* false branch */
+    val getNextUnit = getBody().getUnits().getSuccOf(stmt)
+
+    /* The IfStmt node has two successors, the true and false branch.
+     In the acdfg:
+       - The IfStmt node becomes a MiscNode
+       - We add a node in the true branch with the true condition
+       - We add a node in the false branch with the negation of the true condition
+     */
+
+    /* create the misc node for the statment */
+    val miscNode = addMisc(stmt)
+
+    /* create the node for the true successor */
+
+    /* creates the node for the false successor */
+
+    /* add the control edges to be created */
 
 
-    addMisc(stmt)
+
+
   }
 
   override def caseInvokeStmt(stmt: InvokeStmt): Unit = addMethod(stmt, None)
