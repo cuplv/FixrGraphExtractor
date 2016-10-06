@@ -195,7 +195,7 @@ object EdgeLabel extends Enumeration {
 object FakeMethods {
   val RETURN_METHOD = "return"
   val GET_METHOD = "<get>"
-  val SET_METHOD = "<set>"  
+  val SET_METHOD = "<set>"
 }
 
 /** Defines a set of artificial predicates that we treat as
@@ -209,7 +209,11 @@ object Predicates {
   val GE = "GE"
   val GT = "GT"
   val LE = "LE"
-  val LT = "LT"  
+  val LT = "LT"
+  val NOT = "NOT"
+  val AND = "AND"
+  val OR = "OR"
+  val XOR = "XOR"
 }
 
 class Acdfg(adjacencyList: AdjacencyList,
