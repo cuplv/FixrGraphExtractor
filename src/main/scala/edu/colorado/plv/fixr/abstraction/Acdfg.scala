@@ -1,80 +1,130 @@
 package edu.colorado.plv.fixr.abstraction
 
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
-import soot.jimple.{AssignStmt, IdentityStmt, InvokeStmt}
-import soot.jimple.internal.JimpleLocal
-
 import scala.collection.JavaConversions.asScalaIterator
 import scala.collection.mutable.ArrayBuffer
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import edu.colorado.plv.fixr.protobuf.ProtoAcdfg
 
+import scala.collection.mutable.{Set, HashSet}
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
+import soot.toolkits.exceptions.ThrowableSet
+import soot.Trap
+import soot.toolkits.exceptions.ThrowAnalysisFactory
 
 /**
   * Acdfg
-  *   Class implementing abstract control data flow graph (ACDFG)
+  * Class implementing abstract control data flow graph (ACDFG)
   *
-  *   @author Rhys Braginton Pettee Olsen <rhol9958@colorado.edu>
-  *   @group  University of Colorado at Boulder CUPLV
+  * The class represent a ACDFG as follows:
+  * - nodes: a hash table from the node id to the Node object
+  * - edges: a hash table from the edge id to the Edge object
+  *
+  * Kinds of nodes:
+  * - Node: abstract generic node
+  * - CommandNode: abstract class that represent a node
+  *   containing a statement
+  * - DataNode: represent a variable of the program
+  * - MethodNode: represent a method call
+  * - MiscNode: any statement different from a method call
+  *
+  * Kind of edges:
+  * - Edge: abstract generic edge
+  * - DefEdge: the source node defines the (variable in the) destination node
+  *   Edge from a control node to a data node
+  * - UseEdge: the source node uses the (variable in the) destination node
+  *   Edge from a control node to a data node
+  * - ControlEdge: edge from a control node to another control node
+  * - TransControlEdge: represent a transitive control edge (i.e. the
+  *   source node can reach the destination node through several
+  *   control edge in the original program).
+  *
+  * Additionally, the edges are labeled. The label contains a set of
+  * elements from Label.
+  *
+  * @author Rhys Braginton Pettee Olsen <rhol9958@colorado.edu>
+  * @group  University of Colorado at Boulder CUPLV
   */
-
 abstract class Node {
   def id : Long
-  override def toString = this.getClass.getSimpleName + "(" + id.toString + ")"
-}
 
-abstract class CommandNode extends Node {
   override def toString = this match {
     case n : MethodNode =>
       n.getClass.getSimpleName + "(" +
         "id: "+ n.id.toString + ", " +
-        "invokee: "   + n.invokee.toString + ", " +
-        "name: "      + n.name.toString + ", " +
-        "arguments: [" +
-        n.argumentIds.map(_.toString).mkString(", ") +
-        "]" +
+        "assignee" + n.assignee + ", " +
+        "invokee: " + n.invokee.toString + ", " +
+        "name: " + n.name.toString + ", " +
+        "arguments: [" + n.argumentIds.map(_.toString).mkString(", ") + "]" +
         ")"
-    case n =>
-      this.getClass.getSimpleName + "(" + id.toString + ")"
+    case n : ConstDataNode =>
+      n.getClass.getSimpleName + "(" +
+        "id: " + n.id.toString + ", " +
+        "value: " + n.name +
+        "type: " + n.datatype +
+        ")"
+    case n : DataNode =>
+      n.getClass.getSimpleName + "(" +
+        "id: "+ n.id.toString + ", " +
+        "name: "   + n.name +
+        "type: "   + n.datatype +
+        ")"
+    case n => this.getClass.getSimpleName + "(" + id.toString + ")"
   }
 }
 
-case class DataNode(
-  override val id : Long,
-  name : String,
-  datatype : String
-) extends Node
+abstract class CommandNode extends Node
 
-case class MethodNode(
+abstract class DataNode() extends Node {
+  override val id : Long
+  val name : String
+  val datatype : String
+}
+
+case class VarDataNode(override val id : Long,
+  override val name : String,
+  override val datatype : String) extends DataNode
+
+case class ConstDataNode(
   override val id : Long,
-  //  note: assignee is NOT used to generate Protobuf
-  // assignee : Option[String],
+  override val name : String, /* the value of the constant */
+  override val datatype : String) extends DataNode
+
+case class MethodNode(override val id : Long,
+  assignee : Option[Long],
   invokee : Option[Long],
   name : String,
   argumentIds : Vector[Long]
-  // var argumentNames : Array[String]
 ) extends CommandNode
 
-case class MiscNode(
-  override val id : Long
-) extends CommandNode
+case class MiscNode(override val id : Long) extends CommandNode
 
 /* Edges */
-
 abstract class Edge {
   val to   : Long
   val from : Long
   val id   : Long
-  override def toString =
-    this.getClass.getSimpleName +
+
+  override def toString = this match {
+    case n : ExceptionalControlEdge =>
+      this.getClass.getSimpleName +
+      "(id: "     + n.id.toString   +
+      ", to: "    + n.to.toString   +
+      ", from: "  + n.from.toString +
+      ", exceptions: [" + n.exceptions.mkString(",") +
+      "])"
+    case n =>
+      this.getClass.getSimpleName +
       "(id: "     + id.toString   +
       ", to: "    + to.toString   +
       ", from: "  + from.toString +
       ")"
+  }
 }
+
+
 
 case class DefEdge(
   override val id   : Long,
@@ -94,11 +144,24 @@ case class ControlEdge(
   override val to   : Long
 ) extends Edge
 
-
 case class TransControlEdge(
   override val id   : Long,
   override val from : Long,
   override val to   : Long
+) extends Edge
+
+/** Represent an exceptional control flow edge
+ *  The edge represent the change of control flow from a node to another
+ *  node due to an exception.
+ *
+ *  The same edge can be labeled with multiple exceptions.
+ */
+case class ExceptionalControlEdge (
+  override val id   : Long,
+  override val from : Long,
+  override val to   : Long,
+  /* list of exceptions (string) catched by the exceptional edge */
+  val exceptions : List[String]
 ) extends Edge
 
 case class GitHubRecord(
@@ -120,6 +183,22 @@ case class SourceInfo(
 
 case class AdjacencyList(nodes : Vector[Node], edges : Vector[Edge])
 
+object EdgeLabel extends Enumeration {
+  type EdgeLabel = Value
+  val SRC_DOMINATE_DST, DST_POSDOMINATE_SRC = Value
+}
+
+
+/** Defines the name of the artificial methods introduced
+  * when building the ACDFG
+  */
+object FakeMethods {
+  val RETURN_METHOD = "return"
+  val GET_METHOD = "<get>"
+  val SET_METHOD = "<set>"
+}
+
+
 class Acdfg(adjacencyList: AdjacencyList,
   cdfg : UnitCdfgGraph,
   protobuf : ProtoAcdfg.Acdfg,
@@ -130,14 +209,22 @@ class Acdfg(adjacencyList: AdjacencyList,
 
   /*
    * Edges and nodes
-   *   Design rationale: our graph will be very sparse; want indexing by ID to be fast
+   * Design rationale: our graph will be very sparse; want indexing by
+   * ID to be fast
    */
-  protected[fixr] var edges = scala.collection.mutable.HashMap[Long, Edge]()
-  protected[fixr] var nodes = scala.collection.mutable.HashMap[Long, Node]()
+  var edges = scala.collection.mutable.HashMap[Long, Edge]()
+  var nodes = scala.collection.mutable.HashMap[Long, Node]()
+
+  /**
+    *  Map from the edge id to a set of labels
+    */
+  var edgesLabel = scala.collection.mutable.HashMap[Long, Acdfg.LabelsSet]()
 
   var methodBag = new scala.collection.mutable.ArrayBuffer[String]()
+  var freshIds = new scala.collection.mutable.PriorityQueue[Long]().+=(0)
 
-  def prepareMethodBag() = {
+
+  private def prepareMethodBag() = {
     logger.debug("### Preparing bag of methods...")
     nodes.filter(_._2.isInstanceOf[MethodNode]).foreach { case (_, node) =>
       methodBag.append(node.asInstanceOf[MethodNode].name)
@@ -145,9 +232,17 @@ class Acdfg(adjacencyList: AdjacencyList,
     methodBag = methodBag.sorted
   }
 
-  /* Internal Protobuf value generated as needed */
+  /* Internal Protobuf value generated as needed
+
+   [SM] What does it happen if someone access the protobuffer field,
+   then changes the ACDFG, and re-access the pb field?
+   I think the pb field will not be updated.
+   This is a bug.
+  */
   private lazy val pb : ProtoAcdfg.Acdfg = {
     var builder : ProtoAcdfg.Acdfg.Builder = ProtoAcdfg.Acdfg.newBuilder()
+
+    /* add the edges */
     edges.foreach {
       case (id : Long, edge : ControlEdge) =>
         val protoControlEdge: ProtoAcdfg.Acdfg.ControlEdge.Builder =
@@ -177,9 +272,34 @@ class Acdfg(adjacencyList: AdjacencyList,
         protoTransEdge.setFrom(edge.from)
         protoTransEdge.setTo(edge.to)
         builder.addTransEdge(protoTransEdge)
+      case (id : Long, edge : ExceptionalControlEdge) =>
+        val protoEdge = ProtoAcdfg.Acdfg.ExceptionalControlEdge.newBuilder()
+        protoEdge.setId(id)
+        protoEdge.setFrom(edge.from)
+        protoEdge.setTo(edge.to)
+        edge.exceptions.foreach { x => protoEdge.addExceptions(x) }
+        builder.addExceptionalEdge(protoEdge)
     }
+
+    /* Add the node labels */
+    edgesLabel.foreach {
+      case (id : Long, label : Acdfg.LabelsSet) => {
+        val edgeBuilder = ProtoAcdfg.Acdfg.LabelMap.newBuilder()
+        edgeBuilder.setEdgeId(id)
+        label.foreach { x => x match {
+          case x if x == EdgeLabel.SRC_DOMINATE_DST => edgeBuilder.addLabels(ProtoAcdfg.Acdfg.EdgeLabel.DOMINATE)
+          case x if x == EdgeLabel.DST_POSDOMINATE_SRC => edgeBuilder.addLabels(ProtoAcdfg.Acdfg.EdgeLabel.POSTDOMINATED)
+          case _ => ???
+          }
+        }
+        builder.addEdgeLabels(edgeBuilder)
+      }
+    }
+
     var methodBag : scala.collection.mutable.ArrayBuffer[String] =
       new scala.collection.mutable.ArrayBuffer[String]()
+
+    /* Add the nodes */
     nodes.foreach {
       case (id : Long, node : DataNode) =>
         val protoDataNode : ProtoAcdfg.Acdfg.DataNode.Builder =
@@ -187,6 +307,12 @@ class Acdfg(adjacencyList: AdjacencyList,
         protoDataNode.setId(id)
         protoDataNode.setName(node.name)
         protoDataNode.setType(node.datatype)
+
+        node match {
+          case x : VarDataNode => protoDataNode.setDataType(ProtoAcdfg.Acdfg.DataNode.DataType.DATA_VAR)
+          case x : ConstDataNode => protoDataNode.setDataType(ProtoAcdfg.Acdfg.DataNode.DataType.DATA_CONST)
+        }
+
         builder.addDataNode(protoDataNode)
       case (id : Long, node : MiscNode) =>
         val protoMiscNode : ProtoAcdfg.Acdfg.MiscNode.Builder =
@@ -197,22 +323,41 @@ class Acdfg(adjacencyList: AdjacencyList,
         val protoMethodNode : ProtoAcdfg.Acdfg.MethodNode.Builder =
           ProtoAcdfg.Acdfg.MethodNode.newBuilder()
         protoMethodNode.setId(id)
+        if (node.assignee.isDefined) {
+          protoMethodNode.setAssignee(node.assignee.get)
+        }
         if (node.invokee.isDefined) {
           protoMethodNode.setInvokee(node.invokee.get)
         }
         node.argumentIds.foreach(protoMethodNode.addArgument)
         protoMethodNode.setName(node.name)
         builder.addMethodNode(protoMethodNode)
+
         // add method to bag of methods representation
         methodBag.append(node.name)
     }
 
-    val protoRepoTag = ProtoAcdfg.Acdfg.RepoTag.newBuilder()
-    protoRepoTag.setUserName(this.gitHubRecord.userName)
-    protoRepoTag.setRepoName(this.gitHubRecord.repoName)
-    protoRepoTag.setUrl(this.gitHubRecord.url)
-    protoRepoTag.setCommitHash(this.gitHubRecord.commitHash)
-    builder.setRepoTag(protoRepoTag)
+    /* copy the repotag informations */
+    if (null != this.gitHubRecord) {
+      val protoRepoTag = ProtoAcdfg.Acdfg.RepoTag.newBuilder()
+      protoRepoTag.setUserName(this.gitHubRecord.userName)
+      protoRepoTag.setRepoName(this.gitHubRecord.repoName)
+      protoRepoTag.setUrl(this.gitHubRecord.url)
+      protoRepoTag.setCommitHash(this.gitHubRecord.commitHash)
+      builder.setRepoTag(protoRepoTag)
+    }
+
+    if (null != this.sourceInfo) {
+      val protoSrcTag = ProtoAcdfg.Acdfg.SourceInfo.newBuilder()
+      protoSrcTag.setPackageName(sourceInfo.packageName)
+      protoSrcTag.setClassName(sourceInfo.className)
+      protoSrcTag.setMethodName(sourceInfo.methodName)
+      protoSrcTag.setClassLineNumber(sourceInfo.classLineNumber)
+      protoSrcTag.setMethodLineNumber(sourceInfo.methodLineNumber)
+      protoSrcTag.setSourceClassName(sourceInfo.sourceClassName)
+      protoSrcTag.setAbsSourceClassName(sourceInfo.absSourceClassName)
+      builder.setSourceInfo(protoSrcTag)
+    }
 
     // add bag of methods
     val protoMethodBag = ProtoAcdfg.Acdfg.MethodBag.newBuilder()
@@ -220,16 +365,202 @@ class Acdfg(adjacencyList: AdjacencyList,
     builder.setMethodBag(protoMethodBag)
 
     builder.build()
+  } /* creation of pb */
+
+  // TODO: fix
+  def getNewId : Long = {
+    val newId = freshIds.dequeue()
+    if (freshIds.isEmpty) {
+      // Must maintain invariant: freshIds always has at least one fresh id
+      freshIds.enqueue(newId + 1)
+    }
+    newId
   }
 
-  object MinOrder extends Ordering[Int] {
-    def compare(x:Int, y:Int) = y compare x
+  private def removeId(id : Long) = freshIds.enqueue(id)
+
+  def addEdge(edge : Edge) : Unit = {
+    addEdge(edge, scala.collection.immutable.HashSet[EdgeLabel.Value]())
   }
 
-  var freshIds = new scala.collection.mutable.PriorityQueue[Long]().+=(0)
+  def addEdge(edge : Edge, labels : Acdfg.LabelsSet) : Unit = {
+    edges += ((edge.id, edge))
+    edgesLabel += ((edge.id, labels))
+  }
 
-  def toAdjacencyList : AdjacencyList =
-    AdjacencyList(nodes.values.toVector,edges.values.toVector)
+  def addNode(node : Node) : (Long, Node) = {
+    val oldCount = nodes.size
+    nodes.+=((node.id, node))
+    val newCount = nodes.size
+    assert(oldCount + 1 == newCount)
+    (node.id, node)
+  }
+
+  def removeEdge(to : Long, from : Long) = {
+    val id = edges.find {pair => (pair._2.from == from) && (pair._2.to == to) }.get._1
+    edges.remove(id)
+  }
+
+  def removeEdgesOf(id : Long) = {
+    val edgesOfId = edges.find({
+      pair => (pair._2.from == id) || pair._2.to == id
+    })
+    edgesOfId.foreach(pair => {
+      edges.remove(pair._1)
+      edgesLabel.remove(pair._1)
+    })
+  }
+
+  def removeDataNode(name : String) = {
+    nodes.find(pair => pair._2.isInstanceOf[DataNode]).foreach(
+      pair => {
+        if (pair._2.asInstanceOf[DataNode].name == name) {
+          nodes.remove(pair._1)
+        }
+      }
+    )
+  }
+
+  def removeNode(id : Long) = {
+    nodes.remove(id)
+    removeId(id)
+  }
+
+  /**
+    * Creates a ACDFG from the adjacencylist
+    */
+  def this(adjacencyList: AdjacencyList, gitHubRecord: GitHubRecord,
+    sourceInfo : SourceInfo) = {
+    this(adjacencyList, null, null, gitHubRecord, sourceInfo)
+    assert(this.gitHubRecord == gitHubRecord)
+    adjacencyList.nodes.foreach {node => nodes += ((node.id, node))}
+    adjacencyList.edges.foreach {edge => addEdge(edge)}
+    prepareMethodBag()
+  }
+
+  /**
+    * Creates a ACDFG from a CDFG
+    */
+  def this(cdfg : UnitCdfgGraph, gitHubRecord: GitHubRecord,
+    sourceInfo : SourceInfo) = {
+    this(null, cdfg, null, gitHubRecord, sourceInfo)
+    assert(this.gitHubRecord == gitHubRecord)
+
+    // the following are used to make lookup more efficient
+
+    val converter = new CdfgToAcdfg(cdfg, this)
+    converter.fillAcdfg()
+
+    prepareMethodBag()
+
+    logger.debug("### Done")
+  }
+
+  /**
+    *  Creates the ACDFG structure from the protobuf representation
+    */
+  def this(protobuf : ProtoAcdfg.Acdfg) = {
+    this(null, null, protobuf,
+      GitHubRecord(
+        if (protobuf.getRepoTag.hasUserName)
+          protobuf.getRepoTag.getUserName else "",
+        if (protobuf.getRepoTag.hasRepoName)
+          protobuf.getRepoTag.getRepoName else "",
+        if (protobuf.getRepoTag.hasUrl)
+          protobuf.getRepoTag.getUrl else "",
+        if (protobuf.getRepoTag.hasCommitHash)
+          protobuf.getRepoTag.getCommitHash else ""
+      ),
+      SourceInfo(protobuf.getSourceInfo.getPackageName,
+        protobuf.getSourceInfo.getClassName,
+        protobuf.getSourceInfo.getMethodName,
+        protobuf.getSourceInfo.getClassLineNumber,
+        protobuf.getSourceInfo.getMethodLineNumber,
+        protobuf.getSourceInfo.getSourceClassName,
+        protobuf.getSourceInfo.getAbsSourceClassName
+      )
+    )
+
+    /* add data nodes */
+    protobuf.getDataNodeList.foreach { dataNode =>
+      var node = dataNode.getDataType match {
+        case x if x == ProtoAcdfg.Acdfg.DataNode.DataType.DATA_VAR =>
+          new VarDataNode(dataNode.getId, dataNode.getName, dataNode.getType)
+        case x if x == ProtoAcdfg.Acdfg.DataNode.DataType.DATA_CONST =>
+          new ConstDataNode(dataNode.getId, dataNode.getName, dataNode.getType)
+      }
+
+      addNode(node)
+    }
+    /* method nodes */
+    protobuf.getMethodNodeList.foreach { methodNode =>
+      val invokee = if (methodNode.hasInvokee) Some(methodNode.getInvokee) else None
+      val assignee = if (methodNode.hasAssignee) Some(methodNode.getAssignee) else None
+      val node = new MethodNode(methodNode.getId, assignee, invokee, methodNode.getName,
+        methodNode.getArgumentList.asScala.toVector.map(_.longValue()))
+      addNode(node)
+      (methodNode.getId, node)
+    }
+    /* misc nodes */
+    protobuf.getMiscNodeList.foreach { miscNode =>
+      val node = new MiscNode(miscNode.getId)
+      addNode(node)
+      (miscNode.getId, node)
+    }
+
+    /* edges */
+    protobuf.getControlEdgeList.foreach { protoEdge =>
+      val edge = new ControlEdge(protoEdge.getId, protoEdge.getFrom, protoEdge.getTo)
+      addEdge(edge)
+    }
+
+    protobuf.getUseEdgeList.foreach { protoEdge =>
+      val edge = new UseEdge(protoEdge.getId, protoEdge.getFrom, protoEdge.getTo)
+      addEdge(edge)
+    }
+
+    protobuf.getDefEdgeList.foreach { protoEdge =>
+      val edge = new DefEdge(protoEdge.getId, protoEdge.getFrom, protoEdge.getTo)
+      addEdge(edge)
+    }
+
+    protobuf.getTransEdgeList.foreach { protoEdge =>
+      val edge = new TransControlEdge(protoEdge.getId, protoEdge.getFrom, protoEdge.getTo)
+      addEdge(edge)
+    }
+
+    protobuf.getExceptionalEdgeList.foreach { protoEdge =>
+      val exception = protoEdge.getExceptionsList.toList
+      val edge = new ExceptionalControlEdge(protoEdge.getId, protoEdge.getFrom,
+          protoEdge.getTo, exception)
+      addEdge(edge)
+    }
+
+    /* get the edge labels */
+    protobuf.getEdgeLabelsList.foreach { labelMap => {
+      val labelsList = labelMap.getLabelsList.foldLeft(List[EdgeLabel.Value]())({
+        (res, x) => {
+          x match {
+            case x if x == ProtoAcdfg.Acdfg.EdgeLabel.DOMINATE =>
+              EdgeLabel.SRC_DOMINATE_DST :: res
+            case x if x == ProtoAcdfg.Acdfg.EdgeLabel.POSTDOMINATED =>
+              EdgeLabel.DST_POSDOMINATE_SRC :: res
+            case _ => ???
+          }
+        }
+      })
+      val labelSet = scala.collection.immutable.HashSet[EdgeLabel.Value]() ++ labelsList
+      this.edgesLabel += ((labelMap.getEdgeId, labelSet))
+    }}
+
+    if ((!protobuf.getMethodBag.isInitialized) ||
+      (protobuf.getMethodBag.getMethodCount == 0)) {
+      prepareMethodBag()
+    } else {
+      protobuf.getMethodBag.getMethodList.foreach { method => methodBag.append(method) }
+    }
+  } /* end of constructor from protobuf */
+
 
   def union(that : Acdfg) : AdjacencyList =
     AdjacencyList(
@@ -263,558 +594,54 @@ class Acdfg(adjacencyList: AdjacencyList,
 
   def equals(that : Acdfg) : Boolean = {
     val du = this +| that
-    du.nodes.isEmpty && du.edges.isEmpty &&
-    this.gitHubRecord == that.getGitHubRecord
+    val eqnodes = du.nodes.isEmpty
+    val eqedges = du.edges.isEmpty
+    val eqgh = this.gitHubRecord.equals(that.getGitHubRecord)
+    val eqsource = this.sourceInfo.equals(that.getSourceInfo)
+
+    eqnodes && eqedges && eqgh && eqsource
   }
 
-  def ==(that : Acdfg) : Boolean =
+  def == (that : Acdfg) : Boolean =
     if (that != null) this.equals(that) else false
 
-  /*
-   * Methods to access ids while maintaining HashMaps, RB tree correctness
-   */
-
-  def getNewId : Long = {
-    val newId = freshIds.dequeue()
-    // Would be nice to do:
-    //   whenever freshIds is empty, add next 100 new ids instead of just the next 1
-    if (freshIds.isEmpty) {
-      // Must maintain invariant: freshIds always has at least one fresh id
-      freshIds.enqueue(newId + 1)
-    }
-    newId
-  }
-
-  def removeId(id : Long) = {
-    freshIds.enqueue(id)
-  }
-
-  def addNode(id : Long, node : Node) : (Long, Node) = {
-    val oldCount = nodes.size
-    nodes.+=((id, node))
-    val newCount = nodes.size
-    assert(oldCount + 1 == newCount)
-    (id, node)
-  }
-
-  def removeEdge(to : Long, from : Long) = {
-    val id = edges.find {pair => (pair._2.from == from) && (pair._2.to == to) }.get._1
-    edges.remove(id)
-  }
-
-  def removeEdgesOf(id : Long) = {
-    edges.find({pair => (pair._2.from == id) || pair._2.to == id }).foreach(pair => edges remove pair._1)
-  }
-
-  def removeDataNode(name : String) = {
-    nodes.find(pair => pair._2.isInstanceOf[DataNode]).foreach(
-      pair => {
-        if (pair._2.asInstanceOf[DataNode].name == name) {
-          nodes.remove(pair._1)
-        }
-      }
-    )
-  }
-
-  def removeNode(id : Long) = {
-    nodes.remove(id)
-    removeId(id)
-  }
-
-  override def toString = {
-    var output : String = "ACDFG:" + "\n"
-    output += ("  " + "Nodes:\n")
-    nodes.foreach(node => output += ("    " + node.toString()) + "\n")
-    output += "\n"
-    output += ("  " + "Edges:\n")
-    edges.foreach(edge => output += ("    " + edge.toString()) + "\n")
-    output
-  }
 
   def toProtobuf = pb
-
   def getGitHubRecord = gitHubRecord
   def getSourceInfo = sourceInfo
 
-  def this(adjacencyList: AdjacencyList,
-    gitHubRecord: GitHubRecord,
-    sourceInfo : SourceInfo) = {
-    this(adjacencyList, null, null, gitHubRecord, sourceInfo)
-    assert(this.gitHubRecord == gitHubRecord)
+  override def toString = {
+    // Inefficient - TODO: use buffer instead of string concat
+    var output : String = "ACDFG:" + "\n"
 
-    adjacencyList.nodes.foreach {node =>
-      nodes += ((node.id, node))
-    }
+    output += ("  " + "Nodes:\n")
+    nodes.foreach(node => output += ("    " + node.toString()) + "\n")
+    output += "\n"
 
-    adjacencyList.edges.foreach {edge =>
-      edges += ((edge.id, edge))
-    }
+    output += ("  " + "Edges:\n")
+    edges.foreach(edge => {
+      output += ("    " + edge.toString()) + "\n"
+      this.edgesLabel.get(edge._1) match {
+        case Some(labelsList) => {
+          val labels = labelsList.foldLeft ("    Labels:"){ (res,x) => res + " " + x.toString }
 
-    prepareMethodBag()
-  }
-
-  def this(cdfg : UnitCdfgGraph, gitHubRecord: GitHubRecord,
-    sourceInfo : SourceInfo) = {
-    this(null, cdfg, null, gitHubRecord, sourceInfo)
-    assert(this.gitHubRecord == gitHubRecord)
-
-    // the following are used to make lookup more efficient
-    var unitToId       = scala.collection.mutable.HashMap[soot.Unit, Long]()
-    var localToId      = scala.collection.mutable.HashMap[soot.Local, Long]()
-    var edgePairToId   = scala.collection.mutable.HashMap[(Long, Long), Long]()
-    var idToMethodStrs = scala.collection.mutable.HashMap[Long, Array[String]]()
-
-    val defEdges = cdfg.defEdges()
-    val useEdges = cdfg.useEdges()
-
-    def addDataNode(local : soot.Local,
-      name : String,
-      datatype : String) = {
-      val id = getNewId
-      val node = new DataNode(id, name, datatype)
-      localToId += ((local,id))
-      addNode(id, node)
-    }
-
-    def addMethodNode(unit : soot.Unit,
-      assignee : Option[String],
-      invokee : Option[Long],
-      name : String,
-      argumentStrings : Array[String]) : (Long, Node) = {
-      val id   = getNewId
-      val node = new MethodNode(
-        id,
-        invokee,
-        name,
-        Vector.fill(argumentStrings.length)(0) : Vector[Long]
-      )
-      addNode(id, node)
-      unitToId += ((unit, id))
-      idToMethodStrs += ((id, argumentStrings))
-      (id, node)
-    }
-
-    def addMiscNode(unit : soot.Unit) : (Long, Node) = {
-      val id = getNewId
-      val node = new MiscNode(id)
-      addNode(id, node)
-      unitToId += ((unit, id))
-      (id, node)
-    }
-
-    // CDFG
-    def addDefEdge(fromId : Long, toId : Long): Unit = {
-      val id = getNewId
-      val edge = new DefEdge(id, fromId, toId)
-      edges += ((id, edge))
-      edgePairToId += (((fromId, toId), id))
-    }
-
-    // CDFG
-    def addUseEdge(fromId : Long, toId : Long): Unit = {
-      val id = getNewId
-      val edge = new UseEdge(id, fromId, toId)
-      edges += ((id, edge))
-      edgePairToId += (((fromId, toId), id))
-    }
-
-
-    // CDFG
-    def addControlEdge(fromId : Long, toId : Long): Unit = {
-      val id = getNewId
-      val edge = new ControlEdge(id, fromId, toId)
-      edges += ((id, edge))
-      edgePairToId += (((fromId, toId), id))
-    }
-
-
-    def addDefEdges(unit : soot.Unit, unitId : Long): Unit = {
-      if (!defEdges.containsKey(unit)) {
-        return
-        // defensive programming; don't know if defEdges has a value for every unit
-      }
-      val localIds : Array[Long] = defEdges.get(unit).iterator().map({local : soot.Local =>
-        localToId(local)
-      }).toArray
-      localIds.foreach({localId : Long => addDefEdge(unitId, localId)
-      })
-    }
-
-    def addUseEdges(local : soot.Local, localId : Long): Unit = {
-      if (!useEdges.containsKey(local)) {
-        return
-        // defensive programming; don't know if useEdges has a value for every local
-      }
-      val unitIds : Array[Long] = useEdges.get(local).iterator().map({unit : soot.Unit =>
-        unitToId(unit)
-      }).toArray
-      unitIds.foreach({unitId : Long => addUseEdge(localId, unitId)
-      })
-    }
-
-    def addControlEdges(unit : soot.Unit, unitId : Long): Unit = {
-      // add predecessor edges, if not extant
-      val unitId = unitToId(unit)
-      cdfg.getPredsOf(unit).iterator().foreach{ (predUnit) =>
-        val predUnitId = unitToId(predUnit)
-        if (!edgePairToId.contains(predUnitId, unitId)) {
-          addControlEdge(predUnitId, unitId)
+          output += labels + "\n"
         }
-      }
-      // add succesor edges, if not extant
-      cdfg.getSuccsOf(unit).iterator().foreach{ (succUnit) =>
-        val succUnitId = unitToId(succUnit)
-        if (!edgePairToId.contains(unitId, succUnitId)) {
-          addControlEdge(unitId, succUnitId)
-        }
-      }
-    }
-
-    def computeTransClosure(): Unit = {
-      val commandNodesMap = nodes.filter(_._2.isInstanceOf[CommandNode])
-      val commandNodes = commandNodesMap.values.toVector
-      val commandNodeCount = commandNodes.size
-      var idToAdjIndex = new scala.collection.mutable.HashMap[Long, Int]
-      commandNodesMap.zipWithIndex.foreach {
-        case (((id : Long, _),index : Int)) =>
-          idToAdjIndex += ((id, index))
-      }
-      var commandAdjMatrix = Array.ofDim[Boolean](commandNodeCount, commandNodeCount)
-      var transAdjMatrix = Array.ofDim[Boolean](commandNodeCount, commandNodeCount)
-      var stack      = new scala.collection.mutable.Stack[Node]
-      var discovered = new scala.collection.mutable.ArrayBuffer[Node]
-
-      //initialize stack
-      // add all non-dominated nodes to work list
-      commandNodes.filter {node => true
-        /*
-        edges.values.toSet.contains {
-          edge : Edge =>
-
-            edge : Edge => edge.from == node.id
-          }  &&
-          !edges.values.toSet.contains {
-            edge : Edge => edge.to   == node.id
-          }
-          */
-      }.foreach{ n =>
-        stack.push(n)
-      }
-      // assemble adjacency matrix of commands w/out back-edges from DFS
-      while (stack.nonEmpty) {
-        val node = stack.pop()
-        if ((!discovered.contains(node)) && (!stack.contains(node))) {
-          discovered += node
-          edges.filter { case ((id, edge)) =>
-            edge.from == node.id && idToAdjIndex.contains(edge.to)
-          }.foreach { case ((id, edge)) =>
-            val fromId = idToAdjIndex.get(edge.from).get
-            val toId   = idToAdjIndex.get(edge.to).get
-            commandAdjMatrix(fromId)(toId) = true
-            val newNode = commandNodes(toId)
-            if (!discovered.contains(newNode)) {
-              stack.push(newNode)
-            }
-          }
-        }
-      }
-
-      // assemble adjacency list of transitive closure w/ Floyd-Warshall
-      // O((Vertices) ^ 3)
-      val indices = 0 until commandNodeCount
-
-      /*
-       * NOTE: k,i,j major-to-minor order required;
-       * although i,k,j major-to-minor order is best for locality,
-       * a data dependency requires k,i,j order
-       * to maintain the dynamic programming invariant
-       */
-
-      indices.foreach { k =>
-        indices.foreach { i =>
-          indices.foreach { j =>
-            if (
-              (commandAdjMatrix(i)(k) || transAdjMatrix(i)(k)) &&
-                (commandAdjMatrix(k)(j) || transAdjMatrix(k)(j)) &&
-                (!commandAdjMatrix(i)(j)) && (!transAdjMatrix(i)(j))
-            ) {
-              //changed = true
-              transAdjMatrix(i)(j) = true
-              addTransControlEdge(commandNodes(i).id, commandNodes(j).id)
-            }
-          }
-        }
-      }
-    }
-
-    def addTransControlEdge(fromId : Long, toId : Long): Unit = {
-      val id = getNewId
-      val edge = new TransControlEdge(id, fromId, toId)
-      edges += ((id, edge))
-      edgePairToId += (((fromId, toId), id))
-    }
-
-    cdfg.localsIter().foreach {
-      case n =>
-        n match {
-          case n : JimpleLocal =>
-            addDataNode(n, n.getName, n.getType.toString)
-          case m =>
-        }
-    }
-
-    cdfg.unitIterator.foreach {
-      case n =>
-        n match {
-          case n : IdentityStmt =>
-            // must have NO arguments to toString(), which MUST have parens;
-            // otherwise needs a pointer to some printer object
-            val (id, _) = addMiscNode(n)
-            addDefEdges(n, id)
-          case n : InvokeStmt =>
-            val declaringClass = n.getInvokeExpr.getMethod.getDeclaringClass.getName
-            val methodName = n.getInvokeExpr.getMethod.getName
-            // must have empty arguments to toString(); otherwise needs a pointer to some printer object
-            val arguments = n.getInvokeExpr.getArgs
-            val argumentStrings = arguments.iterator.foldRight(new ArrayBuffer[String]())(
-              (argument, array) => array += argument.toString
-            )
-            val (id, _) = addMethodNode(n, None, None, declaringClass + "." + methodName, argumentStrings.toArray)
-            addDefEdges(n, id)
-          case n : AssignStmt =>
-            val assignee  = n.getLeftOp.toString()
-            if (n.containsInvokeExpr()) {
-              val declaringClass = n.getInvokeExpr.getMethod.getDeclaringClass.getName
-              val methodName = n.getInvokeExpr.getMethod.getName
-              // must have empty arguments to toString(); otherwise needs a pointer to some printer object
-              val arguments = n.getInvokeExpr.getArgs
-              val argumentStrings = arguments.iterator.foldRight(new ArrayBuffer[String]())(
-                (argument, array) => array += argument.toString()
-              )
-              val (id, _) = addMethodNode(
-                n,
-                Some(assignee),
-                None,
-                declaringClass + "." + methodName,
-                argumentStrings.toArray
-              )
-              addDefEdges(n, id)
-            } else {
-              val (id, _) = addMiscNode(n)
-              addDefEdges(n, id)
-            }
-          case _ =>
-            val (id, _) = addMiscNode(n)
-            addDefEdges(n, id)
-        }
-    }
-
-    cdfg.localsIter().foreach {
-      case n =>
-        n match {
-          case n : JimpleLocal =>
-            addUseEdges(n, localToId(n))
-          case m =>
-            logger.debug("    Data node of unknown type; ignoring...")
-        }
-    }
-
-    cdfg.unitIterator.foreach { n =>
-      addControlEdges(n, unitToId(n))
-    }
-    nodes.foreach({ case (id, _) =>
-      val connection = edges.values.find(edge => edge.from == id || edge.to == id)
-      if (connection.isEmpty) {
-        removeNode(id)
+        case None => ()
       }
     })
 
-    nodes
-      .filter(_._2.isInstanceOf[MethodNode])
-      .foreach { case (id, methodNode : MethodNode) =>
-        val argumentNames = idToMethodStrs(id)
-        argumentNames.zipWithIndex.foreach { case (argumentName, index) =>
-          val argumentPairs = nodes
-            .filter(_._2.isInstanceOf[DataNode])
-            .filter(_._2.asInstanceOf[DataNode].name == argumentName)
-          if (argumentPairs.nonEmpty) {
-            val argVal : Long = argumentPairs.head._1
-            nodes.remove(methodNode.id)
-            nodes += ((methodNode.id, MethodNode(
-              methodNode.id,
-              methodNode.invokee,
-              methodNode.name,
-              methodNode.argumentIds.updated(index, argVal)
-            )))
-          } else {
-            val argVal : Long = 0
-            nodes.remove(methodNode.id)
-            nodes += ((methodNode.id, MethodNode(
-              methodNode.id,
-              methodNode.invokee,
-              methodNode.name,
-              methodNode.argumentIds.updated(index, argVal)
-            )))
-          }
-        }
-      }
-
-    edges
-      .filter(_._2.isInstanceOf[UseEdge])
-      .foreach { case (_, edge : UseEdge) => nodes.get(edge.to).get match {
-        case node : MethodNode =>
-          if (! node.argumentIds.toStream.exists(_.equals(edge.from))) {
-            val invokee = Some(edge.from)
-            nodes.remove(node.id)
-            nodes += ((node.id,
-              MethodNode(node.id, invokee, node.name, node.argumentIds)
-            ))
-          }
-        case _ => Nil
-      }}
-
-    logger.debug("### Computing transitive closure down to DFS of command edges...")
-    computeTransClosure()
-
-    prepareMethodBag()
-
-    logger.debug("### Done")
+    output
   }
 
-  /* Creates the ACDFG structure from the protobuf representation */
-  def this(protobuf : ProtoAcdfg.Acdfg) = {
-    this(
-      null,
-      null,
-      protobuf,
-      GitHubRecord(
-        if (protobuf.getRepoTag.hasUserName)
-          protobuf.getRepoTag.getUserName else "",
-        if (protobuf.getRepoTag.hasRepoName)
-          protobuf.getRepoTag.getRepoName else "",
-        if (protobuf.getRepoTag.hasUrl)
-          protobuf.getRepoTag.getUrl else "",
-        if (protobuf.getRepoTag.hasCommitHash)
-          protobuf.getRepoTag.getCommitHash else ""
-      ),
-      SourceInfo(protobuf.getSourceInfo.getPackageName,
-        protobuf.getSourceInfo.getClassName,
-        protobuf.getSourceInfo.getMethodName,
-        protobuf.getSourceInfo.getClassLineNumber,
-        protobuf.getSourceInfo.getMethodLineNumber,
-        protobuf.getSourceInfo.getSourceClassName,
-        protobuf.getSourceInfo.getAbsSourceClassName
-      )
-    )
+}
 
-    // for Protobuf
-    def addDataNode(id : Long,
-      name : String,
-      datatype : String) = {
-      val node = new DataNode(id, name, datatype)
-      addNode(id, node)
-    }
+object Acdfg {
+  type LabelsSet = scala.collection.immutable.Set[EdgeLabel.Value]
 
-    // Protobuf
-    def addMethodNode(
-                       id : Long,
-                       invokee : Option[Long],
-                       name : String,
-                       arguments : Vector[Long]
-                     ): (Long, Node) = {
-      val node = new MethodNode(
-        id,
-        invokee,
-        name,
-        arguments
-      )
-      addNode(id, node)
-      (id, node)
-    }
-
-    // Protobuf
-    def addMiscNode(
-                     id : Long
-                   ) : (Long, Node) = {
-      val node = new MiscNode(id)
-      addNode(id, node)
-      (id, node)
-    }
-
-    // Protobuf
-    def addDefEdge(id : Long, from : Long, to : Long): Unit = {
-      val edge = new DefEdge(id, from, to)
-      edges += ((id, edge))
-    }
-
-    // Protobuf
-    def addUseEdge(id : Long, from : Long, to : Long): Unit = {
-      val edge = new UseEdge(id, from, to)
-      edges += ((id, edge))
-    }
-
-    // Protobuf
-    def addControlEdge(id : Long, from : Long, to : Long): Unit = {
-      val edge = new ControlEdge(id, from, to)
-      edges += ((id, edge))
-    }
-
-    // Protobuf
-    def addTransControlEdge(id : Long, from : Long, to : Long): Unit = {
-      val edge = new TransControlEdge(id, from, to)
-      edges += ((id, edge))
-    }
-
-    // add data nodes
-    protobuf.getDataNodeList.foreach { dataNode =>
-      addDataNode(dataNode.getId, dataNode.getName, dataNode.getType)
-    }
-    protobuf.getMethodNodeList.foreach { methodNode =>
-      if (methodNode.hasInvokee) {
-        addMethodNode(
-          methodNode.getId: Long,
-          Some(methodNode.getInvokee) : Option[Long],
-          methodNode.getName : String,
-          methodNode.getArgumentList.asScala.toVector.map(_.longValue())
-        )
-      } else {
-        addMethodNode(
-          methodNode.getId: Long,
-          None : Option[Long],
-          methodNode.getName : String,
-          methodNode.getArgumentList.asScala.toVector.map(_.longValue())
-        )
-      }
-    }
-    protobuf.getMiscNodeList.foreach { miscNode =>
-      addMiscNode(miscNode.getId)
-    }
-
-    protobuf.getControlEdgeList.foreach { ctrlEdge =>
-      addControlEdge(ctrlEdge.getId, ctrlEdge.getFrom, ctrlEdge.getTo)
-    }
-
-    protobuf.getUseEdgeList.foreach { useEdge =>
-      addUseEdge(useEdge.getId, useEdge.getFrom, useEdge.getTo)
-    }
-
-    protobuf.getDefEdgeList.foreach { defEdge =>
-      addDefEdge(defEdge.getId, defEdge.getFrom, defEdge.getTo)
-    }
-
-    protobuf.getTransEdgeList.foreach { transEdge =>
-      addTransControlEdge(transEdge.getId, transEdge.getFrom, transEdge.getTo)
-    }
-
-    if (
-      (!protobuf.getMethodBag.isInitialized) ||
-        (protobuf.getMethodBag.getMethodCount == 0)
-    ) {
-      prepareMethodBag()
-    } else {
-      protobuf.getMethodBag.getMethodList.foreach {method =>
-        methodBag.append(method)
-      }
-    }
-  } /* end of constructor from protobuf */
+  def isFakeMethod(methodName : String) : Boolean = {
+    return methodName.startsWith(FakeMethods.RETURN_METHOD) ||
+      methodName.startsWith(FakeMethods.GET_METHOD) ||
+      methodName.startsWith(FakeMethods.SET_METHOD)
+  }
 }

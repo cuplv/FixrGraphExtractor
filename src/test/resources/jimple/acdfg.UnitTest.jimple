@@ -1,0 +1,108 @@
+public class acdfg.UnitTest extends java.lang.Object
+{
+  public int pero;
+
+  public int testMethod(int, int, int) {
+    acdfg.UnitTest this;
+    int p1;
+    int p2;
+    int p3;
+
+    return p1;
+  }
+
+  public void voidMethod(int) {
+    acdfg.UnitTest this;
+
+    return;
+  }
+
+  public int testMethodA() {
+    acdfg.UnitTest this;
+    return 0;
+  }
+  public int testMethodB() {
+    acdfg.UnitTest this;
+    return 0;
+  }
+  public int testMethodC() {
+    acdfg.UnitTest this;
+    return 0;
+  }
+  public int testMethodD() {
+    acdfg.UnitTest this;
+    return 0;
+  }
+
+  public void testMethodE() {
+      java.lang.Exception e;
+      int i;
+      slice.TestException this;
+
+      nop;
+
+      this := @this: slice.TestException;
+
+      i = 0;
+
+      nop;
+
+      nop;
+
+   label1:
+      staticinvoke <java.lang.Math: int abs(int)>(i);
+
+   label2:
+      goto label4;
+
+   label3:
+      e := @caughtexception;
+
+      staticinvoke <java.lang.Math: int max(int,int)>(i,i);
+
+      goto label4;
+
+   label4:
+      nop;
+
+      catch java.lang.Exception from label1 to label2 with label3;
+  }
+
+  public int testFieldAccess()
+  {
+      acdfg.UnitTest this;
+      int i, temp$0, temp$1;
+
+      this := @this: acdfg.UnitTest;
+
+      i = this.<acdfg.UnitTest: int pero>;
+
+      temp$0 = i;
+
+      temp$1 = temp$0 + 1;
+
+      i = temp$1;
+
+      return i;
+  }
+
+  public int testFieldSet()
+  {
+      acdfg.UnitTest this;
+      int i, temp$0, temp$1;
+
+      this := @this: acdfg.UnitTest;
+
+      i = 0;
+
+      temp$0 = i;
+
+      temp$1 = temp$0 + 1;
+
+      i = temp$1;
+
+      this.<acdfg.UnitTest: int pero> = i;
+
+      return i;
+  }
+}

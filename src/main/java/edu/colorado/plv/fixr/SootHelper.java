@@ -9,12 +9,15 @@ import edu.colorado.plv.fixr.graphs.UnitCdfgGraph;
 import soot.Body;
 import soot.CompilationDeathException;
 import soot.G;
+import soot.Local;
 import soot.PackManager;
 import soot.PhaseOptions;
 import soot.Scene;
 import soot.SootClass;
 import soot.SootMethod;
 import soot.Timers;
+import soot.Type;
+import soot.jimple.Jimple;
 import soot.options.Options;
 import soot.toolkits.graph.DirectedGraph;
 import soot.util.cfgcmd.CFGToDotGraph;
@@ -26,6 +29,13 @@ import soot.tagkit.SourceLnPosTag;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.SourceFileTag;
 import soot.tagkit.SourceLnNamePosTag;
+
+import soot.tagkit.ConstantValueTag;
+import soot.tagkit.DoubleConstantValueTag;
+import soot.tagkit.FloatConstantValueTag;
+import soot.tagkit.IntegerConstantValueTag;
+import soot.tagkit.LongConstantValueTag;
+import soot.tagkit.StringConstantValueTag;
 
 public class SootHelper {
   public static void reset() {
@@ -249,6 +259,12 @@ public class SootHelper {
                       + " min. "
                       + ((runtime % 60000) / 1000)
                       + " sec.");
+  }
+
+  public static Local addLocal(Body body, String name, Type type) {
+    Local local = Jimple.v().newLocal(name, type);
+    body.getLocals().add(local);
+    return local;
   }
 
   /** Returns the line number of the code element host
