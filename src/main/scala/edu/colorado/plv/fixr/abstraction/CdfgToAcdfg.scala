@@ -16,6 +16,7 @@ import soot.Value
 import soot.Local
 import soot.RefType
 import soot.Body
+import soot.jimple.IntConstant
 import soot.jimple.Jimple
 import soot.jimple.Expr
 import soot.jimple.{StmtSwitch, ExprSwitch}
@@ -722,9 +723,67 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends
     cdfgToAcdfg.remappedEdges += ((stmt, List(trueRemap, falseRemap)))
   }
 
-  override def caseInvokeStmt(stmt: InvokeStmt): Unit = addMethod(stmt, None)
+  override def caseLookupSwitchStmt(stmt: LookupSwitchStmt): Unit = {
+    val stmtNode = addMisc(stmt)
 
-  override def caseLookupSwitchStmt(stmt: LookupSwitchStmt): Unit = addMisc(stmt)
+    val key : Value = stmt.getKey()
+
+    val res : (Int, List[RemapInfo]) =
+      stmt.getTargets().foldLeft ( (0, List[RemapInfo]()) ) ( (res, dstUnit) => {
+      val (index, edges) = res
+
+      val lookupValue : Int = stmt.getLookupValue(index);
+      val lookupCondition = Jimple.v().newEqExpr(key,
+        IntConstant.v(lookupValue))
+      val currentBranchId = addPredNode(lookupCondition, false)
+
+      cdfgToAcdfg.unitsForDominator += ((currentBranchId, dstUnit))
+      val remap = RemapInfo(stmt, dstUnit, List(currentBranchId))
+
+      (index + 1, remap :: edges)
+
+    })
+
+    /* warning: we have to reverse the list after foldLef */
+    val (index, edges) = res match {
+      case (index, edges) => (index, edges.reverse)
+    }
+    cdfgToAcdfg.remappedEdges += ((stmt, edges))
+  }
+
+  override def caseTableSwitchStmt(stmt: TableSwitchStmt): Unit = {
+    val stmtNode = addMisc(stmt)
+    val key : Value = stmt.getKey()
+
+    def getEdgeListAux(stmt : TableSwitchStmt,
+      index : Int,  targetIndex : Int,
+      edges : List[RemapInfo]) : (Int, Int, List[RemapInfo]) = {
+
+      if (index <= stmt.getHighIndex()) {
+        val lookupCondition = Jimple.v().newEqExpr(key,
+          IntConstant.v(index))
+        val currentBranchId = addPredNode(lookupCondition, false)
+        val dstUnit = stmt.getTarget(targetIndex)
+        cdfgToAcdfg.unitsForDominator += ((currentBranchId, dstUnit))
+        val remap = RemapInfo(stmt, dstUnit, List(currentBranchId))
+        getEdgeListAux(stmt, index + 1, targetIndex + 1, remap :: edges)
+      }
+      else {
+        (index, targetIndex, edges)
+      }
+    }
+
+    val res : (Int, Int, List[RemapInfo]) =
+      getEdgeListAux(stmt, stmt.getLowIndex(), 0, List[RemapInfo]())
+
+    /* warning: we have to reverse the list after foldLef */
+    val (_, _, edges) = res match {
+      case (i, ti, edges) => (i, ti, edges.reverse)
+    }
+    cdfgToAcdfg.remappedEdges += ((stmt, edges))
+  }
+
+  override def caseInvokeStmt(stmt: InvokeStmt): Unit = addMethod(stmt, None)
 
   override def caseNopStmt(stmt: NopStmt): Unit = addMisc(stmt)
 
@@ -745,14 +804,19 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends
       FakeMethods.RETURN_METHOD, List[Long]())
   }
 
-  override def caseTableSwitchStmt(stmt: TableSwitchStmt): Unit = addMisc(stmt)
-
   override def caseThrowStmt(stmt: ThrowStmt): Unit = addMisc(stmt)
 
   override def defaultCase(stmt: Any): Unit =
     throw new RuntimeException("Uknown statement " + stmt.toString)
 }
 
+/**
+  * Generate predicate nodes (method call with particular names)
+  * corresponding to the boolean condition used e.g. in a if, case ...
+  *
+  * The class can be extended to deal with other kind of predicates
+  * (e.g. other expression as sums...)
+  */
 class AcdfgSootExprSwitch(cdfgToAcdfg : CdfgToAcdfg) extends ExprSwitch {
 
   var polarity : Boolean = true
@@ -851,6 +915,7 @@ class AcdfgSootExprSwitch(cdfgToAcdfg : CdfgToAcdfg) extends ExprSwitch {
     }
   }
 
+  /* they are not used as a predicate in Jimple*/
   def caseInterfaceInvokeExpr(v : InterfaceInvokeExpr) : Unit = defaultCase(v)
   def caseSpecialInvokeExpr(v : SpecialInvokeExpr) : Unit = defaultCase(v)
   def caseStaticInvokeExpr(v : StaticInvokeExpr) : Unit = defaultCase(v)
@@ -868,7 +933,7 @@ class AcdfgSootExprSwitch(cdfgToAcdfg : CdfgToAcdfg) extends ExprSwitch {
   def caseUshrExpr(v : UshrExpr) : Unit = defaultCase(v)
   def caseSubExpr(v : SubExpr) : Unit = defaultCase(v)
 
-  /* Not important cases - for now  */
+  /* Not used as a predicate in Jimple now   */
   def caseNewExpr(v : NewExpr) : Unit = defaultCase(v)
   def caseNewArrayExpr(v : NewArrayExpr) : Unit = defaultCase(v)
   def caseNewMultiArrayExpr(v : NewMultiArrayExpr) : Unit = defaultCase(v)

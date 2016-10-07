@@ -14,4 +14,31 @@ class Predicates {
     }
   }
 
+  public void testLookupSwitch(int switchVal) {
+    int val = 0;
+    switch (switchVal) {
+    case 10:
+      val = 1;
+      break;
+    case 2:
+      val = 2;
+      break;
+    default:
+      val = -1;
+    }
+  }
+
+  public void testTableSwitch(int switchVal) {
+    int val = 0;
+    switch (switchVal) {
+    case 0:
+      val = 1;
+      break;
+    case 1:
+      val = 2;
+      break;
+    default:
+      val = -1;
+    }
+  }
 }
