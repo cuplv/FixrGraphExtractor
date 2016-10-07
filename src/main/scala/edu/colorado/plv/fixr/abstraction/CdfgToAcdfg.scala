@@ -7,13 +7,19 @@ import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
+import scala.collection.mutable.DoubleLinkedList
 
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
 
 import soot.Value
-import soot.RefType
 import soot.Local
+import soot.RefType
+import soot.Body
+import soot.jimple.IntConstant
+import soot.jimple.Jimple
+import soot.jimple.Expr
+import soot.jimple.{StmtSwitch, ExprSwitch}
 import soot.jimple.Constant
 import soot.jimple.AssignStmt
 import soot.jimple.AssignStmt
@@ -32,18 +38,66 @@ import soot.jimple.RetStmt
 import soot.jimple.ReturnStmt
 import soot.jimple.ReturnVoidStmt
 import soot.jimple.Stmt
-import soot.jimple.StmtSwitch
 import soot.jimple.TableSwitchStmt
 import soot.jimple.ThrowStmt
 import soot.jimple.FieldRef
 import soot.jimple.InstanceFieldRef
 import soot.jimple.internal.AbstractInstanceInvokeExpr
+import soot.jimple.EqExpr
+import soot.jimple.NeExpr
+import soot.jimple.GeExpr
+import soot.jimple.GtExpr
+import soot.jimple.LeExpr
+import soot.jimple.LtExpr
+import soot.jimple.AndExpr
+import soot.jimple.OrExpr
+import soot.jimple.XorExpr
+import soot.jimple.InterfaceInvokeExpr
+import soot.jimple.SpecialInvokeExpr
+import soot.jimple.StaticInvokeExpr
+import soot.jimple.VirtualInvokeExpr
+import soot.jimple.DynamicInvokeExpr
+import soot.jimple.CmpExpr
+import soot.jimple.CmpgExpr
+import soot.jimple.CmplExpr
+import soot.jimple.RemExpr
+import soot.jimple.LengthExpr
+import soot.jimple.ShlExpr
+import soot.jimple.ShrExpr
+import soot.jimple.UshrExpr
+import soot.jimple.SubExpr
+import soot.jimple.NewExpr
+import soot.jimple.NewArrayExpr
+import soot.jimple.NewMultiArrayExpr
+import soot.jimple.DivExpr
+import soot.jimple.MulExpr
+import soot.jimple.AddExpr
+import soot.jimple.NegExpr
+import soot.jimple.InstanceOfExpr
+import soot.jimple.CastExpr
 
 import soot.toolkits.exceptions.ThrowAnalysisFactory
 import soot.toolkits.exceptions.ThrowableSet
 import soot.toolkits.graph.MHGDominatorsFinder
 import soot.toolkits.graph.MHGPostDominatorsFinder
 
+
+/** Represent a simple transformation on the acdfg.
+  * The semantic of remap info is the following:
+  * - srcNode and dstNode are two nodes with a control edge
+  * - intNodesList is a list of intermediate nodes used to create
+  *   new edges
+  *
+  * The transformation tells to replace the edge (srcNode, dstNode)
+  * with the set of edges:
+  * (srcNode, n1), (n1,n2), ..., (n_k-1, n_k), (n_k, dstNode)
+  * where n1,...,nk are the nodes in intNodesList
+  */
+case class RemapInfo(
+  srcNode : soot.Unit,
+  dstNode : soot.Unit,
+  intNodesList : List[Long]
+)
 
 /**
   *  Populates a acdfg from a cdfg
@@ -63,10 +117,34 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
   val defEdges = cdfg.defEdges()
   val useEdges = cdfg.useEdges()
 
+  /* Map from a soot object (value, unit) to a node id */
   var sootObjToId = scala.collection.mutable.HashMap[Any, Long]()
+  /* Map from node IDs to the corresponding edge */
   var edgePairToId = scala.collection.mutable.HashMap[(Long, Long), Long]()
 
+  /* Map from unit (the source node of the edges) to a list of remap
+   * info.
+   *
+   * This is a representation of a list of edges that has been removed
+   * from the cdfg and replaced in the acdfg
+   *
+   * These edges should be ignored in the creation of control edges.
+   *
+   * NOTE: this is a list and not a set, since we may have multiple
+   * edges in from the same source/destination nodes.
+   *
+   */
+  var remappedEdges = scala.collection.mutable.HashMap[soot.Unit,List[RemapInfo]]()
+
+  /* Map from acdfg node ids to cdfg units.
+   * The map is used to compute the domniator/post-dominator relationship
+   */
+  var unitsForDominator = scala.collection.mutable.HashMap[Long, soot.Unit]()
+
+
+  /* helper class used to create an acdfg node from a node unit */
   val nodeCreator = new AcdfgSootStmtSwitch(this)
+  val exprNodeCreator = new AcdfgSootExprSwitch(this)
 
   def lookupNodeId(v : Any) : Option[Long] = sootObjToId.get(v)
 
@@ -94,21 +172,12 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
           case unit : soot.Unit => {
             unit.apply(nodeCreator)
             val nodeId = lookupNodeId(unit)
-            nodeId match {
-              case Some(id) => id
-              case None =>
-                /* The lookupNodeId statemebt on unit must not fail.
-                 * If it fails, it means that something went wrong inside the
-                 * call to unit.apply (look at the cases in AcdfgSootStmtSwitch)
-                 */
-                new RuntimeException("Error creating ACDFG node from unit")
-                0
-            }
+            nodeId.get
           }
           case _ =>
             /* We do not know the type of v here, so we cannot create
              * a node. */
-            new RuntimeException("Cannot create an ACDFG node for this object")
+            throw new RuntimeException("Cannot create an ACDFG node for this object")
             0
         }
         nodeId
@@ -121,16 +190,24 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
     */
   def addMethodNode(unit : soot.Unit, assignee : Option[Long],
       invokee : Option[Long], name : String, arguments : List[Long])  : Node = {
+    val node = addMethodNodeAux(assignee, invokee, name, arguments)
+    sootObjToId += ((unit, node.id))
+    node
+  }
+
+  /** Add a method node
+    */
+  def addMethodNodeAux(assignee : Option[Long],
+      invokee : Option[Long], name : String, arguments : List[Long])  : Node = {
     val id = acdfg.getNewId
     val node = new MethodNode(id, assignee, invokee, name, arguments.toVector)
     acdfg.addNode(node)
-    sootObjToId += ((unit, id))
 
     /* add a use edge for all the method nodes */
     arguments.foreach { fromId => addUseEdge(fromId, id) }
-
     node
   }
+
 
   def addMiscNode(unit : soot.Unit) : Node = {
     val id = acdfg.getNewId
@@ -203,23 +280,99 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
     }
 
     def addControEdgeAux(from : soot.Unit, to : soot.Unit,
-      fromId : Long, toId : Long) : Unit= {
-      val labelSet = CdfgToAcdfg.getLabelSet(from, to, dominators, postDominators)
+      fromId : Long, toId : Long) : Unit = {
 
-      if (! edgePairToId.contains(fromId, toId)) {
-        exceptionMap.get((from,to)) match {
-          case Some(exceptions) =>
-            addExceptionalEdge(fromId, toId, exceptions, labelSet)
-          case None => addControlEdge(fromId, toId, labelSet)
-        }
+      val labelSet = CdfgToAcdfg.getLabelSet(from, to,
+        dominators, postDominators)
+
+      exceptionMap.get((from,to)) match {
+        case Some(exceptions) =>
+          addExceptionalEdge(fromId, toId, exceptions, labelSet)
+        case None => addControlEdge(fromId, toId, labelSet)
       }
+
+    }
+
+    /** Find the first element in succToSkip that has succUnit as
+      * dstNode.
+      * Return in a pair the list without the found element and the
+      * element (a list with the original elements and None if
+      * succUnit is not found)
+      *
+      * NOTE: the order of the list is reversed at every call.
+      */
+    def findElem (succToSkip : List[RemapInfo], succUnit : soot.Unit) = {
+      succToSkip.foldLeft ((succToSkip, Option.empty[RemapInfo])) ({ (res, x) => {
+        res match {
+          case (succToSkip, intEdge) =>
+            if (! intEdge.isDefined) {
+              if (x.dstNode == succUnit) (succToSkip, Some(x))
+              else (x::succToSkip, intEdge)
+            }
+            else (x::succToSkip, intEdge)
+        }
+      }})
     }
 
     val unitId = sootObjToId(unit)
-    // add succesor edges
-    cdfg.getSuccsOf(unit).iterator().foreach{ (succUnit) =>
-      addControEdgeAux(unit, succUnit, unitId, sootObjToId(succUnit))
+
+    /* find the list of nodes that should be remapped */
+    val succToSkip : List[RemapInfo] = remappedEdges.get(unit) match {
+      case Some(l) => l
+      case _ => List[RemapInfo]()
     }
+
+    /* Iterates through the successsors of unit.
+     For the same unit, we try to find the edges to be redefined.
+     Note that in each iteration of the foldLeft we remove such edge
+     if it has been found.
+     */
+    cdfg.getSuccsOf(unit).iterator().foldLeft (succToSkip) (
+      (succToSkip, succUnit) => {
+
+        /* find the edges to be redifend */
+        val res = findElem(succToSkip, succUnit)
+
+        res match {
+          case (newSuccToSkip, intEdge) =>
+            intEdge match {
+              case Some(remapEdge) => {
+                def addRemapEdge(first : Option[soot.Unit], last : soot.Unit, intNodes : List[Long]) : Unit = {
+                  def addFirst(x : Long) = {
+                    val srcUnitId = sootObjToId(first.get)
+                    addControEdgeAux(first.get, succUnit, srcUnitId, x)
+                  }
+
+                  def addLast(x : Long) = {
+                    val srcUnit : soot.Unit = unitsForDominator.get(x).get
+                    addControEdgeAux(srcUnit, last, x, sootObjToId(last))
+                  }
+
+                  intNodes match {
+                    case Nil => ()
+                    case x::Nil => {
+                      /* first element */
+                      if (first.isDefined) addFirst(x)
+                      addLast(x)
+                    }
+                    case x :: y :: xs => {
+                      if (first.isDefined) addFirst(x)
+                      /* intermediary element  */
+                      val srcUnit = unitsForDominator.get(x).get
+                      val dstUnit = unitsForDominator.get(y).get
+                      addControEdgeAux(srcUnit, dstUnit, x, y)
+                      addRemapEdge(None, last, xs)
+                    }
+                    case _ => ()
+                  }
+                }
+                addRemapEdge(Some(unit), succUnit, remapEdge.intNodesList)
+              }
+              case None => addControEdgeAux(unit, succUnit, unitId, sootObjToId(succUnit))
+            }
+            newSuccToSkip
+        }
+      })
   }
 
   private def addTransControlEdge(fromId : Long, toId : Long,
@@ -235,7 +388,11 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
     val commandNodes = commandNodesMap.values.toVector
     val commandNodeCount = commandNodes.size
 
-    var idToUnit = sootObjToId map {_.swap}
+    val idToUnit = sootObjToId map {_.swap}
+    for ((k,v) <- unitsForDominator) {
+      idToUnit += ((k,v))
+    }
+
 
     var idToAdjIndex = new scala.collection.mutable.HashMap[Long, Int]
     commandNodesMap.zipWithIndex.foreach {
@@ -247,22 +404,9 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
     var stack      = new scala.collection.mutable.Stack[Node]
     var discovered = new scala.collection.mutable.ArrayBuffer[Node]
 
-    //initialize stack
-    // add all non-dominated nodes to work list
-    commandNodes.filter {node => true
-      /*
-       edges.values.toSet.contains {
-       edge : Edge =>
+    /* initialize the stack */
+    commandNodes.filter {node => true}.foreach{ n => stack.push(n) }
 
-       edge : Edge => edge.from == node.id
-       }  &&
-       !edges.values.toSet.contains {
-       edge : Edge => edge.to   == node.id
-       }
-       */
-    }.foreach{ n =>
-      stack.push(n)
-    }
     // assemble adjacency matrix of commands w/out back-edges from DFS
     while (stack.nonEmpty) {
       val node = stack.pop()
@@ -318,11 +462,10 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
     }
   }
 
-
   /** Fill the ACDFG visiting the graph
     */
   def fillAcdfg() = {
-    /* creates all the nodes and some use edges?!?  */
+    /* creates all the nodes and some def edges  */
     cdfg.getHeads().foreach(head => createNodes(head, HashSet[soot.Unit]()))
 
     /* Add use edges */
@@ -358,7 +501,6 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
 object CdfgToAcdfg {
   type TrapMap = scala.collection.immutable.HashMap[(soot.Unit,soot.Unit),
     List[String]]
-
 
   /** Return the set of labels for the edge fromfromUnit to toUnit
     *
@@ -429,7 +571,6 @@ object CdfgToAcdfg {
         processUnits(trapUnitIter, exceptionMap)
       } /* foldLeft on traps */
     }
-
     exceptionMap
   }
 }
@@ -438,10 +579,14 @@ object CdfgToAcdfg {
   * Implements the case switch on the soot statement found in the cdfg units
   *
   */
-class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
-  private def addMisc(stmt : Stmt) : Unit = {
+class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends
+    StmtSwitch {
+  private def getBody() : Body = cdfgToAcdfg.cdfg.getBody()
+
+  private def addMisc(stmt : Stmt) : Node = {
     val miscNode = cdfgToAcdfg.addMiscNode(stmt)
     cdfgToAcdfg.addDefEdges(stmt, miscNode.id)
+    miscNode
   }
 
   private def addMethod(stmt : Stmt, assignee : Option[Value]) = {
@@ -477,6 +622,30 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
     cdfgToAcdfg.addDefEdges(stmt, mNode.id)
   }
 
+
+  /**
+    * Add a predicate node with the give condition
+    */
+  private def addPredNode(condition : Value, negate : Boolean) : Long = {
+    if (condition.isInstanceOf[Local] ||
+      condition.isInstanceOf[Constant]) {
+      val predName = if (negate) Predicates.IS_FALSE else Predicates.IS_TRUE
+      val condNode = cdfgToAcdfg.lookupOrCreateNode(condition)
+      val mNode = cdfgToAcdfg.addMethodNodeAux(None,
+        None, predName, List[Long](condNode))
+      mNode.id
+    }
+    else if (condition.isInstanceOf[Expr]) {
+      /* create the node */
+      cdfgToAcdfg.exprNodeCreator.polarity = ! negate
+      condition.apply(cdfgToAcdfg.exprNodeCreator)
+      val node = cdfgToAcdfg.exprNodeCreator.res.get
+      node.id
+    }
+    else {
+      throw new RuntimeException("Undhandled node type")
+    }
+  }
 
   override def caseAssignStmt(stmt : AssignStmt): Unit = {
     def fieldAsMethodCall(stmt : AssignStmt,
@@ -528,11 +697,93 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
 
   override def caseIdentityStmt(stmt: IdentityStmt): Unit = addMisc(stmt)
 
-  override def caseIfStmt(stmt: IfStmt): Unit = addMisc(stmt)
+  override def caseIfStmt(stmt: IfStmt): Unit = {
+    val condition = stmt.getCondition()
+    val trueBranch = stmt.getTarget()
+    val falseBranch = getBody().getUnits().getSuccOf(stmt)
+
+    /* The IfStmt node has two successors, the true and false branch.
+     In the acdfg:
+       - The IfStmt node becomes a MiscNode
+       - We add a node in the true branch with the true condition
+       - We add a node in the false branch with the negation of the true condition
+     */
+
+    /* create the misc node for the statment */
+    val stmtNode = addMisc(stmt)
+    /* create new node for the true successor */
+    val trueBranchId = addPredNode(condition, false)
+    cdfgToAcdfg.unitsForDominator += ((trueBranchId, trueBranch))
+    val falseBranchId = addPredNode(condition, true)
+    cdfgToAcdfg.unitsForDominator += ((falseBranchId, falseBranch))
+
+    /* remap the edges */
+    val trueRemap = RemapInfo(stmt, trueBranch, List(trueBranchId))
+    val falseRemap = RemapInfo(stmt, falseBranch, List(falseBranchId))
+    cdfgToAcdfg.remappedEdges += ((stmt, List(trueRemap, falseRemap)))
+  }
+
+  override def caseLookupSwitchStmt(stmt: LookupSwitchStmt): Unit = {
+    val stmtNode = addMisc(stmt)
+
+    val key : Value = stmt.getKey()
+
+    val res : (Int, List[RemapInfo]) =
+      stmt.getTargets().foldLeft ( (0, List[RemapInfo]()) ) ( (res, dstUnit) => {
+      val (index, edges) = res
+
+      val lookupValue : Int = stmt.getLookupValue(index);
+      val lookupCondition = Jimple.v().newEqExpr(key,
+        IntConstant.v(lookupValue))
+      val currentBranchId = addPredNode(lookupCondition, false)
+
+      cdfgToAcdfg.unitsForDominator += ((currentBranchId, dstUnit))
+      val remap = RemapInfo(stmt, dstUnit, List(currentBranchId))
+
+      (index + 1, remap :: edges)
+
+    })
+
+    /* warning: we have to reverse the list after foldLef */
+    val (index, edges) = res match {
+      case (index, edges) => (index, edges.reverse)
+    }
+    cdfgToAcdfg.remappedEdges += ((stmt, edges))
+  }
+
+  override def caseTableSwitchStmt(stmt: TableSwitchStmt): Unit = {
+    val stmtNode = addMisc(stmt)
+    val key : Value = stmt.getKey()
+
+    def getEdgeListAux(stmt : TableSwitchStmt,
+      index : Int,  targetIndex : Int,
+      edges : List[RemapInfo]) : (Int, Int, List[RemapInfo]) = {
+
+      if (index <= stmt.getHighIndex()) {
+        val lookupCondition = Jimple.v().newEqExpr(key,
+          IntConstant.v(index))
+        val currentBranchId = addPredNode(lookupCondition, false)
+        val dstUnit = stmt.getTarget(targetIndex)
+        cdfgToAcdfg.unitsForDominator += ((currentBranchId, dstUnit))
+        val remap = RemapInfo(stmt, dstUnit, List(currentBranchId))
+        getEdgeListAux(stmt, index + 1, targetIndex + 1, remap :: edges)
+      }
+      else {
+        (index, targetIndex, edges)
+      }
+    }
+
+    val res : (Int, Int, List[RemapInfo]) =
+      getEdgeListAux(stmt, stmt.getLowIndex(), 0, List[RemapInfo]())
+
+    /* warning: we have to reverse the list after foldLef */
+    val (_, _, edges) = res match {
+      case (i, ti, edges) => (i, ti, edges.reverse)
+    }
+    cdfgToAcdfg.remappedEdges += ((stmt, edges))
+  }
 
   override def caseInvokeStmt(stmt: InvokeStmt): Unit = addMethod(stmt, None)
-
-  override def caseLookupSwitchStmt(stmt: LookupSwitchStmt): Unit = addMisc(stmt)
 
   override def caseNopStmt(stmt: NopStmt): Unit = addMisc(stmt)
 
@@ -553,9 +804,149 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends StmtSwitch {
       FakeMethods.RETURN_METHOD, List[Long]())
   }
 
-  override def caseTableSwitchStmt(stmt: TableSwitchStmt): Unit = addMisc(stmt)
-
   override def caseThrowStmt(stmt: ThrowStmt): Unit = addMisc(stmt)
 
-  override def defaultCase(stmt: Any): Unit = ???
+  override def defaultCase(stmt: Any): Unit =
+    throw new RuntimeException("Uknown statement " + stmt.toString)
 }
+
+/**
+  * Generate predicate nodes (method call with particular names)
+  * corresponding to the boolean condition used e.g. in a if, case ...
+  *
+  * The class can be extended to deal with other kind of predicates
+  * (e.g. other expression as sums...)
+  */
+class AcdfgSootExprSwitch(cdfgToAcdfg : CdfgToAcdfg) extends ExprSwitch {
+
+  var polarity : Boolean = true
+  /* keep the last result */
+  var res : Option[Node] = None
+
+  def methodNodeHelper(predName : String, pList : List[Any]) = {
+
+    val parList = pList.foldLeft (List[Long]()) (
+      (res, element) => {
+        val nodeId = cdfgToAcdfg.lookupOrCreateNode(element)
+        nodeId :: res
+      }
+    ).reverse
+
+    val mNode = cdfgToAcdfg.addMethodNodeAux(None,
+      None, predName, parList)
+
+    res = Some(mNode)
+  }
+
+  def handleBinary(v : Expr,
+    negFun : (Value,Value) => Expr,
+    op1 : Value, op2 : Value,
+    predName : String) : Unit = {
+    if (! polarity) {
+      val negated = negFun(op1, op2)
+      polarity = true
+      negated.apply(this)
+    } else {
+      methodNodeHelper(predName, List(op1, op2))
+    }
+  }
+
+  /* base cases */
+  def caseEqExpr(v : EqExpr) : Unit =
+    handleBinary(v, Jimple.v().newNeExpr, v.getOp1, v.getOp2, Predicates.EQ)
+
+  def caseNeExpr(v : NeExpr) : Unit =
+    handleBinary(v, Jimple.v().newEqExpr, v.getOp1, v.getOp2, Predicates.NEQ)
+
+  def caseGeExpr(v : GeExpr) : Unit =
+    handleBinary(v, Jimple.v().newLtExpr, v.getOp1, v.getOp2, Predicates.GE)
+
+  def caseGtExpr(v : GtExpr) : Unit =
+    handleBinary(v, Jimple.v().newLeExpr, v.getOp1, v.getOp2, Predicates.GT)
+
+  def caseLeExpr(v : LeExpr) : Unit =
+    handleBinary(v, Jimple.v().newGtExpr, v.getOp1, v.getOp2, Predicates.LE)
+
+  def caseLtExpr(v : LtExpr) : Unit =
+    handleBinary(v, Jimple.v().newGeExpr, v.getOp1, v.getOp2, Predicates.LT)
+
+  /* recursive cases */
+  def caseAndExpr(v : AndExpr) : Unit = {
+    if (! polarity) {
+      val negated = Jimple.v().newOrExpr(Jimple.v().newNegExpr(v.getOp1),
+        Jimple.v().newNegExpr(v.getOp2))
+      polarity = true
+      negated.apply(this)
+    }
+    else {
+      methodNodeHelper(Predicates.AND, List(v.getOp1, v.getOp2))
+    }
+  }
+
+  def caseOrExpr(v : OrExpr) : Unit = {
+    if (! polarity) {
+      val negated = Jimple.v().newAndExpr(Jimple.v().newNegExpr(v.getOp1),
+        Jimple.v().newNegExpr(v.getOp2))
+      polarity = true
+      negated.apply(this)
+    }
+    else {
+      methodNodeHelper(Predicates.OR, List(v.getOp1, v.getOp2))
+    }
+  }
+
+  def caseXorExpr(v : XorExpr) : Unit = {
+    if (! polarity) {
+      val negated = Jimple.v().newNegExpr(v)
+      polarity = true
+      negated.apply(this)
+    }
+    else {
+      methodNodeHelper(Predicates.XOR, List(v.getOp1, v.getOp2))
+    }
+  }
+
+  def caseNegExpr(v : NegExpr) : Unit = {
+    if (! polarity) {
+      methodNodeHelper(Predicates.IS_FALSE, List(v.getOp))
+    }
+    else {
+      methodNodeHelper(Predicates.NOT, List(v.getOp))
+    }
+  }
+
+  /* they are not used as a predicate in Jimple*/
+  def caseInterfaceInvokeExpr(v : InterfaceInvokeExpr) : Unit = defaultCase(v)
+  def caseSpecialInvokeExpr(v : SpecialInvokeExpr) : Unit = defaultCase(v)
+  def caseStaticInvokeExpr(v : StaticInvokeExpr) : Unit = defaultCase(v)
+  def caseVirtualInvokeExpr(v : VirtualInvokeExpr) : Unit = defaultCase(v)
+  def caseDynamicInvokeExpr(v : DynamicInvokeExpr) : Unit = defaultCase(v)
+
+  /* unknown */
+  def caseCmpExpr(v : CmpExpr) : Unit = defaultCase(v)
+  def caseCmpgExpr(v : CmpgExpr) : Unit = defaultCase(v)
+  def caseCmplExpr(v : CmplExpr) : Unit = defaultCase(v)
+  def caseRemExpr(v : RemExpr) : Unit = defaultCase(v)
+  def caseLengthExpr(v : LengthExpr) : Unit = defaultCase(v)
+  def caseShlExpr(v : ShlExpr) : Unit = defaultCase(v)
+  def caseShrExpr(v : ShrExpr) : Unit = defaultCase(v)
+  def caseUshrExpr(v : UshrExpr) : Unit = defaultCase(v)
+  def caseSubExpr(v : SubExpr) : Unit = defaultCase(v)
+
+  /* Not used as a predicate in Jimple now   */
+  def caseNewExpr(v : NewExpr) : Unit = defaultCase(v)
+  def caseNewArrayExpr(v : NewArrayExpr) : Unit = defaultCase(v)
+  def caseNewMultiArrayExpr(v : NewMultiArrayExpr) : Unit = defaultCase(v)
+  def caseDivExpr(v : DivExpr) : Unit = defaultCase(v)
+  def caseMulExpr(v : MulExpr) : Unit = defaultCase(v)
+  def caseAddExpr(v : AddExpr) : Unit = defaultCase(v)
+  def caseInstanceOfExpr(v : InstanceOfExpr) : Unit = defaultCase(v)
+  def caseCastExpr(v : CastExpr) : Unit = defaultCase(v)
+
+  def defaultCase(obj : Object) : Unit =
+    /* if this exception is raised then we are not handling some expression
+     that can be used in a conditional */
+    throw new RuntimeException("Unhandled expression " + obj.toString)
+}
+
+

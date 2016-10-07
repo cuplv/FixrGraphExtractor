@@ -198,6 +198,23 @@ object FakeMethods {
   val SET_METHOD = "<set>"
 }
 
+/** Defines a set of artificial predicates that we treat as
+ *  method call
+ */
+object Predicates {
+  val IS_TRUE= "is_true"
+  val IS_FALSE= "is_false"
+  val EQ = "EQ"
+  val NEQ = "NEQ"
+  val GE = "GE"
+  val GT = "GT"
+  val LE = "LE"
+  val LT = "LT"
+  val NOT = "NOT"
+  val AND = "AND"
+  val OR = "OR"
+  val XOR = "XOR"
+}
 
 class Acdfg(adjacencyList: AdjacencyList,
   cdfg : UnitCdfgGraph,
