@@ -319,7 +319,7 @@ public class SootHelper {
       if (null == fileName) {
         fileNameTag = code.getTag("SourceLnNamePosTag");
         if (null != fileNameTag && fileNameTag instanceof SourceLnNamePosTag) {
-          fileName = ((SourceLnNamePosTag) fileNameTag).getFileName();          
+          fileName = ((SourceLnNamePosTag) fileNameTag).getFileName();
         }
         if (fileName == null) fileName = "";
       }
