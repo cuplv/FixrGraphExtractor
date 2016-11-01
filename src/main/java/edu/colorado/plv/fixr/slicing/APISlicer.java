@@ -660,7 +660,7 @@ public class APISlicer {
             - connect the new tail with the old tail
 
            */
-          Unit newFirst = Jimple.v().newNopStmt();
+          Unit newFirst = Jimple.v().newNopStmt();           
           Unit newLast = Jimple.v().newGotoStmt(dstLast);
           Unit toNewFirst = Jimple.v().newIfStmt(DIntConstant.v(1, BooleanType.v()),
               newFirst);
@@ -814,7 +814,7 @@ public class APISlicer {
                   successors.add(new Integer(j));
                 }
                 else {
-                  /* already added. Add a goto */
+                  /* already added. Add a goto */                  
                   dstChain.insertAfter(Jimple.v().newGotoStmt(idToDstUnit[j]),dstUnit);
                 }
               }
@@ -839,7 +839,15 @@ public class APISlicer {
            * srcUnit
            */
           toVisit.push(srcUnitId);
-          for (Integer i : successors) toVisit.push(i);
+          for (Integer i : successors) {
+            if (i != srcUnitId) {
+              /* Avoid to visit the current node before its other children 
+               * Otherwise, some children can be unexplored, leading to
+               * errors. 
+               * */
+              toVisit.push(i);
+            }
+          }
 
           statusMap.put(srcUnit, 1);
 
@@ -885,7 +893,16 @@ public class APISlicer {
       }
     }
 
-
+    /**
+     * Given the id of a unit (and the map to get its unit) builds a map 
+     * from a condition (the label of an edge) to a set of targets. 
+     * 
+     * 
+     * 
+     * @param srcUnitId
+     * @param idToDstUnit
+     * @return
+     */
     private Map<Object, List<Unit>> getConditions2Targets(int srcUnitId,
                                                           Unit[] idToDstUnit)
     {

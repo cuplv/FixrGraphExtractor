@@ -80,6 +80,8 @@ import soot.toolkits.exceptions.ThrowAnalysisFactory
 import soot.toolkits.exceptions.ThrowableSet
 import soot.toolkits.graph.MHGDominatorsFinder
 import soot.toolkits.graph.MHGPostDominatorsFinder
+import soot.jimple.internal.AbstractDefinitionStmt
+import soot.jimple.DefinitionStmt
 
 
 /** Represent a simple transformation on the acdfg.
@@ -465,18 +467,39 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
   /** Fill the ACDFG visiting the graph
     */
   def fillAcdfg() = {
+    val visited = HashSet[soot.Unit]()
+
     /* creates all the nodes and some def edges  */
-    cdfg.getHeads().foreach(head => createNodes(head, HashSet[soot.Unit]()))
+    cdfg.getHeads().foreach(head =>
+      createNodes(head, visited)
+    )
+
+    cdfg.getBody().getTraps().foreach { headTrap =>
+      val head = headTrap.getBeginUnit()
+      val handlerUnit = headTrap.getHandlerUnit()
+      createNodes(head, visited)
+      createNodes(handlerUnit, visited)
+    }
+
 
     /* Add use edges */
     cdfg.localsIter().foreach {
-      case n : Local => addUseEdges(n, sootObjToId(n))
+      case n : Local => {
+        if (! sootObjToId.contains(n)) {
+          lookupOrCreateNode(n)
+        }
+        addUseEdges(n, sootObjToId(n))
+      }
       case m =>
         logger.debug("    Data node of unknown type; ignoring...")
     }
 
     /* creates all the control edges */
-    cdfg.unitIterator.foreach { n => addControlEdges(n, sootObjToId(n)) }
+    cdfg.unitIterator.foreach { n =>
+      if (! sootObjToId.contains(n)) lookupOrCreateNode(n)      
+
+      addControlEdges(n, sootObjToId(n)) 
+    }
 
     /* computes transitive clouse */
     logger.debug("### Computing transitive closure down to DFS of command edges...")
@@ -647,8 +670,7 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends
     }
   }
 
-  override def caseAssignStmt(stmt : AssignStmt): Unit = {
-    def fieldAsMethodCall(stmt : AssignStmt,
+  def fieldAsMethodCall(stmt : soot.Unit,
         field : InstanceFieldRef,
         prefix : String,
         assignee : Option[Long]) = {
@@ -666,8 +688,9 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends
 
       val mNode = cdfgToAcdfg.addMethodNode(stmt, assignee,
           Some(baseId), methodName, List[Long]())
-    }
-
+  }
+  
+  def caseAssignOrIdentity(stmt : soot.jimple.DefinitionStmt) : Unit = {
     val assignee = stmt.getLeftOp
     val rhs = stmt.getRightOp
     if (stmt.containsInvokeExpr()) {
@@ -683,9 +706,12 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends
           FakeMethods.GET_METHOD, Some(assigneeId))
     }
     else {
+      val assigneeId = cdfgToAcdfg.lookupOrCreateNode(assignee)
       addMisc(stmt)
-    }
+    }    
   }
+  
+  override def caseAssignStmt(stmt : AssignStmt): Unit = caseAssignOrIdentity(stmt)
 
   override def caseBreakpointStmt(stmt: BreakpointStmt): Unit = addMisc(stmt)
 
@@ -695,7 +721,7 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends
 
   override def caseGotoStmt(stmt: GotoStmt): Unit = addMisc(stmt)
 
-  override def caseIdentityStmt(stmt: IdentityStmt): Unit = addMisc(stmt)
+  override def caseIdentityStmt(stmt: IdentityStmt): Unit = caseAssignOrIdentity(stmt)
 
   override def caseIfStmt(stmt: IfStmt): Unit = {
     val condition = stmt.getCondition()
