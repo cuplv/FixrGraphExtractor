@@ -23,7 +23,6 @@ import scala.collection.JavaConversions._
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
 import edu.colorado.plv.fixr.abstraction.ExceptionalControlEdge
 import edu.colorado.plv.fixr.abstraction.{DataNode, VarDataNode, ConstDataNode}
-import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
 
 /**
   * The class invokes Soot and parses the acdfg.UnitTest class in the testClass
@@ -264,6 +263,23 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
       val set = new MethodNode(4, None, None,
         FakeMethods.SET_METHOD +".acdfg.UnitTest.pero_int", Vector())
       val nodes = AcdfgUnitTest.getNode(acdfg, set)
+      assert (nodes.size == 1)
+    }
+
+    testRes(acdfg  : Acdfg)
+    val acdfgFromProto = new Acdfg(acdfg.toProtobuf)
+    testRes(acdfgFromProto)
+  }
+
+  test("ACDFGArrayRef") {
+    val sootMethod = this.getTestClass().getMethodByName("testArrayRef")
+    val body = sootMethod.retrieveActiveBody()
+    val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+
+    def testRes(acdfg : Acdfg) {
+      val intArray = new VarDataNode(0, "intArray", "int[]")
+      val nodes = AcdfgUnitTest.getNode(acdfg, intArray)
       assert (nodes.size == 1)
     }
 

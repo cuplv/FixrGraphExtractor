@@ -105,4 +105,21 @@ public class acdfg.UnitTest extends java.lang.Object
 
       return i;
   }
+
+  public int testArrayRef()
+  {
+      acdfg.UnitTest this;
+      int[] intArray;
+      int i, j;
+
+      this := @this: acdfg.UnitTest;
+
+      intArray = newarray (int)[5];
+
+      intArray[1] = 1;
+
+      i = intArray[0];
+
+      return i;
+  }
 }
