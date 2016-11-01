@@ -176,6 +176,12 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
             val nodeId = lookupNodeId(unit)
             nodeId.get
           }
+          case arrayRef : soot.jimple.ArrayRef => {
+            val valueBase = arrayRef.getBase()
+            val id = lookupOrCreateNode(valueBase)
+            lookupOrCreateNode(arrayRef.getIndex())
+            id
+          }
           case _ =>
             /* We do not know the type of v here, so we cannot create
              * a node. */
