@@ -287,6 +287,27 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     val acdfgFromProto = new Acdfg(acdfg.toProtobuf)
     testRes(acdfgFromProto)
   }
+  
+  test("ACDFGStaticFiedl") {
+    val sootMethod = this.getTestClass().getMethodByName("testStatic")
+    val body = sootMethod.retrieveActiveBody()
+    val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+
+    def testRes(acdfg : Acdfg) {
+      val set = new MethodNode(0, None, None, FakeMethods.SET_METHOD +".acdfg.UnitTest.staticField_int", Vector())
+      val get= new MethodNode(0, None, None, FakeMethods.GET_METHOD +".acdfg.UnitTest.staticField_int", Vector())
+
+      val nodesset = AcdfgUnitTest.getNode(acdfg, set)
+      assert (nodesset.size == 1)
+      val nodesget = AcdfgUnitTest.getNode(acdfg, get)
+      assert (nodesget.size == 1)
+    }
+
+    testRes(acdfg  : Acdfg)
+    val acdfgFromProto = new Acdfg(acdfg.toProtobuf)
+    testRes(acdfgFromProto)
+  }
 }
 
 object AcdfgUnitTest {

@@ -82,6 +82,7 @@ import soot.toolkits.graph.MHGDominatorsFinder
 import soot.toolkits.graph.MHGPostDominatorsFinder
 import soot.jimple.internal.AbstractDefinitionStmt
 import soot.jimple.DefinitionStmt
+import soot.jimple.StaticFieldRef
 
 
 /** Represent a simple transformation on the acdfg.
@@ -677,38 +678,45 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends
   }
 
   def fieldAsMethodCall(stmt : soot.Unit,
-        field : InstanceFieldRef,
+        field : FieldRef,
         prefix : String,
         assignee : Option[Long]) = {
-      val base = field.getBase
-      val baseId = cdfgToAcdfg.lookupOrCreateNode(base)
-      val typeStr = field.getField.getType.toString()
-      val fieldName = field.getField.getName
-      val declClass = field.getField.getDeclaringClass
+    val base =
+      if (field.isInstanceOf[InstanceFieldRef]) {
+        val base = field.asInstanceOf[InstanceFieldRef].getBase()
+        val baseId = cdfgToAcdfg.lookupOrCreateNode(base)
+        Some(baseId)
+      } else None
 
-      val methodName =
-        prefix + "." +
-        declClass + "."  +
-        fieldName + "_" +
-        typeStr
+    val typeStr = field.getField.getType.toString()
+    val fieldName = field.getField.getName
+    val declClass = field.getField.getDeclaringClass
 
-      val mNode = cdfgToAcdfg.addMethodNode(stmt, assignee,
-          Some(baseId), methodName, List[Long]())
+    val methodName =
+      prefix + "." +
+      declClass + "."  +
+      fieldName + "_" +
+      typeStr
+
+    val mNode = cdfgToAcdfg.addMethodNode(stmt, assignee,
+        base, methodName, List[Long]())
   }
-  
+    
   def caseAssignOrIdentity(stmt : soot.jimple.DefinitionStmt) : Unit = {
     val assignee = stmt.getLeftOp
     val rhs = stmt.getRightOp
     if (stmt.containsInvokeExpr()) {
       addMethod(stmt, Some(assignee))
     }
-    else if (assignee.isInstanceOf[InstanceFieldRef]) {
-      fieldAsMethodCall(stmt, assignee.asInstanceOf[InstanceFieldRef],
+    else if (assignee.isInstanceOf[InstanceFieldRef] ||
+        assignee.isInstanceOf[StaticFieldRef]) {
+      fieldAsMethodCall(stmt, assignee.asInstanceOf[FieldRef],
         FakeMethods.SET_METHOD, None)
-    }
-    else if (rhs.isInstanceOf[InstanceFieldRef]) {
+    }    
+    else if (rhs.isInstanceOf[InstanceFieldRef] ||
+        rhs.isInstanceOf[StaticFieldRef]) {      
         val assigneeId = cdfgToAcdfg.lookupOrCreateNode(assignee)
-        fieldAsMethodCall(stmt, rhs.asInstanceOf[InstanceFieldRef],
+        fieldAsMethodCall(stmt, rhs.asInstanceOf[FieldRef],
           FakeMethods.GET_METHOD, Some(assigneeId))
     }
     else {
