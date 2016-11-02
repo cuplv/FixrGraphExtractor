@@ -1,8 +1,6 @@
 package edu.colorado.plv.fixr;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import edu.colorado.plv.fixr.graphs.CDFGToDotGraph;
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph;
@@ -19,23 +17,15 @@ import soot.Timers;
 import soot.Type;
 import soot.jimple.Jimple;
 import soot.options.Options;
-import soot.toolkits.graph.DirectedGraph;
-import soot.util.cfgcmd.CFGToDotGraph;
-import soot.util.dot.DotGraph;
-
 import soot.tagkit.AbstractHost;
-import soot.tagkit.Tag;
-import soot.tagkit.SourceLnPosTag;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.SourceFileTag;
 import soot.tagkit.SourceLnNamePosTag;
-
-import soot.tagkit.ConstantValueTag;
-import soot.tagkit.DoubleConstantValueTag;
-import soot.tagkit.FloatConstantValueTag;
-import soot.tagkit.IntegerConstantValueTag;
-import soot.tagkit.LongConstantValueTag;
-import soot.tagkit.StringConstantValueTag;
+import soot.tagkit.SourceLnPosTag;
+import soot.tagkit.Tag;
+import soot.toolkits.graph.DirectedGraph;
+import soot.util.cfgcmd.CFGToDotGraph;
+import soot.util.dot.DotGraph;
 
 public class SootHelper {
   public static void reset() {
@@ -51,11 +41,11 @@ public class SootHelper {
     Options.v().set_keep_line_number(true);
     Options.v().set_keep_offset(true);
     Options.v().set_src_prec(Options.src_prec_class);
-    Options.v().set_soot_classpath(classpath);
-
     Options.v().set_prepend_classpath(true);
-    //Options.v().set_allow_phantom_refs(true);
-
+    Options.v().set_soot_classpath(classpath);    
+    
+    //Options.v().set_allow_phantom_refs(true);    
+    
     if (null != processDir) {
       Options.v().set_process_dir(processDir);
     }
@@ -161,8 +151,8 @@ public class SootHelper {
     PhaseOptions.v().setPhaseOption("bb", "enabled:false");
     PhaseOptions.v().setPhaseOption("bop", "enabled:false");
     PhaseOptions.v().setPhaseOption("tag", "enabled:false");
-    PhaseOptions.v().setPhaseOption("db", "enabled:false");
-
+    PhaseOptions.v().setPhaseOption("db", "enabled:false");    
+    
     Options.v().set_whole_program(false);
   }
 
@@ -220,9 +210,15 @@ public class SootHelper {
     }
   }
 
-  public static void run(String[] args) {
+  public static void run(String[] args) {    
     // Replicates the soot.Main.run() method skipping the output
     Date start = new Date();
+
+    /* Add NullPointerException to be resolved
+     * Cannot avoid the insertion of  null pointer exception by soot as described here
+     * https://github.com/Sable/soot/issues/558
+     */
+    Scene.v().addBasicClass("java.lang.NullPointerException",SootClass.SIGNATURES);
 
     try {
       Timers.v().totalTimer.start();

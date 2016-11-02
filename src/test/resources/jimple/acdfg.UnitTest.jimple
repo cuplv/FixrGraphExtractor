@@ -2,6 +2,8 @@ public class acdfg.UnitTest extends java.lang.Object
 {
   public int pero;
 
+  public static int staticField;
+
   public int testMethod(int, int, int) {
     acdfg.UnitTest this;
     int p1;
@@ -119,6 +121,19 @@ public class acdfg.UnitTest extends java.lang.Object
       intArray[1] = 1;
 
       i = intArray[0];
+
+      return i;
+  }
+
+  public int testStatic()
+  {
+      acdfg.UnitTest this;
+      int i;
+
+      this := @this: acdfg.UnitTest;
+
+      <acdfg.UnitTest: int staticField> = 0;
+      i = <acdfg.UnitTest: int staticField>;
 
       return i;
   }
