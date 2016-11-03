@@ -475,7 +475,7 @@ public class APISlicer {
         for (int j = 0; j < edges.length; j++) {
           if (! isEdgeInSlice(i,j)) {
             edges[i][j] = false;
-            edgeLabels[i][j] = null;
+            edgeLabels[i][j] = null;           
           }
         }
       }
@@ -557,8 +557,8 @@ public class APISlicer {
 
               if (this.unitsInSlice[i]) {
                 /* set the label for the edge */
-                assert edgeLabels[i][i] != null;
-                edgeLabels[i][j].addAll(edgeLabels[i][k]);
+                assert edgeLabels[i][j] != null;
+                edgeLabels[i][j].addAll(edgeLabels[i][k]);                                
               }
             }
           }
@@ -966,10 +966,12 @@ public class APISlicer {
 
         Unit target = defaultTarget;
 
-        assert(c2t.containsKey(condition));
-        List<Unit> targets = c2t.get(condition);
+        List<Unit> targets = null;
+        if (c2t.containsKey(condition)) {
+          targets = c2t.get(condition);
+        }
 
-        if (targets != null) {
+        if (targets != null && targets.size() > 1) {
           assert targets.size() > 0;
           target = targets.get(0);
           targets.remove(0); /* consume the target */
@@ -996,7 +998,7 @@ public class APISlicer {
           // assert(c2t.containsKey(DEFAULT_LABEL));
           List<Unit> targets = c2t.get(DEFAULT_LABEL);
           if (null != targets) {
-            assert targets.size() == 1;
+            // assert targets.size() == 1;
             target = targets.get(0);
           }
           assert (null != target);
@@ -1008,7 +1010,7 @@ public class APISlicer {
           // assert(c2t.containsKey(DEFAULT_LABEL));
           List<Unit> targets = c2t.get(DEFAULT_LABEL);
           if (targets != null) {
-            assert targets.size() == 1;
+            // assert targets.size() == 1;
             target = targets.get(0);
           }
           assert (null != target);
