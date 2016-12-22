@@ -13,13 +13,47 @@ message Iso {
     optional double weight = 3;
   }
 
+  message DataNode{
+    required uint64 id = 1;
+    required string name = 2;
+    required string type = 3;
+    enum DataType {
+      DATA_VAR = 0;
+      DATA_CONST = 1;
+    }
+    optional DataType data_type = 4;
+  }
+
+  message MethodNode {
+    required uint64 id = 1;
+    required string name = 3;
+    repeated string argumentTypes = 4;
+    optional string assigneeType = 5;
+    optional string invokeeType = 2;
+    optional uint64 assigneeID = 6;
+    optional uint64 invokeeID = 7;
+  }
+
+  message Edge {
+   required uint64 id = 1;
+   required uint64 from=2;
+   required uint64 to = 3;
+  }
+
+
+  
+
   required string  graph_1_id = 1;
   required string  graph_2_id = 2;
   repeated MapNode map_node   = 3;
   repeated MapEdge map_edge   = 4;
-  optional double weight = 5;
-  optional double obj_value = 6;
-  optional uint64 dataNodeMatchCount=7;
+  repeated DataNode data_nodes = 5;
+  repeated MethodNode method_nodes = 6;
+  repeated Edge edges = 7;
+  
+  optional double weight = 17;
+  optional double obj_value = 18;
+  optional uint64 dataNodeMatchCount=19;
   optional uint64 dataEdgeMatchCount=8;
   optional uint64 controlEdgeMatchCount=9;
   optional uint64 methodNodeMatchCount=10;
@@ -27,5 +61,7 @@ message Iso {
   optional double averageDataNodeInDegree = 12;	
   optional double averageDataNodeOutDegree = 13;
   optional double averageMethodNodeInDegree = 14;
-  optional  double averageMethodNodeOutDegree =15;
+  optional double averageMethodNodeOutDegree =15;
+  repeated string methodCallNames = 16;
+  repeated string allDataTypes = 20;
 }
