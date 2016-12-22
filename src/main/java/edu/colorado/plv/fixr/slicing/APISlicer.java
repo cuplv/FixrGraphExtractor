@@ -475,7 +475,7 @@ public class APISlicer {
         for (int j = 0; j < edges.length; j++) {
           if (! isEdgeInSlice(i,j)) {
             edges[i][j] = false;
-            edgeLabels[i][j] = null;
+            edgeLabels[i][j] = null;           
           }
         }
       }
@@ -557,8 +557,8 @@ public class APISlicer {
 
               if (this.unitsInSlice[i]) {
                 /* set the label for the edge */
-                assert edgeLabels[i][i] != null;
-                edgeLabels[i][j].addAll(edgeLabels[i][k]);
+                assert edgeLabels[i][j] != null;
+                edgeLabels[i][j].addAll(edgeLabels[i][k]);                                
               }
             }
           }
@@ -660,7 +660,7 @@ public class APISlicer {
             - connect the new tail with the old tail
 
            */
-          Unit newFirst = Jimple.v().newNopStmt();
+          Unit newFirst = Jimple.v().newNopStmt();           
           Unit newLast = Jimple.v().newGotoStmt(dstLast);
           Unit toNewFirst = Jimple.v().newIfStmt(DIntConstant.v(1, BooleanType.v()),
               newFirst);
@@ -814,7 +814,7 @@ public class APISlicer {
                   successors.add(new Integer(j));
                 }
                 else {
-                  /* already added. Add a goto */
+                  /* already added. Add a goto */                  
                   dstChain.insertAfter(Jimple.v().newGotoStmt(idToDstUnit[j]),dstUnit);
                 }
               }
@@ -839,7 +839,15 @@ public class APISlicer {
            * srcUnit
            */
           toVisit.push(srcUnitId);
-          for (Integer i : successors) toVisit.push(i);
+          for (Integer i : successors) {
+            if (i != srcUnitId) {
+              /* Avoid to visit the current node before its other children 
+               * Otherwise, some children can be unexplored, leading to
+               * errors. 
+               * */
+              toVisit.push(i);
+            }
+          }
 
           statusMap.put(srcUnit, 1);
 
@@ -885,7 +893,16 @@ public class APISlicer {
       }
     }
 
-
+    /**
+     * Given the id of a unit (and the map to get its unit) builds a map 
+     * from a condition (the label of an edge) to a set of targets. 
+     * 
+     * 
+     * 
+     * @param srcUnitId
+     * @param idToDstUnit
+     * @return
+     */
     private Map<Object, List<Unit>> getConditions2Targets(int srcUnitId,
                                                           Unit[] idToDstUnit)
     {
@@ -949,10 +966,12 @@ public class APISlicer {
 
         Unit target = defaultTarget;
 
-        assert(c2t.containsKey(condition));
-        List<Unit> targets = c2t.get(condition);
+        List<Unit> targets = null;
+        if (c2t.containsKey(condition)) {
+          targets = c2t.get(condition);
+        }
 
-        if (targets != null) {
+        if (targets != null && targets.size() > 1) {
           assert targets.size() > 0;
           target = targets.get(0);
           targets.remove(0); /* consume the target */
@@ -979,7 +998,7 @@ public class APISlicer {
           // assert(c2t.containsKey(DEFAULT_LABEL));
           List<Unit> targets = c2t.get(DEFAULT_LABEL);
           if (null != targets) {
-            assert targets.size() == 1;
+            // assert targets.size() == 1;
             target = targets.get(0);
           }
           assert (null != target);
@@ -991,7 +1010,7 @@ public class APISlicer {
           // assert(c2t.containsKey(DEFAULT_LABEL));
           List<Unit> targets = c2t.get(DEFAULT_LABEL);
           if (targets != null) {
-            assert targets.size() == 1;
+            // assert targets.size() == 1;
             target = targets.get(0);
           }
           assert (null != target);

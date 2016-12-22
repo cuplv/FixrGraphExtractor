@@ -133,8 +133,8 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     else {
       logger.debug("CDFG construction...")
       val cdfg: UnitCdfgGraph = new UnitCdfgGraph(slicedJimple)
-      logger.debug("ACDFG construction...")
-
+      logger.debug("ACDFG construction...")      
+      
       val sourceInfo : SourceInfo = SourceInfo(sootClass.getPackageName(),
         sootClass.getName(),
         sootMethod.getName(),
@@ -144,6 +144,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
         SootHelper.getAbsFileName(sootClass))
       val gitHubRecord : GitHubRecord = GitHubRecord(options.userName,
         options.repoName, options.url, options.commitHash)
+
       val acdfg : Acdfg = new Acdfg(cdfg, gitHubRecord, sourceInfo)
 
       if (options.storeAcdfg) acdfgListBuffer += acdfg;

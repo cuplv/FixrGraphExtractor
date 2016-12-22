@@ -52,7 +52,21 @@ class Provenance(
     val gitFindUrl = s"${ghr.url}/find/${ghr.commitHash}"
 
     scalatags.Text.all.html(
-      scalatags.Text.all.head(),
+      scalatags.Text.all.head(
+        scalatags.Text.all.script(src:="https://github.com/mdaines/viz.js/releases/download/v1.3.0/viz.js"),
+        scalatags.Text.all.script(s"""
+          var acdfgReq = new XMLHttpRequest();
+          acdfgReq.open('GET', '${prefix}.acdfg.dot', true);
+          acdfgReq.send();
+          acdfgReq.onload = function() {
+            var acdfgText = acdfgReq.responseText;
+            var acdfgContainer = document.getElementById('acdfg');
+            var acdfg = Viz(acdfgText, options={ format: 'svg', engine: 'dot' });
+            acdfgContainer.innerHTML = acdfg;
+          };
+          """
+        )
+      ),
       scalatags.Text.all.body(
         scalatags.Text.all.h1(fullyQualifiedName),
         scalatags.Text.all.div(
@@ -69,9 +83,8 @@ class Provenance(
 
         //
         scalatags.Text.all.h2("Abstract Control Data Flow Graph (ACDFG)"),
-        scalatags.Text.all.div(id := "acdfg",
-          scalatags.Text.all.img(src := prefix + ".acdfg.svg")
-        ),
+        // scalatags.Text.all.img(src := prefix + ".acdfg.svg")
+        scalatags.Text.all.div(id := "acdfg",""),
 
         scalatags.Text.all.h2("Debug informations"),
         scalatags.Text.all.div(

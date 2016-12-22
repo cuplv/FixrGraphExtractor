@@ -80,6 +80,9 @@ import soot.toolkits.exceptions.ThrowAnalysisFactory
 import soot.toolkits.exceptions.ThrowableSet
 import soot.toolkits.graph.MHGDominatorsFinder
 import soot.toolkits.graph.MHGPostDominatorsFinder
+import soot.jimple.internal.AbstractDefinitionStmt
+import soot.jimple.DefinitionStmt
+import soot.jimple.StaticFieldRef
 
 
 /** Represent a simple transformation on the acdfg.
@@ -173,6 +176,12 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
             unit.apply(nodeCreator)
             val nodeId = lookupNodeId(unit)
             nodeId.get
+          }
+          case arrayRef : soot.jimple.ArrayRef => {
+            val valueBase = arrayRef.getBase()
+            val id = lookupOrCreateNode(valueBase)
+            lookupOrCreateNode(arrayRef.getIndex())
+            id
           }
           case _ =>
             /* We do not know the type of v here, so we cannot create
@@ -465,18 +474,39 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
   /** Fill the ACDFG visiting the graph
     */
   def fillAcdfg() = {
+    val visited = HashSet[soot.Unit]()
+
     /* creates all the nodes and some def edges  */
-    cdfg.getHeads().foreach(head => createNodes(head, HashSet[soot.Unit]()))
+    cdfg.getHeads().foreach(head =>
+      createNodes(head, visited)
+    )
+
+    cdfg.getBody().getTraps().foreach { headTrap =>
+      val head = headTrap.getBeginUnit()
+      val handlerUnit = headTrap.getHandlerUnit()
+      createNodes(head, visited)
+      createNodes(handlerUnit, visited)
+    }
+
 
     /* Add use edges */
     cdfg.localsIter().foreach {
-      case n : Local => addUseEdges(n, sootObjToId(n))
+      case n : Local => {
+        if (! sootObjToId.contains(n)) {
+          lookupOrCreateNode(n)
+        }
+        addUseEdges(n, sootObjToId(n))
+      }
       case m =>
         logger.debug("    Data node of unknown type; ignoring...")
     }
 
     /* creates all the control edges */
-    cdfg.unitIterator.foreach { n => addControlEdges(n, sootObjToId(n)) }
+    cdfg.unitIterator.foreach { n =>
+      if (! sootObjToId.contains(n)) lookupOrCreateNode(n)      
+
+      addControlEdges(n, sootObjToId(n)) 
+    }
 
     /* computes transitive clouse */
     logger.debug("### Computing transitive closure down to DFS of command edges...")
@@ -647,45 +677,55 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends
     }
   }
 
-  override def caseAssignStmt(stmt : AssignStmt): Unit = {
-    def fieldAsMethodCall(stmt : AssignStmt,
-        field : InstanceFieldRef,
+  def fieldAsMethodCall(stmt : soot.Unit,
+        field : FieldRef,
         prefix : String,
         assignee : Option[Long]) = {
-      val base = field.getBase
-      val baseId = cdfgToAcdfg.lookupOrCreateNode(base)
-      val typeStr = field.getField.getType.toString()
-      val fieldName = field.getField.getName
-      val declClass = field.getField.getDeclaringClass
+    val base =
+      if (field.isInstanceOf[InstanceFieldRef]) {
+        val base = field.asInstanceOf[InstanceFieldRef].getBase()
+        val baseId = cdfgToAcdfg.lookupOrCreateNode(base)
+        Some(baseId)
+      } else None
 
-      val methodName =
-        prefix + "." +
-        declClass + "."  +
-        fieldName + "_" +
-        typeStr
+    val typeStr = field.getField.getType.toString()
+    val fieldName = field.getField.getName
+    val declClass = field.getField.getDeclaringClass
 
-      val mNode = cdfgToAcdfg.addMethodNode(stmt, assignee,
-          Some(baseId), methodName, List[Long]())
-    }
+    val methodName =
+      prefix + "." +
+      declClass + "."  +
+      fieldName + "_" +
+      typeStr
 
+    val mNode = cdfgToAcdfg.addMethodNode(stmt, assignee,
+        base, methodName, List[Long]())
+  }
+    
+  def caseAssignOrIdentity(stmt : soot.jimple.DefinitionStmt) : Unit = {
     val assignee = stmt.getLeftOp
     val rhs = stmt.getRightOp
     if (stmt.containsInvokeExpr()) {
       addMethod(stmt, Some(assignee))
     }
-    else if (assignee.isInstanceOf[InstanceFieldRef]) {
-      fieldAsMethodCall(stmt, assignee.asInstanceOf[InstanceFieldRef],
+    else if (assignee.isInstanceOf[InstanceFieldRef] ||
+        assignee.isInstanceOf[StaticFieldRef]) {
+      fieldAsMethodCall(stmt, assignee.asInstanceOf[FieldRef],
         FakeMethods.SET_METHOD, None)
-    }
-    else if (rhs.isInstanceOf[InstanceFieldRef]) {
+    }    
+    else if (rhs.isInstanceOf[InstanceFieldRef] ||
+        rhs.isInstanceOf[StaticFieldRef]) {      
         val assigneeId = cdfgToAcdfg.lookupOrCreateNode(assignee)
-        fieldAsMethodCall(stmt, rhs.asInstanceOf[InstanceFieldRef],
+        fieldAsMethodCall(stmt, rhs.asInstanceOf[FieldRef],
           FakeMethods.GET_METHOD, Some(assigneeId))
     }
     else {
+      val assigneeId = cdfgToAcdfg.lookupOrCreateNode(assignee)
       addMisc(stmt)
-    }
+    }    
   }
+  
+  override def caseAssignStmt(stmt : AssignStmt): Unit = caseAssignOrIdentity(stmt)
 
   override def caseBreakpointStmt(stmt: BreakpointStmt): Unit = addMisc(stmt)
 
@@ -695,7 +735,7 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends
 
   override def caseGotoStmt(stmt: GotoStmt): Unit = addMisc(stmt)
 
-  override def caseIdentityStmt(stmt: IdentityStmt): Unit = addMisc(stmt)
+  override def caseIdentityStmt(stmt: IdentityStmt): Unit = caseAssignOrIdentity(stmt)
 
   override def caseIfStmt(stmt: IfStmt): Unit = {
     val condition = stmt.getCondition()
