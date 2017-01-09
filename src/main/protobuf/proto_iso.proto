@@ -1,5 +1,4 @@
 package edu.colorado.plv.fixr.protobuf;
-
 message Iso {
   message MapNode {
     required uint64  id_1   = 1;
@@ -26,12 +25,13 @@ message Iso {
 
   message MethodNode {
     required uint64 id = 1;
-    required string name = 3;
-    repeated string argumentTypes = 4;
+    required string name = 2;
+    repeated string argumentTypes = 3;
+    repeated uint64 argumentIDs=4;
     optional string assigneeType = 5;
-    optional string invokeeType = 2;
-    optional uint64 assigneeID = 6;
-    optional uint64 invokeeID = 7;
+    optional string invokeeType = 6;
+    optional uint64 assigneeID = 7;
+    optional uint64 invokeeID = 8;
   }
 
   message Edge {
