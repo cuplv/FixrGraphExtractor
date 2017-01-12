@@ -122,7 +122,7 @@ public class SootHelper {
 
     PhaseOptions.v().setPhaseOption("cg", "enabled:false");
     PhaseOptions.v().setPhaseOption("wjtp", "enabled:false");
-
+    
     PhaseOptions.v().setPhaseOption("wjop", "enabled:false");
     PhaseOptions.v().setPhaseOption("wjap", "enabled:false");
 

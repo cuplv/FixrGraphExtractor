@@ -9,6 +9,8 @@ import edu.colorado.plv.fixr.abstraction.Predicates
 import edu.colorado.plv.fixr.abstraction.MethodNode
 import edu.colorado.plv.fixr.SootHelper
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
+import edu.colorado.plv.fixr.simp.BodySimplifier
+import soot.toolkits.graph.ExceptionalUnitGraph
 
 class TestAcdfgSimp  extends TestClassBase("./src/test/resources/javasources",
   "simple.Simp", null) {
@@ -49,7 +51,9 @@ class TestAcdfgSimp  extends TestClassBase("./src/test/resources/javasources",
     val body = sootMethod.retrieveActiveBody()
 
     /* test the method call */
-    val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
+    val simp : BodySimplifier = new BodySimplifier(new ExceptionalUnitGraph(body))
+    
+    val cdfg: UnitCdfgGraph = new UnitCdfgGraph(simp.getSimplifiedBody())
     SootHelper.dumpToDot(cdfg, cdfg.getBody(), "/tmp/cdfg.dot")
     val acdfg : Acdfg = new Acdfg(cdfg, null, null)
     val g = new AcdfgToDotGraph(acdfg)

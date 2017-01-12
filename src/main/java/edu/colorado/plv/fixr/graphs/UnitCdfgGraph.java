@@ -15,6 +15,7 @@ import soot.Local;
 import soot.Unit;
 import soot.Value;
 import soot.ValueBox;
+import soot.jimple.AssignStmt;
 import soot.toolkits.graph.ExceptionalUnitGraph;
 import soot.toolkits.graph.pdg.EnhancedUnitGraph;
 import soot.toolkits.scalar.SimpleLocalDefs;
@@ -38,13 +39,13 @@ public class UnitCdfgGraph extends ExceptionalUnitGraph {
   protected DataDependencyGraph ddg = null;
 
   public UnitCdfgGraph(Body body) {
-    super(body);
-
+    super(body);   
     this.ddg = new DataDependencyGraph(this);
+    
     addDataDependentNodes();
     pruneDataDependent();
 
-    /* we require to have at least on tail.
+    /* we require to have at least one tail.
 
        If there is no tail (it is set only if there are return
        statements, which may not be the case after slicing)
@@ -195,4 +196,6 @@ public class UnitCdfgGraph extends ExceptionalUnitGraph {
     /* just keep the locals that are used in an edge */
     localsList.retainAll(usedLocals);
   }
+  
+
 }
