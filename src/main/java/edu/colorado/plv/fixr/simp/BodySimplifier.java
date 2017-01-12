@@ -23,7 +23,7 @@ public class BodySimplifier {
   private Body body;
   protected DataDependencyGraph ddg = null;
   
-  public BodySimplifier(UnitGraph graph) {    
+  public BodySimplifier(UnitGraph graph) {   
     this.body = graph.getBody();
     this.ddg = new DataDependencyGraph(graph);
   }
