@@ -22,10 +22,10 @@ class TestAcdfgSimp  extends TestClassBase("./src/test/resources/javasources",
     val simp : BodySimplifier = new BodySimplifier(new ExceptionalUnitGraph(body))
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(simp.getSimplifiedBody())
     
-//    System.out.println(cdfg.getBody());    
-//    SootHelper.dumpToDot(cdfg, cdfg.getBody(), "/tmp/cdfg.dot")
+    System.out.println(cdfg.getBody());    
+    SootHelper.dumpToDot(cdfg, cdfg.getBody(), "/tmp/cdfg.dot")
     
-    cdfg        
+    cdfg
   }
   
   def testRes(cdfg : UnitCdfgGraph, notInList : List[String],
@@ -43,12 +43,7 @@ class TestAcdfgSimp  extends TestClassBase("./src/test/resources/javasources",
     val cdfg = getCdfg(methodName)
     testRes(cdfg, notIn, in)    
   }
-  
-//  test("ACDFGCast") {
-//    val sootMethod = this.getTestClass().getMethodByName("testAppCast")
-//    
-//  }
-  
+    
   test("ACDFGAssignments") {
     singleTest("testAssignments", List("temp$0 = "), List("base = staticinvoke "))
   }
@@ -81,5 +76,23 @@ class TestAcdfgSimp  extends TestClassBase("./src/test/resources/javasources",
     singleTest("testAssignments6", 
         List("y = 1"),
         List("x = 1"))
-  }          
+  }
+  
+  test("TestImplicitCast") {
+    singleTest("testImplicitCast", 
+        List(),
+        List())
+  }
+  
+  test("TestAppCast") {
+    singleTest("testAppCast", 
+        List(),
+        List())
+  }
+  
+  test("TestFmwkCast") {
+    singleTest("testFmwkCast", 
+        List(),
+        List())
+  }  
 }

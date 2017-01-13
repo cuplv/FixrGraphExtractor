@@ -1,8 +1,6 @@
 package edu.colorado.plv.fixr.simp;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,8 +14,9 @@ import soot.Body;
 import soot.Local;
 import soot.Unit;
 import soot.Value;
+import soot.ValueBox;
 import soot.jimple.AssignStmt;
-import soot.jimple.Constant;
+import soot.jimple.CastExpr;
 import soot.toolkits.graph.UnitGraph;
 
 /**
@@ -37,8 +36,17 @@ public class BodySimplifier {
   }
   
   public Body getSimplifiedBody() {
-    // inline the equalities
-    inlineEqualities(this.body);
+    ReachingDefinitions rd = this.ddg.getReachingDefinitions();
+    Map<Unit, Set<Unit>> duChain = rd.getDefinedUnits();
+
+    // remove the casts
+    // TODO: fix
+    removeCasts(this.body, null, duChain);    
+    
+    // inline the equalities - recompute the duChain
+    inlineEqualities(this.body, duChain);
+
+    
     
     return (Body) body;
   }
@@ -72,12 +80,10 @@ public class BodySimplifier {
    *
    * NOTE: it only works for assignments between locals and constants
    */
-  private void inlineEqualities(Body body) {
+  private void inlineEqualities(Body body, Map<Unit, Set<Unit>> duChain) {
     logger.warn("Inlining equalities...");
     boolean fixPoint = false;
     
-    ReachingDefinitions rd = this.ddg.getReachingDefinitions();
-    Map<Unit, Set<Unit>> duChain = rd.getDefinedUnits();
     filterDuChain(duChain);
     
     /* get all the assignments */
@@ -99,7 +105,7 @@ public class BodySimplifier {
         }
         else if (useUnits.size() > 1) {
           // Warning: relaxing this case may be tricky (due to interdependency
-          // with other statements
+          // with other statements)
           newAssignments.remove(toSubstitute);          
         } else if (useUnits.size() == 1) {
           Unit singleUse = useUnits.iterator().next();
@@ -190,6 +196,78 @@ public class BodySimplifier {
         }
         uses.remove(removedUnit);
       }
+    }
+  }
+  
+  /**
+   * Removes the app-specific cast operations from the source code.
+   * 
+   * Loops through each unit of the body, searching for cast operations.
+   * If the cast is from a framework type leave it unchanged.
+   * 
+   * Otherwise, the cast is to an application type and must be removed. 
+   * 
+   * Limitations: cannot handle generics.
+   * 
+   * @param body
+   */
+  private void removeCasts(Body body, Set<String> fmwkPackages,
+      Map<Unit, Set<Unit>> duChain) {
+    Set<AssignStmt> castToInline = new HashSet<AssignStmt>();
+    
+    /* find the cast expression to be inlined */
+    for (Unit u : body.getUnits()) {
+      if (u instanceof AssignStmt) {
+        Value rhs = ((AssignStmt) u).getRightOp();
+        if (rhs instanceof CastExpr) {
+          CastExpr castExpr = (CastExpr) rhs;          
+          soot.Type castType = castExpr.getType();
+          
+          // Get rid of all the array types (at some point there should be 
+          // a base type
+          while (castType instanceof soot.ArrayType) {
+            castType = ((soot.ArrayType) castType).baseType;
+          }
+
+          // Look at the ref type. 
+          if (castType instanceof soot.RefType) {
+            soot.RefType refType = (soot.RefType) castType;
+            for (String s : fmwkPackages) {
+              if (refType.getClassName().startsWith(s)) {
+                castToInline.add((AssignStmt) u);
+              }
+            }
+          }                  
+        }
+      }
+    }
+    
+    /* Inline the cast expressions 
+     * 
+     * Unit is of the form v1 = CAST(v2) for some values v1, v2
+     * 
+     * We want to replace all the v1 with v2 in the following code.
+     * 
+     * It is not sound (for types) but it is ok for the ACDFG construction.
+     * 
+     * */
+    for (AssignStmt u : castToInline) {      
+      Value lhs = u.getLeftOp();
+      Value rhs = u.getRightOp();
+      
+      assert (rhs instanceof CastExpr);
+      
+      // Replace the value
+      Value castValue = ((CastExpr) rhs).getOp();       
+      Set<Unit> useOfLhs = duChain.get(lhs);
+      for (Unit toReplace : useOfLhs) {
+        for (ValueBox vbToReplace : toReplace.getUseBoxes()) {
+          vbToReplace.setValue(castValue);
+        }
+      }
+      
+      // TODO: fix the duChain 
+      
     }
   }
 }

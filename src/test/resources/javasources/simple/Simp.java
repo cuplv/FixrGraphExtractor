@@ -1,5 +1,8 @@
 package simple;
 
+import java.util.List;
+import java.util.ArrayList;
+
 class Simp {
 
   class SimpBase {
@@ -12,10 +15,30 @@ class Simp {
 
   public static void doSomething(SimpExtended extended) {}
 
+  public static void testList(List<Object> objectList) {}
+
+  // Do nothing, just shows that there are no casts
+  // introduced by Jimple
+  public void testImplicitCast() {
+    ArrayList<Object> l = null;
+
+    testList(l);
+  }
+
+  // The cast to the app specific types should be ignored
   public void testAppCast() {
     SimpExtended extended;
     extended = (SimpExtended) getSimpBase();
     doSomething(extended);
+  }
+
+  // Test cast to the framework specific types should be
+  // considered instead
+  public void testFmwkCast() {
+    ArrayList<Object> l = null;
+    List<Object> baseList = (List<Object>) l;
+
+    testList(baseList);
   }
 
   // Expected: base = ... (no Jimple intermediate vars)
