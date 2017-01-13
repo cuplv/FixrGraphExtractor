@@ -6,11 +6,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import edu.colorado.plv.fixr.graphs.DataDependencyGraph;
+import edu.colorado.plv.fixr.slicing.APISlicer;
 import edu.colorado.plv.fixr.slicing.ReachingDefinitions;
 import soot.Body;
+import soot.Local;
 import soot.Unit;
+import soot.Value;
 import soot.jimple.AssignStmt;
+import soot.jimple.Constant;
 import soot.toolkits.graph.UnitGraph;
 
 /**
@@ -22,7 +29,8 @@ import soot.toolkits.graph.UnitGraph;
 public class BodySimplifier {
   private Body body;
   protected DataDependencyGraph ddg = null;
-  
+  private Logger logger = LoggerFactory.getLogger(APISlicer.class);  
+      
   public BodySimplifier(UnitGraph graph) {   
     this.body = graph.getBody();
     this.ddg = new DataDependencyGraph(graph);
@@ -61,68 +69,127 @@ public class BodySimplifier {
    *       - It finds all the units that USE this definition (e.g. y = x)
    *       - If we have only a single unit that is an assignment, we perform the 
    *         substitution (x = m() becomes y = m(), and we remove y = x)
-   * 
+   *
+   * NOTE: it only works for assignments between locals and constants
    */
   private void inlineEqualities(Body body) {
+    logger.warn("Inlining equalities...");
     boolean fixPoint = false;
     
     ReachingDefinitions rd = this.ddg.getReachingDefinitions();
     Map<Unit, Set<Unit>> duChain = rd.getDefinedUnits();
+    filterDuChain(duChain);
     
     /* get all the assignments */
     Set<Unit> assignments = new HashSet<Unit>();
     for (Unit u : body.getUnits()) 
-      if (u instanceof AssignStmt) assignments.add(u);
+      if (isUnitAssignment(u))
+          assignments.add(u);              
     
     while (! fixPoint) {
       fixPoint = true;
-      List<Unit> toIgnore= new ArrayList<Unit>();
-      List<Unit> toAdd= new ArrayList<Unit>();
+      Set<Unit> newAssignments = new HashSet<Unit>();
+      newAssignments.addAll(assignments);      
       
-      for (Unit u : assignments) {
-        Set<Unit> useUnits = duChain.get(u);                
+      for (Unit toSubstitute : assignments) {
+        Set<Unit> useUnits = duChain.get(toSubstitute);                
         
         if (null == useUnits) {
-          toIgnore.add(u);
+          newAssignments.remove(toSubstitute);
         }
         else if (useUnits.size() > 1) {
-          toIgnore.add(u);
+          // Warning: relaxing this case may be tricky (due to interdependency
+          // with other statements
+          newAssignments.remove(toSubstitute);          
         } else if (useUnits.size() == 1) {
           Unit singleUse = useUnits.iterator().next();
           if (singleUse instanceof AssignStmt) {
             // we can perform the substitution
-            
+                                   
             // create a new assignment
             AssignStmt newAssign = soot.jimple.Jimple.v().newAssignStmt(
                 ((AssignStmt) singleUse).getLeftOp(),
-                ((AssignStmt) u).getRightOp());
-            
-            System.out.println("U: " + u.toString());
-            System.out.println("SingleUse: " + singleUse.toString());
-            System.out.println("NewAssing: " + newAssign.toString());
-                        
-            body.getUnits().insertAfter(newAssign, u);
-            body.getUnits().remove(u);
+                ((AssignStmt) toSubstitute).getRightOp());
+                                    
+            body.getUnits().insertAfter(newAssign, singleUse);
+            body.getUnits().remove(toSubstitute);
             body.getUnits().remove(singleUse);
             
-            toAdd.add(newAssign);
+            newAssignments.add(newAssign);
+            newAssignments.remove(toSubstitute);
+            newAssignments.remove(singleUse);
             
             // keep track of the uses of unit.
             Set<Unit> useSingleUse = duChain.get(singleUse);
             if (null != useSingleUse) {
               duChain.put(newAssign, useSingleUse);
             }
-            duChain.put(u, null);
+            duChain.put(toSubstitute, null);
             duChain.put(singleUse, null);
-            
-            toIgnore.add(u);
+            // Not efficient - to improve
+            updateDuChain(duChain, toSubstitute, newAssign, singleUse);
+                                   
             fixPoint = false;
           }
         }
-      }
-      
-      assignments.removeAll(toIgnore);
-      assignments.addAll(toAdd);      
+      }     
+      assignments = newAssignments;
     }        
+  }
+  
+  /**
+   * 
+   * @param u
+   * @return true iff u is an assisngment that involves locals
+   */
+  private boolean isUnitAssignment(Unit u) {
+    if (u instanceof AssignStmt) {
+      Value lhs = ((AssignStmt) u).getLeftOp();
+      return (lhs instanceof Local);
+    }
+    return false;
+  }
+  
+  private void filterDuChain(Map<Unit, Set<Unit>> duChain) {
+    Set<Unit> keyToRemove = new HashSet<Unit>();
+    
+    // Filter the DuChain on locals
+    for (Map.Entry<Unit, Set<Unit>> entry : duChain.entrySet()) {
+      Unit key = entry.getKey();
+      
+      if (isUnitAssignment(key)) {
+        Set<Unit> newSet = new HashSet<Unit>();
+        Set<Unit> oldSet = entry.getValue();
+        for (Unit value : oldSet) {
+          if (isUnitAssignment(value)) {
+            Value rhs = ((AssignStmt) value).getRightOp();
+            if (rhs instanceof Local)
+              newSet.add(value);
+          }
+        }
+        oldSet.clear();
+        oldSet.addAll(newSet);
+      }
+      else {
+        keyToRemove.add(key);
+      }   
+    }
+  }
+  
+  private void updateDuChain(Map<Unit, Set<Unit>> duChain,
+      Unit replacedUnit,
+      Unit addedUnit,
+      Unit removedUnit) {
+    for (Map.Entry<Unit, Set<Unit>> entry : duChain.entrySet()) {
+      Set<Unit> uses = entry.getValue();
+      
+      if (null != uses) {
+        if (uses.contains(replacedUnit)) {
+          uses.remove(replacedUnit);
+          uses.add(addedUnit);          
+        }
+        uses.remove(removedUnit);
+      }
+    }
   }
 }
