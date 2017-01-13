@@ -269,8 +269,37 @@ public class ReachingDefinitions extends ForwardFlowAnalysis<Unit, FlowSet> {
     /* get the reachable definition at unit u */
     ArrayPackedSet s = (ArrayPackedSet) getFlowAfter(u);
     @SuppressWarnings("unchecked")
-      List<Unit> unitList = (List<Unit>) s.toList();
+    List<Unit> unitList = (List<Unit>) s.toList();
 
     return unitList;
+  }
+  
+  /**
+   * Returns a map that, given a Unit u, returns the set of all the units that 
+   * can be reached by the definitions in u and use u (a DU chain)
+   *  
+   * @param u
+   * @return 
+   */
+  public Map<Unit, Set<Unit>> getDefinedUnits() {
+     Map<Unit, Set<Unit>> duMap = new HashMap<Unit, Set<Unit>>();
+     
+     for (Unit dst : graph) {
+       for (Object objSrc : getFlowAfter(dst) ) {
+         Unit src = (Unit) objSrc;
+         
+         if (unitDefines(dst, src, true)) {
+           Set<Unit> srcSet = duMap.get(src);
+           if (null == srcSet) {
+             srcSet = new HashSet<Unit>();
+             duMap.put(src, srcSet);           
+           }
+           
+           srcSet.add(dst);
+         }
+       }         
+     }
+     
+     return duMap;
   }
 }

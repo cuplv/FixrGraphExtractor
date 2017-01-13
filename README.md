@@ -21,7 +21,6 @@ Part of CUPLV's DARPA MUSE Effort
 2. Limitations of the current slicing technique (the slicing is not sound):
   * No aliasing (due to this, we cannot handle arrays of arrays correctly, since in jimple they are encoded with intermeditate variables)
   * Method calls are opaque, and they do not change anything (e.g. memory content or have side effects on the parameters)
-  * Exceptions are not currently handled correctly (need to deal with them in the PDG)
 
 ## Building and Execution
 
@@ -30,6 +29,9 @@ Part of CUPLV's DARPA MUSE Effort
 Building and execution requires:
 
 - Working versions of the JDK and JRE for Java 1.7
+
+*WARNING*: we explicitly require Java 1.7 when looking at source code (tests use the source code), due to this Soot limitation https://github.com/Sable/soot/issues/465
+
 - A suitable version of SBT (found to work on 0.13.6)
 - A suitable version of Scala (found to work on 2.11.4)
 

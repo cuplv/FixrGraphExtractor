@@ -40,6 +40,8 @@ import java.util.concurrent.Future
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer
+import edu.colorado.plv.fixr.simp.BodySimplifier
+import soot.toolkits.graph.ExceptionalUnitGraph
 
 class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
   val acdfgListBuffer : ListBuffer[Acdfg] = ListBuffer[Acdfg]()
@@ -132,7 +134,9 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     }
     else {
       logger.debug("CDFG construction...")
-      val cdfg: UnitCdfgGraph = new UnitCdfgGraph(slicedJimple)
+      
+      val simp : BodySimplifier = new BodySimplifier(new ExceptionalUnitGraph(slicedJimple))      
+      val cdfg: UnitCdfgGraph = new UnitCdfgGraph(simp.getSimplifiedBody())
       logger.debug("ACDFG construction...")      
       
       val sourceInfo : SourceInfo = SourceInfo(sootClass.getPackageName(),
