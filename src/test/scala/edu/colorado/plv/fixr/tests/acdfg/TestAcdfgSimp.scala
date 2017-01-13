@@ -12,6 +12,7 @@ import edu.colorado.plv.fixr.SootHelper
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
 import edu.colorado.plv.fixr.simp.BodySimplifier
 import soot.toolkits.graph.ExceptionalUnitGraph
+import scala.collection.JavaConversions._
 
 class TestAcdfgSimp  extends TestClassBase("./src/test/resources/javasources",
   "simple.Simp", null) {
@@ -19,80 +20,81 @@ class TestAcdfgSimp  extends TestClassBase("./src/test/resources/javasources",
   def getCdfg(methodName : String) : UnitCdfgGraph = {
     val sootMethod = this.getTestClass().getMethodByName(methodName)
     val body = sootMethod.retrieveActiveBody()
-    val simp : BodySimplifier = new BodySimplifier(new ExceptionalUnitGraph(body))
+    val simp : BodySimplifier = new BodySimplifier(new ExceptionalUnitGraph(body), List("java."))
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(simp.getSimplifiedBody())
-    
-    System.out.println(cdfg.getBody());    
-    SootHelper.dumpToDot(cdfg, cdfg.getBody(), "/tmp/cdfg.dot")
-    
+
+//    System.out.println(cdfg.getBody());
+//    SootHelper.dumpToDot(cdfg, cdfg.getBody(), "/tmp/cdfg.dot")
+
     cdfg
   }
-  
+
   def testRes(cdfg : UnitCdfgGraph, notInList : List[String],
       inList : List[String]) = {
     val bodyStr = cdfg.getBody().toString()
     val notIn = notInList.foldLeft(true)((res, elem) => bodyStr.indexOf(elem) < 0 && res)
     val in = inList.length == 0 ||
-      inList.foldLeft(false)((res, elem) => bodyStr.indexOf(elem) > 0 || res) 
+      inList.foldLeft(false)((res, elem) => bodyStr.indexOf(elem) > 0 || res)
     assert(notIn && in)
   }
-  
+
   def singleTest(methodName : String,
       notIn : List[String],
       in : List[String]) {
     val cdfg = getCdfg(methodName)
-    testRes(cdfg, notIn, in)    
+    testRes(cdfg, notIn, in)
   }
-    
+
   test("ACDFGAssignments") {
     singleTest("testAssignments", List("temp$0 = "), List("base = staticinvoke "))
   }
-  
+
   test("ACDFGAssignments2") {
-    singleTest("testAssignments2", 
+    singleTest("testAssignments2",
         List("x = 1", "y = x", "z = y", "temp$0 = "),
         List("z = 1"))
   }
 
   test("ACDFGAssignments3") {
-    singleTest("testAssignments3", 
+    singleTest("testAssignments3",
         List("x = 1", "temp$0 = "),
         List())
   }
 
   test("ACDFGAssignments4") {
-    singleTest("testAssignments4", 
-        List("x = 1", "temp$0 = "),
-        List("z = 3", "y = 1"))
+    singleTest("testAssignments4",
+        List("temp$0 = "),
+        List("x = 1", "z = 3", "y = 1"))
   }
 
   test("ACDFGAssignments5") {
-    singleTest("testAssignments5", 
-        List("x = 1", "temp$0 = "),
-        List("y = 1"))
-  }
-
-  test("ACDFGAssignments6") {
-    singleTest("testAssignments6", 
+    singleTest("testAssignments5",
         List("y = 1"),
         List("x = 1"))
   }
-  
+
+  test("ACDFGAssignments6") {
+    singleTest("testAssignments6",
+        List(),
+        List("y = x"))
+  }
+
+
   test("TestImplicitCast") {
-    singleTest("testImplicitCast", 
+    singleTest("testImplicitCast",
         List(),
         List())
   }
-  
+
   test("TestAppCast") {
-    singleTest("testAppCast", 
+    singleTest("testAppCast",
         List(),
-        List())
+        List("extended = (simple.Simp$SimpExtended) temp$0"))
   }
-  
+
   test("TestFmwkCast") {
-    singleTest("testFmwkCast", 
+    singleTest("testFmwkCast",
         List(),
-        List())
-  }  
+        List("baseList = null"))
+  }
 }

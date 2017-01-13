@@ -35,7 +35,7 @@ class Simp {
   // Test cast to the framework specific types should be
   // considered instead
   public void testFmwkCast() {
-    ArrayList<Object> l = null;
+    Object l = null;
     List<Object> baseList = (List<Object>) l;
 
     testList(baseList);
@@ -66,7 +66,8 @@ class Simp {
     z = y + y; // don't handle rhs that are not variables
   }
 
-  // Expected: z = 3; y = 1;
+  // Expected: don't change
+  // The inlining just look at a straightline code
   public void testAssignments4() {
     int x, y, z;
 
@@ -75,7 +76,7 @@ class Simp {
     y = x;
   }
 
-  // Expected: y = 1
+  // Expected: no changes (we do not handle this case)
   public void testAssignments5(int a) {
     int x, y, z;
 
@@ -83,17 +84,20 @@ class Simp {
     if (a > 0) {
       y = x;
     }
+    z = x;
   }
 
   // Expected: no changes (we do not handle this case)
   public void testAssignments6(int a) {
-    int x, y, z;
+    int x, y;
 
-    x = 1;
     if (a > 0) {
-      y = x;
+      x = 1;
+    } else {
+      x = 2
     }
-    z = x;
+
+    y = x;
   }
 
 
