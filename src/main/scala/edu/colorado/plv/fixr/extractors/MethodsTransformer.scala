@@ -134,11 +134,12 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     }
     else {
       logger.debug("CDFG construction...")
-      
-      val simp : BodySimplifier = new BodySimplifier(new ExceptionalUnitGraph(slicedJimple))      
+
+      val simp : BodySimplifier = new BodySimplifier(new ExceptionalUnitGraph(slicedJimple),
+        options.sliceFilter)
       val cdfg: UnitCdfgGraph = new UnitCdfgGraph(simp.getSimplifiedBody())
-      logger.debug("ACDFG construction...")      
-      
+      logger.debug("ACDFG construction...")
+
       val sourceInfo : SourceInfo = SourceInfo(sootClass.getPackageName(),
         sootClass.getName(),
         sootMethod.getName(),

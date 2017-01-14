@@ -1,5 +1,8 @@
 package simple;
 
+import java.util.List;
+import java.util.ArrayList;
+
 class Simp {
 
   class SimpBase {
@@ -12,10 +15,30 @@ class Simp {
 
   public static void doSomething(SimpExtended extended) {}
 
+  public static void testList(List<Object> objectList) {}
+
+  // Do nothing, just shows that there are no casts
+  // introduced by Jimple
+  public void testImplicitCast() {
+    ArrayList<Object> l = null;
+
+    testList(l);
+  }
+
+  // The cast to the app specific types should be ignored
   public void testAppCast() {
     SimpExtended extended;
     extended = (SimpExtended) getSimpBase();
     doSomething(extended);
+  }
+
+  // Test cast to the framework specific types should be
+  // considered instead
+  public void testFmwkCast() {
+    Object l = null;
+    List<Object> baseList = (List<Object>) l;
+
+    testList(baseList);
   }
 
   // Expected: base = ... (no Jimple intermediate vars)
@@ -43,7 +66,8 @@ class Simp {
     z = y + y; // don't handle rhs that are not variables
   }
 
-  // Expected: z = 3; y = 1;
+  // Expected: don't change
+  // The inlining just look at a straightline code
   public void testAssignments4() {
     int x, y, z;
 
@@ -52,7 +76,7 @@ class Simp {
     y = x;
   }
 
-  // Expected: y = 1
+  // Expected: no changes (we do not handle this case)
   public void testAssignments5(int a) {
     int x, y, z;
 
@@ -60,17 +84,20 @@ class Simp {
     if (a > 0) {
       y = x;
     }
+    z = x;
   }
 
   // Expected: no changes (we do not handle this case)
   public void testAssignments6(int a) {
-    int x, y, z;
+    int x, y;
 
-    x = 1;
     if (a > 0) {
-      y = x;
+      x = 1;
+    } else {
+      x = 2
     }
-    z = x;
+
+    y = x;
   }
 
 
