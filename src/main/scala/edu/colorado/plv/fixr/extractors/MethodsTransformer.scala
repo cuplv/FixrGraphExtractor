@@ -121,7 +121,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
 
     var sc: SlicingCriterion = null
     if (null == options.sliceFilter)
-      sc = MethodPackageSeed.createAndroidSeed()
+      sc = MethodPackageSeed.createAndroidSeed()      
     else
       sc = new MethodPackageSeed(options.sliceFilter)
 
@@ -134,9 +134,13 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     }
     else {
       logger.debug("CDFG construction...")
-
-      val simp : BodySimplifier = new BodySimplifier(new ExceptionalUnitGraph(slicedJimple),
-        options.sliceFilter)
+            
+      val simp : BodySimplifier =
+        if (null != options.sliceFilter) {
+          new BodySimplifier(new ExceptionalUnitGraph(slicedJimple), options.sliceFilter)
+        } else {
+          new BodySimplifier(new ExceptionalUnitGraph(slicedJimple), List("android."))
+        }
       val cdfg: UnitCdfgGraph = new UnitCdfgGraph(simp.getSimplifiedBody())
       logger.debug("ACDFG construction...")
 

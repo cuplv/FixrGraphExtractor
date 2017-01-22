@@ -36,7 +36,10 @@ public class BodySimplifier {
   public BodySimplifier(UnitGraph graph, Collection<String> packages) {
     this.body = graph.getBody();
     this.ddg = new DataDependencyGraph(graph);
-    this.packageSet = new HashSet<String>(packages);
+    this.packageSet = new HashSet<String>();
+    for (String s : packages) {
+      this.packageSet.add(s);
+    }
   }
 
   public Body getSimplifiedBody() {
