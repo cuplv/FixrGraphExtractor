@@ -104,6 +104,7 @@ public class SootHelper {
       /* Jimple body creation - neeed when processing classes */
       PhaseOptions.v().setPhaseOption("jb", "enabled:true");
       PhaseOptions.v().setPhaseOption("jb", "use-original-names:true");
+      PhaseOptions.v().setPhaseOption("jb", "preserve-source-annotations:true");
       // jb.ls is enabled, otherwise soot raises
       // the exception java.lang.Exception: null typing passed to useChecker
       PhaseOptions.v().setPhaseOption("jb.ls", "enabled:true");
@@ -115,7 +116,10 @@ public class SootHelper {
       PhaseOptions.v().setPhaseOption("jb.cp", "enabled:true");
       PhaseOptions.v().setPhaseOption("jb.dae", "enabled:true");
       PhaseOptions.v().setPhaseOption("jb.cp-ule", "enabled:true");
-      PhaseOptions.v().setPhaseOption("jb.lp", "enabled:true");
+      // Disabled: it reuses locals around, and may also mess with original variables of the source
+      // Drawback: creates a lot of intermediate variables
+      // PhaseOptions.v().setPhaseOption("jb.lp", "enabled:true");
+      PhaseOptions.v().setPhaseOption("jb.lp", "enabled:false");
       PhaseOptions.v().setPhaseOption("jb.ne", "enabled:true");
       PhaseOptions.v().setPhaseOption("jb.uce", "enabled:true");
     }
