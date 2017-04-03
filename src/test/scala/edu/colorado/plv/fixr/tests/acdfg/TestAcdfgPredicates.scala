@@ -19,7 +19,7 @@ class TestAcdfgPredicates extends TestClassBase("./src/test/resources/javasource
     /* test the method call */
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
     // SootHelper.dumpToDot(cdfg, cdfg.getBody(), "/tmp/cdfg.dot")
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null, "app")
     //val g = new AcdfgToDotGraph(acdfg)
     //g.draw().plot("/tmp/acdfg.dot")
 
@@ -49,7 +49,7 @@ class TestAcdfgPredicates extends TestClassBase("./src/test/resources/javasource
 
     /* test the method call */
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null, "app")
 
     def testRes(acdfg : Acdfg) = {
       val const2 = new ConstDataNode(0, "2", "int")
@@ -83,7 +83,7 @@ class TestAcdfgPredicates extends TestClassBase("./src/test/resources/javasource
 
     /* test the method call */
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null, "app")
 
     def testRes(acdfg : Acdfg) = {
       val const0 = new ConstDataNode(0, "0", "int")

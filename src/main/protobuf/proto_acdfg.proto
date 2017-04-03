@@ -108,6 +108,7 @@ message Acdfg {
   /* Provenance information */
   optional RepoTag     repo_tag     = 8;
   optional SourceInfo  source_info  = 10;
+  optional string provenance_path = 13;
 
   /* Used for faster lookup
      [SM] It seems an hack introduced to compute the pair of isomorphisms.

@@ -121,7 +121,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
 
     var sc: SlicingCriterion = null
     if (null == options.sliceFilter)
-      sc = MethodPackageSeed.createAndroidSeed()      
+      sc = MethodPackageSeed.createAndroidSeed()
     else
       sc = new MethodPackageSeed(options.sliceFilter)
 
@@ -134,7 +134,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     }
     else {
       logger.debug("CDFG construction...")
-            
+
       val simp : BodySimplifier =
         if (null != options.sliceFilter) {
           new BodySimplifier(new ExceptionalUnitGraph(slicedJimple), options.sliceFilter)
@@ -154,12 +154,19 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       val gitHubRecord : GitHubRecord = GitHubRecord(options.userName,
         options.repoName, options.url, options.commitHash)
 
-      val acdfg : Acdfg = new Acdfg(cdfg, gitHubRecord, sourceInfo)
+      val name : String = sootClass.getName() + "_" + sootMethod.getName();        
+      
+      val acdfg : Acdfg =
+        if (options.provenanceDir != null) {
+          val filePrefix : String = name
+          val provFileName : String = filePrefix + ".html"
+          new Acdfg(cdfg, gitHubRecord, sourceInfo, provFileName)
+        }
+        else {
+          new Acdfg(cdfg, gitHubRecord, sourceInfo, "")
+        }       
 
-      if (options.storeAcdfg) acdfgListBuffer += acdfg;
-
-      val name : String = sootClass.getName() + "_" +
-      sootMethod.getName();
+      if (options.storeAcdfg) acdfgListBuffer += acdfg;      
 
       if (null != options.outputDir) {
         logger.info("Writing data for - class {} - method: {}{}",
@@ -213,7 +220,9 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
         throw ex
     }
     val output : FileOutputStream = new FileOutputStream(outputFile)
-    acdfg.toProtobuf.writeTo(output)
+    val protobuf = acdfg.toProtobuf
+    protobuf.writeTo(output)
+
     output.close()
 
     // Write the povenance information
@@ -252,7 +261,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       val slicedJimpleName : String = filePrefix + ".sliced.jimple";
       writeJimple(slicedBody, slicedJimpleName)
 
-      val provenance : Provenance = new Provenance(null, body, slicedBody, 
+      val provenance : Provenance = new Provenance(null, body, slicedBody,
           outFileNamePrefix, cfg, cdfg, acdfg)
 
       try {

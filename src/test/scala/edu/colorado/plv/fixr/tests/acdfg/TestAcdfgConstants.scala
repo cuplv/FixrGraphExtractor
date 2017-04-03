@@ -17,7 +17,7 @@ class TestAcdfgConstants() extends TestClassBase("./src/test/resources/javasourc
 
     /* test the method call */
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null, "app")
 
     def testRes(acdfg : Acdfg) = {
       val constNode = new ConstDataNode(0, "0", "int")

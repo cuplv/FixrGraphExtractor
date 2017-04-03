@@ -54,7 +54,7 @@ abstract class TestTransEdge(classPath : String, testClassName : String,
     val gr = GitHubRecord("a", "b", "c", "d")
     val si = SourceInfo("PackageName", "ClassName", "MethodName",
       1, 2, "SourceClassName", "AbsSourceClassName")
-    val acdfg: Acdfg = new Acdfg(cdfg, gr, si)
+    val acdfg: Acdfg = new Acdfg(cdfg, gr, si, "app")
     // logger.debug("ACDFG: " + acdfg.toString)
     // logger.debug("Protobuf: " + acdfg.toProtobuf.toString)
     // logger.debug("Recovered ACDFG: " + new Acdfg(acdfg.toProtobuf).toString)
