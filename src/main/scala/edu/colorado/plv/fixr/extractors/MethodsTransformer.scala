@@ -52,12 +52,16 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     transformOpt : java.util.Map[String,String] ) : Unit = {
     val method : SootMethod = body.getMethod()
     val sootClass : SootClass = method.getDeclaringClass()
+    val className : String = sootClass.getName()
 
     if (method.isConcrete() &&
-      (method.getName() == options.methodName &&
-        sootClass.getName() == options.className) ||
-      (null == options.methodName && null != options.className) ||
-      (null != options.processDir)) {
+        (! className.startsWith("android.")) &&
+        (! className.startsWith("com.google.android.")) &&
+        (! className.startsWith("com.android.")) &&
+
+       ((method.getName() == options.methodName && sootClass.getName() == options.className) ||
+        (null == options.methodName && null == options.className && (null != options.processDir))
+      	)) {
       try {
         if (options.to > 0) {
           val executor : ExecutorService = Executors.newSingleThreadExecutor()
