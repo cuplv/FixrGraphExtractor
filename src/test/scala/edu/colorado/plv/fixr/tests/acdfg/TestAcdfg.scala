@@ -46,7 +46,7 @@ abstract class TestAcdfg(classPath : String, testClassName : String,
       val gr = GitHubRecord("a", "b", "c", "d")
       val si = SourceInfo("PackageName", "ClassName", "MethodName",
         1, 2, "SourceClassName", "AbsSourceFileName")
-      val acdfg: Acdfg = new Acdfg(cdfg, gr, si)
+      val acdfg: Acdfg = new Acdfg(cdfg, gr, si, "App")
       val newAcdfg = new Acdfg(acdfg.toProtobuf)
       info(acdfg.disjointUnion(newAcdfg).toString())
       

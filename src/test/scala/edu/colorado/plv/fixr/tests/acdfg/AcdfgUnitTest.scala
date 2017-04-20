@@ -84,7 +84,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
 
     /* test the method call */
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null, "")
 
     val l0Node = new VarDataNode(0, "l0", "int")
     val l1Node = new VarDataNode(1, "l1", "int")
@@ -139,7 +139,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
 
     /* test the method call */
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null, "")
 
     val nA_ = new MethodNode(4, None, Some(3), "acdfg.UnitTest.testMethodA", Vector())
     val nB_ = new MethodNode(4, None, Some(3), "acdfg.UnitTest.testMethodB", Vector())
@@ -178,7 +178,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
 
     /* test the method call */
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null, "app")
 
     def testRes(acdfg : Acdfg) {
       val absNode = new MethodNode(4, None, None, "java.lang.Math.abs", Vector())
@@ -201,7 +201,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     val sootMethod = this.getTestClass().getMethodByName("voidMethod")
     val body = sootMethod.retrieveActiveBody()
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null, "app")
 
     val returnNode = new MethodNode(4, None, None, FakeMethods.RETURN_METHOD, Vector())
 
@@ -217,7 +217,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     val sootMethod = this.getTestClass().getMethodByName("testMethodA")
     val body = sootMethod.retrieveActiveBody()
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null, "app")
 
     val retNode = new MethodNode(4, None, None, FakeMethods.RETURN_METHOD, Vector())
     val constNode = new ConstDataNode(0, "0", "int")
@@ -239,7 +239,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     val sootMethod = this.getTestClass().getMethodByName("testFieldAccess")
     val body = sootMethod.retrieveActiveBody()
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null, "app")
 
     def testRes(acdfg : Acdfg) {
       val access = new MethodNode(4, None, None,
@@ -257,7 +257,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     val sootMethod = this.getTestClass().getMethodByName("testFieldSet")
     val body = sootMethod.retrieveActiveBody()
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null, "app")
 
     def testRes(acdfg : Acdfg) {
       val set = new MethodNode(4, None, None,
@@ -275,7 +275,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     val sootMethod = this.getTestClass().getMethodByName("testArrayRef")
     val body = sootMethod.retrieveActiveBody()
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null, "app")
 
     def testRes(acdfg : Acdfg) {
       val intArray = new VarDataNode(0, "intArray", "int[]")
@@ -292,7 +292,7 @@ class AcdfgUnitTest() extends TestClassBase("./src/test/resources/jimple",
     val sootMethod = this.getTestClass().getMethodByName("testStatic")
     val body = sootMethod.retrieveActiveBody()
     val cdfg: UnitCdfgGraph = new UnitCdfgGraph(body)
-    val acdfg : Acdfg = new Acdfg(cdfg, null, null)
+    val acdfg : Acdfg = new Acdfg(cdfg, null, null, "app")
 
     def testRes(acdfg : Acdfg) {
       val set = new MethodNode(0, None, None, FakeMethods.SET_METHOD +".acdfg.UnitTest.staticField_int", Vector())

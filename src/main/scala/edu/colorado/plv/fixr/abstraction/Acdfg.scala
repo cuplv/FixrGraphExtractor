@@ -220,7 +220,8 @@ class Acdfg(adjacencyList: AdjacencyList,
   cdfg : UnitCdfgGraph,
   protobuf : ProtoAcdfg.Acdfg,
   gitHubRecord : GitHubRecord,
-  sourceInfo : SourceInfo) {
+  sourceInfo : SourceInfo,
+  provenancePath : String) {
 
   val logger : Logger = LoggerFactory.getLogger(classOf[Acdfg])
 
@@ -381,6 +382,8 @@ class Acdfg(adjacencyList: AdjacencyList,
     methodBag.sorted.foreach(protoMethodBag.addMethod)
     builder.setMethodBag(protoMethodBag)
 
+    builder.setProvenancePath(provenancePath)
+    
     builder.build()
   } /* creation of pb */
 
@@ -447,8 +450,8 @@ class Acdfg(adjacencyList: AdjacencyList,
     * Creates a ACDFG from the adjacencylist
     */
   def this(adjacencyList: AdjacencyList, gitHubRecord: GitHubRecord,
-    sourceInfo : SourceInfo) = {
-    this(adjacencyList, null, null, gitHubRecord, sourceInfo)
+    sourceInfo : SourceInfo, prov_path : String) = {
+    this(adjacencyList, null, null, gitHubRecord, sourceInfo, prov_path)
     assert(this.gitHubRecord == gitHubRecord)
     adjacencyList.nodes.foreach {node => nodes += ((node.id, node))}
     adjacencyList.edges.foreach {edge => addEdge(edge)}
@@ -459,8 +462,8 @@ class Acdfg(adjacencyList: AdjacencyList,
     * Creates a ACDFG from a CDFG
     */
   def this(cdfg : UnitCdfgGraph, gitHubRecord: GitHubRecord,
-    sourceInfo : SourceInfo) = {
-    this(null, cdfg, null, gitHubRecord, sourceInfo)
+    sourceInfo : SourceInfo, prov_path : String) = {
+    this(null, cdfg, null, gitHubRecord, sourceInfo, prov_path)
     assert(this.gitHubRecord == gitHubRecord)
 
     // the following are used to make lookup more efficient
@@ -495,7 +498,8 @@ class Acdfg(adjacencyList: AdjacencyList,
         protobuf.getSourceInfo.getMethodLineNumber,
         protobuf.getSourceInfo.getSourceClassName,
         protobuf.getSourceInfo.getAbsSourceClassName
-      )
+      ),
+      protobuf.getProvenancePath
     )
 
     /* add data nodes */
