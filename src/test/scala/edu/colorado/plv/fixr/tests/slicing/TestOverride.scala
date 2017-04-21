@@ -16,8 +16,8 @@ class TestOverride extends FunSuite with BeforeAndAfter {
   test("testoverride") {
     val options : ExtractorOptions = new ExtractorOptions();
     options.className = "slice.TestOverride2"
-    options.methodName = "callerMethod"
-    options.readFromSources = true
+    options.methodName = "callerMethod"    
+    options.configCode = SootHelper.READ_FROM_SOURCES
     options.sliceFilter = List("java.util")
     options.sootClassPath = "./src/test/resources/javasources"
     options.outputDir = null

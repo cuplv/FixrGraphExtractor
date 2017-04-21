@@ -1,5 +1,7 @@
 package edu.colorado.plv.fixr.extractors
 
+import edu.colorado.plv.fixr.SootHelper;
+
 /**
  * Options used in the ACDFG extraction
  *
@@ -8,7 +10,7 @@ package edu.colorado.plv.fixr.extractors
 class ExtractorOptions {
   // Soot options
   var sootClassPath : String = null;
-  var readFromSources : Boolean = true;
+  var configCode : Int = SootHelper.READ_FROM_BYTECODE;
 
   // JPhantom options
   var useJPhantom : Boolean = false;
@@ -23,6 +25,7 @@ class ExtractorOptions {
   var methodName : String = null;
   var userName : String = null;
   var repoName : String = null;
+  var androidJars : String = null;
   var url : String = null;
   var commitHash : String = null;
 

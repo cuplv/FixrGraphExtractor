@@ -36,7 +36,7 @@ class TestClassBase(classPath : String, testClassName : String,
     */
   before {
     SootHelper.reset();
-    SootHelper.configure(getClassPath(), true);
+    SootHelper.configure(getClassPath(), SootHelper.READ_FROM_SOURCES, null);
     // TODO: merge the test with the extraction part, where we use Soot in the canonical way
     
     Options.v().set_whole_program(true);

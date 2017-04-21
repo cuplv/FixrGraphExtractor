@@ -16,7 +16,7 @@ class TestBug47 extends FunSuite with BeforeAndAfter {
     val options : ExtractorOptions = new ExtractorOptions();
     options.className = "bugs.Bug_047"
     options.methodName = "bug_047_method"
-    options.readFromSources = true
+    options.configCode = SootHelper.READ_FROM_SOURCES
     options.sliceFilter = List("android")
     options.sootClassPath = ":./src/test/resources/javasources"
     options.outputDir = "/tmp/"

@@ -61,7 +61,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
 
        ((method.getName() == options.methodName && sootClass.getName() == options.className) ||
         (null == options.methodName && null == options.className && (null != options.processDir))
-      	)) {
+        )) {
       try {
         if (options.to > 0) {
           val executor : ExecutorService = Executors.newSingleThreadExecutor()
@@ -158,8 +158,8 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       val gitHubRecord : GitHubRecord = GitHubRecord(options.userName,
         options.repoName, options.url, options.commitHash)
 
-      val name : String = sootClass.getName() + "_" + sootMethod.getName();        
-      
+      val name : String = sootClass.getName() + "_" + sootMethod.getName();
+
       val acdfg : Acdfg =
         if (options.provenanceDir != null) {
           val filePrefix : String = name
@@ -168,9 +168,9 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
         }
         else {
           new Acdfg(cdfg, gitHubRecord, sourceInfo, "")
-        }       
+        }
 
-      if (options.storeAcdfg) acdfgListBuffer += acdfg;      
+      if (options.storeAcdfg) acdfgListBuffer += acdfg;
 
       if (null != options.outputDir) {
         logger.info("Writing data for - class {} - method: {}{}",
@@ -210,12 +210,16 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     logger.debug("Writing ACDFG data to: {}", outputDir)
 
     // Write the acdfg
+    val outputDirPath = new File(outputDir)
     val acdfgFileName : String = Paths.get(outputDir,
       outFileNamePrefix + ".acdfg.bin").toString();
     val outputFile : File = new File(acdfgFileName)
     try {
-      if (! outputFile.getParentFile.exists) {
-        outputFile.getParentFile.mkdir
+      if (! outputDirPath.exists()) {
+        val created = outputDirPath.mkdirs()
+        if (! created) {
+          throw new Exception("Error creating " + outputDir)
+        }
       }
     }
     catch {

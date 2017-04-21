@@ -22,6 +22,11 @@ import soot.SootClass
 import soot.toolkits.graph.pdg.EnhancedUnitGraph
 import edu.colorado.plv.fixr.extractors.MethodExtractor
 import edu.colorado.plv.fixr.visualization.Visualizer
+import soot.PhaseOptions
+import soot.options.Options
+import soot.PackManager
+import soot.Transform
+import edu.colorado.plv.fixr.extractors.MethodsTransformer
 
 object Main {
   val logger : Logger = LoggerFactory.getLogger(this.getClass)
@@ -29,13 +34,15 @@ object Main {
   case class MainOptions(
     visualize : Boolean = false,
     sootClassPath : String = null,
-    readFromSources : Boolean = true,
+    readFromSources : Boolean = false,
+    readFromApk : Boolean = false,
     useJPhantom : Boolean = false,
-    outPhantomJar : String = null,    
+    outPhantomJar : String = null,
     sliceFilter : String = null,
     processDir : String = null,
     className : String = null,
     methodName : String = null,
+    androidJars : String = null,
     outputDir : String = null,
     provenanceDir : String = null,
     graph1 : String = null,
@@ -68,11 +75,17 @@ object Main {
       opt[String]('i', "graph2") action { (x, c) =>
         c.copy(iso = x) } text("Path to embedding/isomorphism protobuf")
 
-      opt[String]('l', "cp").required().action { (x, c) =>
+      opt[String]('l', "cp") action { (x, c) =>
       c.copy(sootClassPath = x) } text("cp is the soot classpath")
       //
       opt[Boolean]('s', "read-from-sources") action { (x, c) =>
         c.copy(readFromSources = x) } text("Set to true to use Jimple as input")
+      //
+      opt[Boolean]('a', "read-from-apk") action { (x, c) =>
+        c.copy(readFromApk = x) } text("Set to true to use read APKs as input")
+      //
+      opt[String]('w', "anroid-jars") action { (x, c) =>
+        c.copy(androidJars = x) } text("Path to Android platform in the android-sdk")
       //
       opt[Boolean]('j', "jphanthom") action { (x, c) =>
         c.copy(useJPhantom = x) } text("Set to true to use JPhantom")
@@ -132,6 +145,19 @@ object Main {
             "but output directory was not specified")
           System.exit(1)
         }
+        if (mainopt.readFromApk && mainopt.readFromSources) {
+          logger.error("Cannot read from both apk and sources")
+          System.exit(1)
+        }
+        if (mainopt.readFromApk && null == mainopt.androidJars) {
+          logger.error("Paths to the android jars not provided!")
+          System.exit(1)
+        }
+        if ((! mainopt.readFromApk) && null == mainopt.sootClassPath) {
+          logger.error("Classpath not provided!")
+          System.exit(1)
+        }
+
         val graph1FileSt = new FileInputStream(new File(mainopt.graph1))
         val graph2FileSt = new FileInputStream(new File(mainopt.graph2))
         val isoFileSt    = new FileInputStream(new File(mainopt.iso))
@@ -144,18 +170,19 @@ object Main {
 
         visualizer.draw().plot(Paths.get(mainopt.outputDir, outputName).toString())
       }
-      case Some(mainopt) if !mainopt.visualize => {
+      case Some(mainopt) if ! mainopt.visualize => {
         logger.debug("cp: {}", mainopt.sootClassPath)
         logger.debug("read-from-sources: {}", mainopt.readFromSources)
+        logger.debug("read-from-apk: {}", mainopt.readFromApk)
         logger.debug("jphantom: {}\n", mainopt.useJPhantom)
-        logger.debug("jphantom-folder: {}\n", mainopt.outPhantomJar)        
+        logger.debug("jphantom-folder: {}\n", mainopt.outPhantomJar)
         logger.debug("slice-filter: {}", mainopt.sliceFilter)
         logger.debug("process-dir: {}", mainopt.processDir)
         logger.debug("class-name: {}", mainopt.className)
         logger.debug("method-name: {}", mainopt.methodName)
         logger.debug("output-dir: {}", mainopt.outputDir)
         logger.debug("provenance-dir: {}\n", mainopt.provenanceDir)
-        logger.debug("time-out: {}\n", mainopt.to)        
+        logger.debug("time-out: {}\n", mainopt.to)
 
         if ( null != mainopt.url &&
           null != mainopt.userName &&
@@ -216,12 +243,17 @@ object Main {
            System.exit(1)
         }
 
-        val options : ExtractorOptions = new ExtractorOptions() 
+        val configCode = if (mainopt.readFromSources) SootHelper.READ_FROM_SOURCES
+            else if (mainopt.readFromApk) SootHelper.READ_FROM_APK
+            else SootHelper.READ_FROM_BYTECODE
+
+        val options : ExtractorOptions = new ExtractorOptions()
         options.className = mainopt.className
         options.methodName = mainopt.methodName
         options.useJPhantom = mainopt.useJPhantom
         options.outPhantomJar = mainopt.outPhantomJar
-        options.readFromSources = mainopt.readFromSources
+        options.configCode = configCode
+        options.androidJars = mainopt.androidJars
         options.sootClassPath = mainopt.sootClassPath
         options.outputDir = mainopt.outputDir
         options.provenanceDir = mainopt.provenanceDir
@@ -230,7 +262,7 @@ object Main {
         options.userName = mainopt.userName
         options.url = mainopt.url
         options.commitHash = mainopt.commitHash
-        
+
         if (null != mainopt.sliceFilter) {
           options.sliceFilter = mainopt.sliceFilter.split(":").toList
         }
