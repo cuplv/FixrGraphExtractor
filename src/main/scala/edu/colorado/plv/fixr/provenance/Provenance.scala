@@ -17,9 +17,9 @@ import scalatags.stylesheet._
 class Provenance(
   source : String,
   body : Body,
-  slicedBody : Body,
+  slicedBodyOption : Option[Body],
   prefix : String,
-  cfg : DirectedGraph[_],
+  cfgOption : Option[DirectedGraph[_]],
   cdfg : UnitCdfgGraph,
   acdfg : Acdfg
 ) {
@@ -50,6 +50,11 @@ class Provenance(
     val gitPretty = s"${ghr.userName}/${ghr.repoName}/${ghr.commitHash}"
     val gitUrl = s"http://github.com/${ghr.userName}/${ghr.repoName}/tree/${ghr.commitHash}"
     val gitFindUrl = s"${ghr.url}/find/${ghr.commitHash}"
+    val sliceStr =
+      slicedBodyOption match {
+        case None => "Body was not sliced"
+        case Some(slicedBody) => slicedBody.toString
+      }
 
     scalatags.Text.all.html(
       scalatags.Text.all.head(
@@ -91,7 +96,7 @@ class Provenance(
           scalatags.Text.all.h3("Jimple"),
           scalatags.Text.all.pre(scalatags.Text.all.code(body.toString)),
           scalatags.Text.all.h3("Sliced Jimple"),
-          scalatags.Text.all.pre(scalatags.Text.all.code(slicedBody.toString)),
+          scalatags.Text.all.pre(scalatags.Text.all.code(sliceStr)),
           scalatags.Text.all.h3("Control Flow Graph (CFG)"),
           scalatags.Text.all.div(id := "cfg",
             scalatags.Text.all.img(src := prefix + ".cfg.svg")

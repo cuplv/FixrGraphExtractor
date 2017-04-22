@@ -519,7 +519,6 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
       visited : HashSet[soot.Unit]) : Unit = {
     if (! visited.contains(unit)) {
       /* create node */
-      System.out.println()
       try {
         unit.apply(nodeCreator)
       } catch {

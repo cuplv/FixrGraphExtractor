@@ -55,13 +55,13 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     val className : String = sootClass.getName()
 
     if (method.isConcrete() &&
-        (! className.startsWith("android.")) &&
-        (! className.startsWith("com.google.android.")) &&
-        (! className.startsWith("com.android.")) &&
-
-       ((method.getName() == options.methodName && sootClass.getName() == options.className) ||
+      (! className.startsWith("android.")) &&
+      (! className.startsWith("com.google.android.")) &&
+      (! className.startsWith("com.android.")) &&
+      (! className.startsWith("com.googlecode.")) &&
+      ((method.getName() == options.methodName && sootClass.getName() == options.className) ||
         (null == options.methodName && null == options.className && (null != options.processDir))
-        )) {
+      )) {
       try {
         if (options.to > 0) {
           val executor : ExecutorService = Executors.newSingleThreadExecutor()
@@ -113,6 +113,24 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     }
   }
 
+  def sliceBody(sc : SlicingCriterion, jimpleUnitGraph: EnhancedUnitGraph,
+    body : Body) : Option[(APISlicer, Body)] = {
+
+    if (jimpleUnitGraph.size() > 30) {
+      logger.info("Skipping slicing, graph is too big for PDG construction");
+      None
+    }
+    else {
+      logger.info("Creating the slicer...")
+      val slicer: APISlicer = new APISlicer(jimpleUnitGraph, body)
+      logger.info("Slicer created...")
+      logger.info("Slicing...")
+      val slicedJimple: Body = slicer.slice(sc)
+      logger.info("Slicing done...")
+      Some((slicer, slicedJimple))
+    }
+  }
+
   def extractMethod(sootClass : SootClass, sootMethod : SootMethod) : Unit = {
     logger.info("Extracting graph for - class {} - method: {}{}",
       sootClass.getName(), sootMethod.getName(), "")
@@ -120,33 +138,38 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     assert(sootMethod.isConcrete());
 
     val body: Body = sootMethod.retrieveActiveBody()
+    logger.info("Creating the enhanced unit graph...")
     val jimpleUnitGraph: EnhancedUnitGraph = new EnhancedUnitGraph(body)
-    val slicer: APISlicer = new APISlicer(jimpleUnitGraph, body)
+    logger.info("Enhanched unit graph created... (size = " + jimpleUnitGraph.size() + ")" );
+
 
     var sc: SlicingCriterion = null
     if (null == options.sliceFilter)
       sc = MethodPackageSeed.createAndroidSeed()
     else
       sc = new MethodPackageSeed(options.sliceFilter)
+    val sliceResult : Option[(APISlicer, Body)] = sliceBody(sc, jimpleUnitGraph, body)
 
-    logger.debug("Slicing...")
-    val slicedJimple: Body = slicer.slice(sc)
+    val bodyToUse =
+      sliceResult match {
+        case None => body
+        case Some((slicer, slicedJimple)) => slicedJimple
+      }
 
-    if (null == slicedJimple) {
+    if (null == bodyToUse) {
       logger.warn("Empty slice for - class {} - method: {}\nFilter: {}\n\n",
         sootClass.getName(), sootMethod.getName(), sc.getCriterionDescription())
     }
     else {
       logger.debug("CDFG construction...")
-
       val simp : BodySimplifier =
         if (null != options.sliceFilter) {
-          new BodySimplifier(new ExceptionalUnitGraph(slicedJimple), options.sliceFilter)
+          new BodySimplifier(new ExceptionalUnitGraph(bodyToUse), options.sliceFilter)
         } else {
-          new BodySimplifier(new ExceptionalUnitGraph(slicedJimple), List("android."))
+          new BodySimplifier(new ExceptionalUnitGraph(bodyToUse), List("android."))
         }
       val cdfg: UnitCdfgGraph = new UnitCdfgGraph(simp.getSimplifiedBody())
-      logger.debug("ACDFG construction...")
+      logger.debug("CDFG built...")
 
       val sourceInfo : SourceInfo = SourceInfo(sootClass.getPackageName(),
         sootClass.getName(),
@@ -160,6 +183,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
 
       val name : String = sootClass.getName() + "_" + sootMethod.getName();
 
+      logger.debug("ACDFG construction...")
       val acdfg : Acdfg =
         if (options.provenanceDir != null) {
           val filePrefix : String = name
@@ -169,6 +193,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
         else {
           new Acdfg(cdfg, gitHubRecord, sourceInfo, "")
         }
+      logger.debug("ACDFG built...")
 
       if (options.storeAcdfg) acdfgListBuffer += acdfg;
 
@@ -176,9 +201,19 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
         logger.info("Writing data for - class {} - method: {}{}",
           sootClass.getName(), sootMethod.getName(), "")
 
-        writeData(name, acdfg, cdfg, body, slicedJimple, slicer.getCfg());
-        logger.info("Created graph for - class {} - method: {}{}",
-          sootClass.getName(), sootMethod.getName(), "")
+        sliceResult match {
+          case None => {
+            writeData(name, acdfg, cdfg, body, None, None);
+            logger.info("Created graph for - class {} - method: {}{}",
+              sootClass.getName(), sootMethod.getName(), "")
+          }
+          case Some((slicer, slicedJimple)) => {
+            writeData(name, acdfg, cdfg, body, Some(slicedJimple),
+              Some(slicer.getCfg()));
+            logger.info("Created graph for - class {} - method: {}{}",
+              sootClass.getName(), sootMethod.getName(), "")
+          }
+        }
       }
       else {
         logger.warn("Disabled data writing for - class {} - method: {}{}",
@@ -202,8 +237,8 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     acdfg : Acdfg,
     cdfg : UnitCdfgGraph,
     body : Body,
-    slicedBody : Body,
-    cfg : UnitGraph) : Unit = {
+    slicedBodyOption : Option[Body],
+    slicedCfgOption : Option[UnitGraph]) : Unit = {
     val currentDir = System.getProperty("user.dir")
     val outputDir = if (null == options.outputDir) currentDir else options.outputDir
 
@@ -256,7 +291,11 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       dotGraph.draw().plot(acdfg_dot)
 
       // CFG
-      SootHelper.dumpToDot(cfg, cfg.getBody(), filePrefix + ".cfg.dot")
+      slicedCfgOption match {
+        case None => ()
+        case Some(cfg) => SootHelper.dumpToDot(cfg, cfg.getBody(),
+          filePrefix + ".cfg.dot")
+      }
 
       // CDFG
       SootHelper.dumpToDot(cdfg, cdfg.getBody(), filePrefix + ".cdfg.dot")
@@ -266,11 +305,16 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       writeJimple(body, jimpleFileName)
 
       // SLICED JIMPLE
-      val slicedJimpleName : String = filePrefix + ".sliced.jimple";
-      writeJimple(slicedBody, slicedJimpleName)
+      slicedBodyOption match {
+        case None => ()
+        case Some(slicedBody) => {
+          val slicedJimpleName : String = filePrefix + ".sliced.jimple";
+          writeJimple(slicedBody, slicedJimpleName)
+        }
+      }
 
-      val provenance : Provenance = new Provenance(null, body, slicedBody,
-          outFileNamePrefix, cfg, cdfg, acdfg)
+      val provenance : Provenance = new Provenance(null, body,
+        slicedBodyOption, outFileNamePrefix, slicedCfgOption, cdfg, acdfg)
 
       try {
         val provFileName : String = filePrefix + ".html"
