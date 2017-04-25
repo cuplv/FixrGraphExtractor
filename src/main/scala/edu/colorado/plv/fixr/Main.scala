@@ -39,6 +39,7 @@ object Main {
     useJPhantom : Boolean = false,
     outPhantomJar : String = null,
     sliceFilter : String = null,
+    extractFromPackages : String = null,
     processDir : String = null,
     className : String = null,
     methodName : String = null,
@@ -84,7 +85,7 @@ object Main {
       opt[Boolean]('a', "read-from-apk") action { (x, c) =>
         c.copy(readFromApk = x) } text("Set to true to use read APKs as input")
       //
-      opt[String]('w', "anroid-jars") action { (x, c) =>
+      opt[String]('w', "android-jars") action { (x, c) =>
         c.copy(androidJars = x) } text("Path to Android platform in the android-sdk")
       //
       opt[Boolean]('j', "jphanthom") action { (x, c) =>
@@ -93,7 +94,10 @@ object Main {
         c.copy(outPhantomJar = x) } text("Path to the generated JPhantom classes")
       //
       opt[String]('f', "slice-filter").action { (x, c) =>
-      c.copy(sliceFilter = x) } text("Package prefix to use as seed for slicing")
+      c.copy(sliceFilter = x) } text("Package prefixes to use as seed for slicing (: separated list)")
+      //
+      opt[String]('k', "extract-from-packages").action { (x, c) =>
+      c.copy(extractFromPackages = x) } text("Extract graphs only from this packages (: separated list)")
       //
       opt[String]('p', "process-dir") action { (x, c) =>
       c.copy(processDir = x) } text("Comma (:) separated list of input directories to process")
@@ -174,6 +178,7 @@ object Main {
         logger.debug("cp: {}", mainopt.sootClassPath)
         logger.debug("read-from-sources: {}", mainopt.readFromSources)
         logger.debug("read-from-apk: {}", mainopt.readFromApk)
+        logger.debug("extract-from-packages: {}", mainopt.extractFromPackages)
         logger.debug("jphantom: {}\n", mainopt.useJPhantom)
         logger.debug("jphantom-folder: {}\n", mainopt.outPhantomJar)
         logger.debug("slice-filter: {}", mainopt.sliceFilter)
@@ -262,6 +267,10 @@ object Main {
         options.userName = mainopt.userName
         options.url = mainopt.url
         options.commitHash = mainopt.commitHash
+
+        if (null != mainopt.extractFromPackages) {
+          options.extractFromPackages = mainopt.extractFromPackages.split(":").toList
+        }
 
         if (null != mainopt.sliceFilter) {
           options.sliceFilter = mainopt.sliceFilter.split(":").toList

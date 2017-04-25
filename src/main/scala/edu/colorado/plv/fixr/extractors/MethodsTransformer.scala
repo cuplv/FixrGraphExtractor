@@ -55,6 +55,15 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     val sootClass : SootClass = method.getDeclaringClass()
     val className : String = sootClass.getName()
 
+    /* filter methods to extract by package */
+    val skipMethod = null != options.extractFromPackages &&
+      ! (options.extractFromPackages.foldLeft (false) ( (r,e) => className.startsWith(e) || r))
+
+    if (skipMethod) {
+      logger.info("Skipping " + className)
+      return
+    }
+
     if (method.isConcrete() &&
       (! className.startsWith("android.")) &&
       (! className.startsWith("com.google.android.")) &&
