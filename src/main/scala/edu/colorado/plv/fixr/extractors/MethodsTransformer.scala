@@ -118,19 +118,13 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
   def sliceBody(sc : SlicingCriterion, jimpleUnitGraph: EnhancedUnitGraph,
     body : Body) : Option[(APISlicer, Body)] = {
 
-    if (jimpleUnitGraph.size() > 30) {
-      logger.info("Skipping slicing, graph is too big for PDG construction");
-      None
-    }
-    else {
-      logger.info("Creating the slicer...")
-      val slicer: APISlicer = new APISlicer(jimpleUnitGraph, body)
-      logger.info("Slicer created...")
-      logger.info("Slicing...")
-      val slicedJimple: Body = slicer.slice(sc)
-      logger.info("Slicing done...")
-      Some((slicer, slicedJimple))
-    }
+    logger.info("Creating the slicer...")
+    val slicer: APISlicer = new APISlicer(jimpleUnitGraph, body)
+    logger.info("Slicer created...")
+    logger.info("Slicing...")
+    val slicedJimple: Body = slicer.slice(sc)
+    logger.info("Slicing done...")
+    Some((slicer, slicedJimple))
   }
 
   def extractMethod(sootClass : SootClass, sootMethod : SootMethod) : Unit = {
