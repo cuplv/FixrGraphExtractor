@@ -13,6 +13,7 @@ import edu.colorado.plv.fixr.slicing.SlicingCriterion
 import edu.colorado.plv.fixr.abstraction.{Acdfg, AcdfgToDotGraph, GitHubRecord, SourceInfo}
 import edu.colorado.plv.fixr.slicing.APISlicer
 import java.io.FileOutputStream
+import edu.colorado.plv.fixr.extractors.slicing.JimpleSlicer
 
 import edu.colorado.plv.fixr.provenance.Provenance
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed
@@ -57,6 +58,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     if (method.isConcrete() &&
       (! className.startsWith("android.")) &&
       (! className.startsWith("com.google.android.")) &&
+      (! className.startsWith("com.google.protobuf.")) &&
       (! className.startsWith("com.android.")) &&
       (! className.startsWith("com.googlecode.")) &&
       ((method.getName() == options.methodName && sootClass.getName() == options.className) ||
@@ -137,17 +139,31 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
 
     assert(sootMethod.isConcrete());
 
-    val body: Body = sootMethod.retrieveActiveBody()
-    logger.info("Creating the enhanced unit graph...")
-    val jimpleUnitGraph: EnhancedUnitGraph = new EnhancedUnitGraph(body)
-    logger.info("Enhanched unit graph created... (size = " + jimpleUnitGraph.size() + ")" );
+    val name : String = sootClass.getName() + "_" + sootMethod.getName()
+    val outputFile : File= getAcdfgOutName(options.outputDir, name)
+    if (outputFile.exists()) {
+      // Do not overwrite a graph
+      logger.info("File {} already exists, skipping it...", outputFile)
+      return;
+    }
 
+    val body: Body = sootMethod.retrieveActiveBody()
 
     var sc: SlicingCriterion = null
     if (null == options.sliceFilter)
       sc = MethodPackageSeed.createAndroidSeed()
     else
       sc = new MethodPackageSeed(options.sliceFilter)
+
+    logger.info("Jimple slicing...")
+    val jimpleSlicer = new JimpleSlicer(body, sc)
+    jimpleSlicer.sliceJimple()
+    logger.info("Jimple slicing end...")
+
+    logger.info("Creating the enhanced unit graph...")
+    val jimpleUnitGraph: EnhancedUnitGraph = new EnhancedUnitGraph(body)
+    logger.info("Enhanched unit graph created... (size = " + jimpleUnitGraph.size() + ")" );
+
     val sliceResult : Option[(APISlicer, Body)] = sliceBody(sc, jimpleUnitGraph, body)
 
     val bodyToUse =
@@ -180,8 +196,6 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
         SootHelper.getAbsFileName(sootClass))
       val gitHubRecord : GitHubRecord = GitHubRecord(options.userName,
         options.repoName, options.url, options.commitHash)
-
-      val name : String = sootClass.getName() + "_" + sootMethod.getName();
 
       logger.debug("ACDFG construction...")
       val acdfg : Acdfg =
@@ -230,6 +244,13 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     streamOut.close();
   }
 
+  private def getAcdfgOutName(outputDir : String, outFileNamePrefix : String) : File = {
+    val acdfgFileName : String = Paths.get(outputDir,
+      outFileNamePrefix + ".acdfg.bin").toString();
+    val outputFile : File = new File(acdfgFileName)
+    return outputFile
+  }
+
   /**
     * Write the data to the output folder
     */
@@ -245,10 +266,8 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     logger.debug("Writing ACDFG data to: {}", outputDir)
 
     // Write the acdfg
+    val outputFile : File= getAcdfgOutName(outputDir, outFileNamePrefix)
     val outputDirPath = new File(outputDir)
-    val acdfgFileName : String = Paths.get(outputDir,
-      outFileNamePrefix + ".acdfg.bin").toString();
-    val outputFile : File = new File(acdfgFileName)
     try {
       if (! outputDirPath.exists()) {
         val created = outputDirPath.mkdirs()

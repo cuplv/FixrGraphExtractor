@@ -3,13 +3,14 @@ package edu.colorado.plv.fixr.tests.regression
 import org.scalatest.BeforeAndAfter
 import edu.colorado.plv.fixr.SootHelper
 import org.scalatest.FunSuite
-import edu.colorado.plv.fixr.extractors.MethodExtractor;
+import edu.colorado.plv.fixr.extractors.MethodExtractor
 import edu.colorado.plv.fixr.extractors.Extractor
 import edu.colorado.plv.fixr.extractors.ExtractorOptions
-import edu.colorado.plv.fixr.tests.TestClassBase
+import edu.colorado.plv.fixr.tests.{TestClassBase, TestParseSources}
 import edu.colorado.plv.fixr.slicing.APISlicer
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph
+
 import scala.collection.JavaConversions._
 import scala.collection.JavaConversions.mapAsScalaMap
 import soot.SootClass
@@ -43,5 +44,5 @@ class TestBug049 extends TestClassBase("./src/test/resources/libs/android-17.jar
       assert(size < 6)
   }
 
-   test("Bug049") {testCDFG()}
+   test("Bug049", TestParseSources) {testCDFG()}
 }

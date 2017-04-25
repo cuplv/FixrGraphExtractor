@@ -7,13 +7,14 @@ import org.scalatest.FunSuite
 import edu.colorado.plv.fixr.extractors.MethodExtractor
 import edu.colorado.plv.fixr.extractors.Extractor
 import edu.colorado.plv.fixr.extractors.ExtractorOptions
+import edu.colorado.plv.fixr.tests.TestParseSources
 
 class TestOverride extends FunSuite with BeforeAndAfter {
   before {
     SootHelper.reset();
   }
 
-  test("testoverride") {
+  test("testoverride",TestParseSources) {
     val options : ExtractorOptions = new ExtractorOptions();
     options.className = "slice.TestOverride2"
     options.methodName = "callerMethod"    

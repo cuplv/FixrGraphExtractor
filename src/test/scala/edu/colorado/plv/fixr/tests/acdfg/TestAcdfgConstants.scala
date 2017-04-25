@@ -6,11 +6,12 @@ import edu.colorado.plv.fixr.abstraction.Acdfg
 import edu.colorado.plv.fixr.SootHelper
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
 import edu.colorado.plv.fixr.abstraction.{MethodNode, ConstDataNode}
+import edu.colorado.plv.fixr.tests.TestParseSources
 
 class TestAcdfgConstants() extends TestClassBase("./src/test/resources/javasources",
   "simple.Constants", null) {
 
-  test("ACDFGConstant") {
+  test("ACDFGConstant",TestParseSources) {
     val sootMethod = this.getTestClass().getMethodByName("accessConstantVar")
 
     val body = sootMethod.retrieveActiveBody()

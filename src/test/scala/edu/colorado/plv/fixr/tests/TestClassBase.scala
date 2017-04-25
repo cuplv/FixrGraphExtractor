@@ -6,6 +6,9 @@ import soot.Scene
 import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
 import soot.options.Options
+import org.scalatest.Tag
+
+object TestParseSources extends Tag("edu.colorado.plv.fixr.tests.TestParseSources")
 
 /**
   * Basic class to be used for testing.

@@ -3,16 +3,17 @@ package edu.colorado.plv.fixr.tests.regression
 import org.scalatest.BeforeAndAfter
 import edu.colorado.plv.fixr.SootHelper
 import org.scalatest.FunSuite
-import edu.colorado.plv.fixr.extractors.MethodExtractor;
+import edu.colorado.plv.fixr.extractors.MethodExtractor
 import edu.colorado.plv.fixr.extractors.Extractor
 import edu.colorado.plv.fixr.extractors.ExtractorOptions
+import edu.colorado.plv.fixr.tests.TestParseSources
 
 class TestBug47 extends FunSuite with BeforeAndAfter {
   before {
     SootHelper.reset();
   }
 
-  ignore("bug_047") {
+  ignore("bug_047", TestParseSources) {
     val options : ExtractorOptions = new ExtractorOptions();
     options.className = "bugs.Bug_047"
     options.methodName = "bug_047_method"

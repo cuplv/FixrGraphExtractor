@@ -6,13 +6,14 @@ import org.scalatest.FunSuite
 import edu.colorado.plv.fixr.extractors.MethodExtractor;
 import edu.colorado.plv.fixr.extractors.Extractor
 import edu.colorado.plv.fixr.extractors.ExtractorOptions
+import edu.colorado.plv.fixr.tests.TestParseSources
 
 class TestSourceInfo extends FunSuite with BeforeAndAfter {
   before {
     SootHelper.reset();
   }
 
-  test("testSourceInfo_01") {
+  test("testSourceInfo_01",TestParseSources) {
     SootHelper.reset();
     val options : ExtractorOptions = new ExtractorOptions();
     options.className = "slice.TestControlFlow"
@@ -42,7 +43,7 @@ class TestSourceInfo extends FunSuite with BeforeAndAfter {
     })
   }
 
-  test("testSourceInfo_02") {
+  test("testSourceInfo_02",TestParseSources) {
     SootHelper.reset();
     val options : ExtractorOptions = new ExtractorOptions();
     options.className = "bugs.Bug_046"

@@ -4,6 +4,7 @@ import edu.colorado.plv.fixr.extractors._;
 import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
 import edu.colorado.plv.fixr.SootHelper
+import edu.colorado.plv.fixr.tests.TestParseSources
 
 /**
  * Regression tests for bug 22
@@ -31,8 +32,8 @@ class TestBug22 extends FunSuite with BeforeAndAfter {
     SootHelper.reset();
   }
 
-  test("abstract_method") {testExtraction("bugs.Bug_022",
+  test("abstract_method",TestParseSources) {testExtraction("bugs.Bug_022",
     "./src/test/resources/javasources")}
-  test("interface") {testExtraction("bugs.Bug_022_02",
+  test("interface",TestParseSources) {testExtraction("bugs.Bug_022_02",
     "./src/test/resources/javasources")}
 }
