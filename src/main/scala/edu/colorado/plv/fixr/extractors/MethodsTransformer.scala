@@ -59,8 +59,9 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     val skipMethod = null != options.extractFromPackages &&
       ! (options.extractFromPackages.foldLeft (false) ( (r,e) => className.startsWith(e) || r))
 
+
     if (skipMethod) {
-      logger.info("Skipping " + className)
+      logger.info("Skipping (filtered by package/class name) " + className)
       return
     }
 
@@ -134,7 +135,24 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     val slicedJimple: Body = slicer.slice(sc)
     logger.info("Slicing done...")
     Some((slicer, slicedJimple))
+    Some((null, slicedJimple))
   }
+
+
+  def dumbSliceBody(sc : SlicingCriterion, jimpleUnitGraph: EnhancedUnitGraph,
+    body : Body) : Option[(APISlicer, Body)] = {
+
+    logger.info("Creating the slicer...")
+    //val slicer: APISlicer = new APISlicer(jimpleUnitGraph, body)
+    logger.info("Slicer created...")
+    logger.info("Slicing...")
+    // val slicedJimple: Body = slicer.slice(sc)
+    val slicedJimple = body
+    logger.info("Slicing done...")
+    //Some((slicer, slicedJimple))
+    Some((null, slicedJimple))
+  }
+
 
   def extractMethod(sootClass : SootClass, sootMethod : SootMethod) : Unit = {
     logger.info("Extracting graph for - class {} - method: {}{}",
@@ -226,7 +244,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
           }
           case Some((slicer, slicedJimple)) => {
             writeData(name, acdfg, cdfg, body, Some(slicedJimple),
-              Some(slicer.getCfg()));
+              None);
             logger.info("Created graph for - class {} - method: {}{}",
               sootClass.getName(), sootMethod.getName(), "")
           }
