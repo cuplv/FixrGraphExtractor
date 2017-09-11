@@ -2,9 +2,16 @@ language: scala
 scala:
    - 2.11.4
 
+jdk:
+  - openjdk7
+
 install:
   - wget https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.gz
   - tar -xzvf protobuf-2.6.1.tar.gz
   - pushd protobuf-2.6.1 && ./configure --prefix=/usr && make && sudo make install && popd
+
+before_script:
+  - echo $JAVA_HOME
+  - java -version
 
 script: sbt test
