@@ -135,7 +135,6 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     val slicedJimple: Body = slicer.slice(sc)
     logger.info("Slicing done...")
     Some((slicer, slicedJimple))
-    Some((null, slicedJimple))
   }
 
   def extractMethod(sootClass : SootClass, sootMethod : SootMethod) : Unit = {
@@ -228,7 +227,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
           }
           case Some((slicer, slicedJimple)) => {
             writeData(name, acdfg, cdfg, body, Some(slicedJimple),
-              None);
+              Some(slicer.getCfg()));
             logger.info("Created graph for - class {} - method: {}{}",
               sootClass.getName(), sootMethod.getName(), "")
           }
