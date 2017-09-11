@@ -138,22 +138,6 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     Some((null, slicedJimple))
   }
 
-
-  def dumbSliceBody(sc : SlicingCriterion, jimpleUnitGraph: EnhancedUnitGraph,
-    body : Body) : Option[(APISlicer, Body)] = {
-
-    logger.info("Creating the slicer...")
-    //val slicer: APISlicer = new APISlicer(jimpleUnitGraph, body)
-    logger.info("Slicer created...")
-    logger.info("Slicing...")
-    // val slicedJimple: Body = slicer.slice(sc)
-    val slicedJimple = body
-    logger.info("Slicing done...")
-    //Some((slicer, slicedJimple))
-    Some((null, slicedJimple))
-  }
-
-
   def extractMethod(sootClass : SootClass, sootMethod : SootMethod) : Unit = {
     logger.info("Extracting graph for - class {} - method: {}{}",
       sootClass.getName(), sootMethod.getName(), "")
