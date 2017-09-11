@@ -7,11 +7,12 @@ import edu.colorado.plv.fixr.abstraction.{Acdfg, Predicates}
 import edu.colorado.plv.fixr.abstraction.{MethodNode, VarDataNode}
 import edu.colorado.plv.fixr.abstraction.AcdfgToDotGraph
 import edu.colorado.plv.fixr.SootHelper
+import edu.colorado.plv.fixr.tests.TestParseSources
 
 class TestAcdfgPredicates extends TestClassBase("./src/test/resources/javasources",
   "simple.Predicates", null) {
 
-  test("ACDFGIf") {
+  test("ACDFGIf",TestParseSources) {
     val sootMethod = this.getTestClass().getMethodByName("testIf")
 
     val body = sootMethod.retrieveActiveBody()
@@ -42,7 +43,7 @@ class TestAcdfgPredicates extends TestClassBase("./src/test/resources/javasource
   }
 
 
-  test("ACDFGLookupSwitch") {
+  test("ACDFGLookupSwitch",TestParseSources) {
     val sootMethod = this.getTestClass().getMethodByName("testLookupSwitch")
 
     val body = sootMethod.retrieveActiveBody()
@@ -76,7 +77,7 @@ class TestAcdfgPredicates extends TestClassBase("./src/test/resources/javasource
     testRes(acdfgFromProto)
   }
 
-  test("ACDFGTableSwitch") {
+  test("ACDFGTableSwitch",TestParseSources) {
     val sootMethod = this.getTestClass().getMethodByName("testTableSwitch")
 
     val body = sootMethod.retrieveActiveBody()

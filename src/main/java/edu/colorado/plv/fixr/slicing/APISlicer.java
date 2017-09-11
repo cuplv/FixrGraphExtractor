@@ -102,8 +102,11 @@ public class APISlicer {
     this.cfg = cfg;
 
     /* Computes the program dependency graph */
+    logger.info("Creating PDG... (size = " + this.cfg.size() + ")" );
     this.pdg= new PDGSlicer((UnitGraph) this.cfg);
+    logger.info("Creating DDG...");
     this.ddg = new DataDependencyGraph(this.cfg);
+    logger.info("Processing traps...");
     this.throwAnalysis = ThrowAnalysisFactory.checkInitThrowAnalysis();
     buildTrapMaps();
   }

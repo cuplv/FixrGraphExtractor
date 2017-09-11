@@ -47,11 +47,12 @@ abstract class Extractor(options : ExtractorOptions) {
 
     logger.debug("Initializing soot...")
     if (null == options.processDir) {
-      SootHelper.configure(sootClassPath, options.readFromSources)
-
+      SootHelper.configure(sootClassPath, options.configCode,
+        options.androidJars)
     }
     else {
-      SootHelper.configure(sootClassPath, options.readFromSources,
+      SootHelper.configure(sootClassPath, options.configCode,
+        options.androidJars,
         options.processDir)
     }
   }

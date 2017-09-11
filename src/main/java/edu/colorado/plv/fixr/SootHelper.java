@@ -1,6 +1,8 @@
 package edu.colorado.plv.fixr;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import edu.colorado.plv.fixr.graphs.CDFGToDotGraph;
 import edu.colorado.plv.fixr.graphs.UnitCdfgGraph;
@@ -28,64 +30,21 @@ import soot.util.cfgcmd.CFGToDotGraph;
 import soot.util.dot.DotGraph;
 
 public class SootHelper {
+  public static int READ_FROM_SOURCES = 0;
+  public static int READ_FROM_BYTECODE = 1;
+  public static int READ_FROM_APK = 2;
+
   public static void reset() {
     G.reset();
   }
 
-  public static void configure(String classpath, boolean readFromSources) {
-    configure(classpath, readFromSources, null);
+  public static void configure(String classpath,
+                               int configCode,
+                               String androidJars) {
+    configure(classpath, configCode, androidJars, null);
   }
 
-  public static void configure(String classpath, boolean readFromSources, java.util.List<String> processDir) {
-    Options.v().set_verbose(false);
-    Options.v().set_keep_line_number(true);
-    Options.v().set_keep_offset(true);
-    Options.v().set_src_prec(Options.src_prec_class);
-    Options.v().set_prepend_classpath(true);
-    Options.v().set_soot_classpath(classpath);    
-    
-    //Options.v().set_allow_phantom_refs(true);    
-    
-    if (null != processDir) {
-      Options.v().set_process_dir(processDir);
-    }
-
-    if (readFromSources) {
-      /* We want to parse the code from source
-       * Phase
-       * jj Creates a JimpleBody for each method directly from source
-       *
-       * Subphases
-       * jj.ls        Local splitter: one local per DU-UD web
-       * jj.a        Aggregator: removes some unnecessary copies
-       * jj.ule      Unused local eliminator
-       * jj.tr       Assigns types to locals
-       * jj.ulp      Local packer: minimizes number of locals
-       * jj.lns      Local name standardizer
-       * jj.cp       Copy propagator
-       * jj.dae      Dead assignment eliminator
-       * jj.cp-ule   Post-copy propagation unused local eliminator
-       * jj.lp       Local packer: minimizes number of locals
-       * jj.ne       Nop eliminator
-       * jj.uce      Unreachable code eliminator
-       */
-      PhaseOptions.v().setPhaseOption("jb", "enabled:false");
-      PhaseOptions.v().setPhaseOption("jj", "use-original-names:true");
-      //PhaseOptions.v().setPhaseOption("jj", "enabled:true");
-      PhaseOptions.v().setPhaseOption("jj.ls", "enabled:false");
-      PhaseOptions.v().setPhaseOption("jj.a", "enabled:true");
-      PhaseOptions.v().setPhaseOption("jj.ule", "enabled:true");
-      PhaseOptions.v().setPhaseOption("jj.tr", "enabled:true");
-      PhaseOptions.v().setPhaseOption("jj.ulp", "enabled:true");
-      PhaseOptions.v().setPhaseOption("jj.lns", "enabled:true");
-      PhaseOptions.v().setPhaseOption("jj.cp", "enabled:true");
-      PhaseOptions.v().setPhaseOption("jj.dae", "enabled:true");
-      PhaseOptions.v().setPhaseOption("jj.cp-ule", "enabled:true");
-      PhaseOptions.v().setPhaseOption("jj.lp", "enabled:true");
-      PhaseOptions.v().setPhaseOption("jj.ne", "enabled:true");
-      PhaseOptions.v().setPhaseOption("jj.uce", "enabled:true");
-    }
-    else {
+  private static void setBytecodeOptions() {
       PhaseOptions.v().setPhaseOption("jj", "use-original-names:true");
       //PhaseOptions.v().setPhaseOption("jj", "enabled:true");
       PhaseOptions.v().setPhaseOption("jj.ls", "enabled:false");
@@ -122,11 +81,79 @@ public class SootHelper {
       PhaseOptions.v().setPhaseOption("jb.lp", "enabled:false");
       PhaseOptions.v().setPhaseOption("jb.ne", "enabled:true");
       PhaseOptions.v().setPhaseOption("jb.uce", "enabled:true");
+  }
+
+  public static void configure(String classpath,
+                               int configCode,
+                               String androidJars,
+                               java.util.List<String> processDir) {
+    Options.v().set_verbose(false);
+    Options.v().set_keep_line_number(true);
+    Options.v().set_keep_offset(true);
+
+    if (null != processDir) {
+      Options.v().set_process_dir(processDir);
     }
 
+    if (READ_FROM_SOURCES == configCode) {
+      /* We want to parse the code from source
+       * Phase
+       * jj Creates a JimpleBody for each method directly from source
+       *
+       * Subphases
+       * jj.ls        Local splitter: one local per DU-UD web
+       * jj.a        Aggregator: removes some unnecessary copies
+       * jj.ule      Unused local eliminator
+       * jj.tr       Assigns types to locals
+       * jj.ulp      Local packer: minimizes number of locals
+       * jj.lns      Local name standardizer
+       * jj.cp       Copy propagator
+       * jj.dae      Dead assignment eliminator
+       * jj.cp-ule   Post-copy propagation unused local eliminator
+       * jj.lp       Local packer: minimizes number of locals
+       * jj.ne       Nop eliminator
+       * jj.uce      Unreachable code eliminator
+       */
+      Options.v().set_src_prec(Options.src_prec_class);
+      Options.v().set_prepend_classpath(true);
+      Options.v().set_soot_classpath(classpath);
+
+      PhaseOptions.v().setPhaseOption("jb", "enabled:false");
+      PhaseOptions.v().setPhaseOption("jj", "use-original-names:true");
+      PhaseOptions.v().setPhaseOption("jj.ls", "enabled:false");
+      PhaseOptions.v().setPhaseOption("jj.a", "enabled:true");
+      PhaseOptions.v().setPhaseOption("jj.ule", "enabled:true");
+      PhaseOptions.v().setPhaseOption("jj.tr", "enabled:true");
+      PhaseOptions.v().setPhaseOption("jj.ulp", "enabled:true");
+      PhaseOptions.v().setPhaseOption("jj.lns", "enabled:true");
+      PhaseOptions.v().setPhaseOption("jj.cp", "enabled:true");
+      PhaseOptions.v().setPhaseOption("jj.dae", "enabled:true");
+      PhaseOptions.v().setPhaseOption("jj.cp-ule", "enabled:true");
+      PhaseOptions.v().setPhaseOption("jj.lp", "enabled:true");
+      PhaseOptions.v().setPhaseOption("jj.ne", "enabled:true");
+      PhaseOptions.v().setPhaseOption("jj.uce", "enabled:true");
+    }
+    else if (READ_FROM_BYTECODE == configCode) {
+      Options.v().set_prepend_classpath(true);
+      Options.v().set_soot_classpath(classpath);
+      Options.v().set_src_prec(Options.src_prec_class);
+
+      setBytecodeOptions();
+    }
+    else if (READ_FROM_APK == configCode) {
+      Options.v().set_allow_phantom_refs(true);
+      Options.v().set_src_prec(Options.src_prec_apk);
+      Options.v().set_android_jars(androidJars);
+
+      setBytecodeOptions();
+    }
+    else {
+      throw new RuntimeException("Unkown config code to initialize Soot: " +
+          configCode);
+    }
     PhaseOptions.v().setPhaseOption("cg", "enabled:false");
     PhaseOptions.v().setPhaseOption("wjtp", "enabled:false");
-    
+
     PhaseOptions.v().setPhaseOption("wjop", "enabled:false");
     PhaseOptions.v().setPhaseOption("wjap", "enabled:false");
 
@@ -155,8 +182,8 @@ public class SootHelper {
     PhaseOptions.v().setPhaseOption("bb", "enabled:false");
     PhaseOptions.v().setPhaseOption("bop", "enabled:false");
     PhaseOptions.v().setPhaseOption("tag", "enabled:false");
-    PhaseOptions.v().setPhaseOption("db", "enabled:false");    
-    
+    PhaseOptions.v().setPhaseOption("db", "enabled:false");
+
     Options.v().set_whole_program(false);
   }
 
@@ -214,7 +241,7 @@ public class SootHelper {
     }
   }
 
-  public static void run(String[] args) {    
+  public static void run(String[] args) {
     // Replicates the soot.Main.run() method skipping the output
     Date start = new Date();
 

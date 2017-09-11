@@ -7,17 +7,18 @@ import org.scalatest.FunSuite
 import edu.colorado.plv.fixr.extractors.MethodExtractor
 import edu.colorado.plv.fixr.extractors.Extractor
 import edu.colorado.plv.fixr.extractors.ExtractorOptions
+import edu.colorado.plv.fixr.tests.TestParseSources
 
 class TestOverride extends FunSuite with BeforeAndAfter {
   before {
     SootHelper.reset();
   }
 
-  test("testoverride") {
+  test("testoverride",TestParseSources) {
     val options : ExtractorOptions = new ExtractorOptions();
     options.className = "slice.TestOverride2"
-    options.methodName = "callerMethod"
-    options.readFromSources = true
+    options.methodName = "callerMethod"    
+    options.configCode = SootHelper.READ_FROM_SOURCES
     options.sliceFilter = List("java.util")
     options.sootClassPath = "./src/test/resources/javasources"
     options.outputDir = null

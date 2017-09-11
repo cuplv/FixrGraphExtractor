@@ -6,6 +6,9 @@ import soot.Scene
 import org.scalatest.FunSuite
 import org.scalatest.BeforeAndAfter
 import soot.options.Options
+import org.scalatest.Tag
+
+object TestParseSources extends Tag("edu.colorado.plv.fixr.tests.TestParseSources")
 
 /**
   * Basic class to be used for testing.
@@ -36,7 +39,7 @@ class TestClassBase(classPath : String, testClassName : String,
     */
   before {
     SootHelper.reset();
-    SootHelper.configure(getClassPath(), true);
+    SootHelper.configure(getClassPath(), SootHelper.READ_FROM_SOURCES, null);
     // TODO: merge the test with the extraction part, where we use Soot in the canonical way
     
     Options.v().set_whole_program(true);
