@@ -11,6 +11,7 @@ install:
   - pushd protobuf-2.6.1 && ./configure --prefix=/usr && make && sudo make install && popd
 
 before_script:
-    - java -version
+  - echo $JAVA_HOME
+  - java -version
 
 script: sbt test
