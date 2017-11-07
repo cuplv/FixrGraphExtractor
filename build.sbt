@@ -2,10 +2,11 @@
 import com.github.retronym.SbtOneJar._
 
 import sbtprotobuf.{ProtobufPlugin=>PB}
+// seq(PB.protobufSettings: _*)
+enablePlugins(PB)
+// javaSource in PB.protobufConfig <<= (sourceManaged in Compile)
 
-seq(PB.protobufSettings: _*)
 
-javaSource in PB.protobufConfig <<= (sourceManaged in Compile)
 
 lazy val commonSettings =
   Seq(
