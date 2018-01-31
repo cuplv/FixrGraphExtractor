@@ -7,4 +7,8 @@ install:
   - tar -xzvf protobuf-2.6.1.tar.gz
   - pushd protobuf-2.6.1 && ./configure --prefix=/usr && make && sudo make install && popd
 
-script: sbt test
+script:
+  jdk_switcher use oraclejdk8
+  testOnly -- -l edu.colorado.plv.fixr.tests.TestParseSources
+  jdk_switcher use openjdk7
+  sbt test
