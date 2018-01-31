@@ -9,6 +9,6 @@ install:
 
 script:
   - jdk_switcher use oraclejdk8
-  - sbt testOnly -- -l edu.colorado.plv.fixr.tests.TestParseSources
+  - sbt "testOnly -- -l edu.colorado.plv.fixr.tests.TestParseSources"
   - jdk_switcher use openjdk7
   - sbt -java-home $JAVA_HOME test
