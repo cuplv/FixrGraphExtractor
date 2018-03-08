@@ -519,7 +519,14 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
       visited : HashSet[soot.Unit]) : Unit = {
     if (! visited.contains(unit)) {
       /* create node */
-      unit.apply(nodeCreator)
+      try {
+        unit.apply(nodeCreator)
+      } catch {
+        case e : scala.NotImplementedError =>
+          println(unit)
+          e.printStackTrace()
+          throw e
+      }
 
       /* create children */
       visited += unit
@@ -731,7 +738,7 @@ class AcdfgSootStmtSwitch(cdfgToAcdfg : CdfgToAcdfg) extends
 
   override def caseEnterMonitorStmt(stmt: EnterMonitorStmt): Unit = addMisc(stmt)
 
-  override def caseExitMonitorStmt(stmt: ExitMonitorStmt): Unit = ???
+  override def caseExitMonitorStmt(stmt: ExitMonitorStmt): Unit = addMisc(stmt)
 
   override def caseGotoStmt(stmt: GotoStmt): Unit = addMisc(stmt)
 

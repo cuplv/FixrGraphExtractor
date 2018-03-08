@@ -53,7 +53,7 @@ public abstract class TestClassBase {
 	public void setup()
 	{
 		SootHelper.reset();			
-		SootHelper.configure(getClassPath(), true);
+		SootHelper.configure(getClassPath(), SootHelper.READ_FROM_SOURCES, null);
 		
 		/* Load dependencies */
 		if (null != getTestClassName()) {

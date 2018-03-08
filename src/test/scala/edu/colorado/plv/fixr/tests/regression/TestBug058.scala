@@ -7,17 +7,18 @@ import edu.colorado.plv.fixr.abstraction.Acdfg
 import edu.colorado.plv.fixr.extractors.MethodExtractor
 import edu.colorado.plv.fixr.extractors.Extractor
 import edu.colorado.plv.fixr.extractors.ExtractorOptions
+import edu.colorado.plv.fixr.tests.TestParseSources
 
 class TestBug058 extends FunSuite with BeforeAndAfter {
   before {
     SootHelper.reset();
   }
 
-  test("bug_058") {
+  test("bug_058", TestParseSources) {
     val options : ExtractorOptions = new ExtractorOptions();
     options.className = "bugs.Bug_058"
     options.methodName = "bug_058"
-    options.readFromSources = false
+    options.configCode = SootHelper.READ_FROM_BYTECODE    
     options.sliceFilter = List("android")
     options.sootClassPath = "./src/test/resources/libs/android-17.jar:./src/test/resources/javasources"
     options.outputDir = null

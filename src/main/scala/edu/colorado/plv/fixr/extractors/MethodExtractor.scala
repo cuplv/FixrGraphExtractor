@@ -24,9 +24,6 @@ class MethodExtractor(options : ExtractorOptions) extends Extractor(options) {
     // Inject the graph extractor into Soot
     PackManager.v().getPack("jtp").add(new Transform("jtp.graphExtractor",
       transformer))
-
-    PhaseOptions.v().setPhaseOption("jtp", "on");
-    Options.v().set_main_class(options.className)
     SootHelper.run(Array(options.className))
   }
 

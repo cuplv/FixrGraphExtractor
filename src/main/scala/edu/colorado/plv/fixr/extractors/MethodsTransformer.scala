@@ -13,6 +13,7 @@ import edu.colorado.plv.fixr.slicing.SlicingCriterion
 import edu.colorado.plv.fixr.abstraction.{Acdfg, AcdfgToDotGraph, GitHubRecord, SourceInfo}
 import edu.colorado.plv.fixr.slicing.APISlicer
 import java.io.FileOutputStream
+import edu.colorado.plv.fixr.extractors.slicing.JimpleSlicer
 
 import edu.colorado.plv.fixr.provenance.Provenance
 import edu.colorado.plv.fixr.slicing.MethodPackageSeed
@@ -54,14 +55,24 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     val sootClass : SootClass = method.getDeclaringClass()
     val className : String = sootClass.getName()
 
-    if (method.isConcrete() &&
-        (! className.startsWith("android.")) &&
-        (! className.startsWith("com.google.android.")) &&
-        (! className.startsWith("com.android.")) &&
+    /* filter methods to extract by package */
+    val skipMethod = null != options.extractFromPackages &&
+      ! (options.extractFromPackages.foldLeft (false) ( (r,e) => className.startsWith(e) || r))
 
-       ((method.getName() == options.methodName && sootClass.getName() == options.className) ||
+    if (skipMethod) {
+      logger.info("Skipping " + className)
+      return
+    }
+
+    if (method.isConcrete() &&
+      (! className.startsWith("android.")) &&
+      (! className.startsWith("com.google.android.")) &&
+      (! className.startsWith("com.google.protobuf.")) &&
+      (! className.startsWith("com.android.")) &&
+      (! className.startsWith("com.googlecode.")) &&
+      ((method.getName() == options.methodName && sootClass.getName() == options.className) ||
         (null == options.methodName && null == options.className && (null != options.processDir))
-      	)) {
+      )) {
       try {
         if (options.to > 0) {
           val executor : ExecutorService = Executors.newSingleThreadExecutor()
@@ -113,15 +124,33 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     }
   }
 
+  def sliceBody(sc : SlicingCriterion, jimpleUnitGraph: EnhancedUnitGraph,
+    body : Body) : Option[(APISlicer, Body)] = {
+
+    logger.info("Creating the slicer...")
+    val slicer: APISlicer = new APISlicer(jimpleUnitGraph, body)
+    logger.info("Slicer created...")
+    logger.info("Slicing...")
+    val slicedJimple: Body = slicer.slice(sc)
+    logger.info("Slicing done...")
+    Some((slicer, slicedJimple))
+  }
+
   def extractMethod(sootClass : SootClass, sootMethod : SootMethod) : Unit = {
     logger.info("Extracting graph for - class {} - method: {}{}",
       sootClass.getName(), sootMethod.getName(), "")
 
     assert(sootMethod.isConcrete());
 
+    val name : String = sootClass.getName() + "_" + sootMethod.getName()
+    val outputFile : File= getAcdfgOutName(options.outputDir, name)
+    if (outputFile.exists()) {
+      // Do not overwrite a graph
+      logger.info("File {} already exists, skipping it...", outputFile)
+      return;
+    }
+
     val body: Body = sootMethod.retrieveActiveBody()
-    val jimpleUnitGraph: EnhancedUnitGraph = new EnhancedUnitGraph(body)
-    val slicer: APISlicer = new APISlicer(jimpleUnitGraph, body)
 
     var sc: SlicingCriterion = null
     if (null == options.sliceFilter)
@@ -129,24 +158,37 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     else
       sc = new MethodPackageSeed(options.sliceFilter)
 
-    logger.debug("Slicing...")
-    val slicedJimple: Body = slicer.slice(sc)
+    logger.info("Jimple slicing...")
+    val jimpleSlicer = new JimpleSlicer(body, sc)
+    jimpleSlicer.sliceJimple()
+    logger.info("Jimple slicing end...")
 
-    if (null == slicedJimple) {
+    logger.info("Creating the enhanced unit graph...")
+    val jimpleUnitGraph: EnhancedUnitGraph = new EnhancedUnitGraph(body)
+    logger.info("Enhanched unit graph created... (size = " + jimpleUnitGraph.size() + ")" );
+
+    val sliceResult : Option[(APISlicer, Body)] = sliceBody(sc, jimpleUnitGraph, body)
+
+    val bodyToUse =
+      sliceResult match {
+        case None => body
+        case Some((slicer, slicedJimple)) => slicedJimple
+      }
+
+    if (null == bodyToUse) {
       logger.warn("Empty slice for - class {} - method: {}\nFilter: {}\n\n",
         sootClass.getName(), sootMethod.getName(), sc.getCriterionDescription())
     }
     else {
       logger.debug("CDFG construction...")
-
       val simp : BodySimplifier =
         if (null != options.sliceFilter) {
-          new BodySimplifier(new ExceptionalUnitGraph(slicedJimple), options.sliceFilter)
+          new BodySimplifier(new ExceptionalUnitGraph(bodyToUse), options.sliceFilter)
         } else {
-          new BodySimplifier(new ExceptionalUnitGraph(slicedJimple), List("android."))
+          new BodySimplifier(new ExceptionalUnitGraph(bodyToUse), List("android."))
         }
       val cdfg: UnitCdfgGraph = new UnitCdfgGraph(simp.getSimplifiedBody())
-      logger.debug("ACDFG construction...")
+      logger.debug("CDFG built...")
 
       val sourceInfo : SourceInfo = SourceInfo(sootClass.getPackageName(),
         sootClass.getName(),
@@ -158,8 +200,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       val gitHubRecord : GitHubRecord = GitHubRecord(options.userName,
         options.repoName, options.url, options.commitHash)
 
-      val name : String = sootClass.getName() + "_" + sootMethod.getName();        
-      
+      logger.debug("ACDFG construction...")
       val acdfg : Acdfg =
         if (options.provenanceDir != null) {
           val filePrefix : String = name
@@ -168,17 +209,28 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
         }
         else {
           new Acdfg(cdfg, gitHubRecord, sourceInfo, "")
-        }       
+        }
+      logger.debug("ACDFG built...")
 
-      if (options.storeAcdfg) acdfgListBuffer += acdfg;      
+      if (options.storeAcdfg) acdfgListBuffer += acdfg;
 
       if (null != options.outputDir) {
         logger.info("Writing data for - class {} - method: {}{}",
           sootClass.getName(), sootMethod.getName(), "")
 
-        writeData(name, acdfg, cdfg, body, slicedJimple, slicer.getCfg());
-        logger.info("Created graph for - class {} - method: {}{}",
-          sootClass.getName(), sootMethod.getName(), "")
+        sliceResult match {
+          case None => {
+            writeData(name, acdfg, cdfg, body, None, None);
+            logger.info("Created graph for - class {} - method: {}{}",
+              sootClass.getName(), sootMethod.getName(), "")
+          }
+          case Some((slicer, slicedJimple)) => {
+            writeData(name, acdfg, cdfg, body, Some(slicedJimple),
+              Some(slicer.getCfg()));
+            logger.info("Created graph for - class {} - method: {}{}",
+              sootClass.getName(), sootMethod.getName(), "")
+          }
+        }
       }
       else {
         logger.warn("Disabled data writing for - class {} - method: {}{}",
@@ -195,6 +247,13 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     streamOut.close();
   }
 
+  private def getAcdfgOutName(outputDir : String, outFileNamePrefix : String) : File = {
+    val acdfgFileName : String = Paths.get(outputDir,
+      outFileNamePrefix + ".acdfg.bin").toString();
+    val outputFile : File = new File(acdfgFileName)
+    return outputFile
+  }
+
   /**
     * Write the data to the output folder
     */
@@ -202,20 +261,22 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     acdfg : Acdfg,
     cdfg : UnitCdfgGraph,
     body : Body,
-    slicedBody : Body,
-    cfg : UnitGraph) : Unit = {
+    slicedBodyOption : Option[Body],
+    slicedCfgOption : Option[UnitGraph]) : Unit = {
     val currentDir = System.getProperty("user.dir")
     val outputDir = if (null == options.outputDir) currentDir else options.outputDir
 
     logger.debug("Writing ACDFG data to: {}", outputDir)
 
     // Write the acdfg
-    val acdfgFileName : String = Paths.get(outputDir,
-      outFileNamePrefix + ".acdfg.bin").toString();
-    val outputFile : File = new File(acdfgFileName)
+    val outputFile : File= getAcdfgOutName(outputDir, outFileNamePrefix)
+    val outputDirPath = new File(outputDir)
     try {
-      if (! outputFile.getParentFile.exists) {
-        outputFile.getParentFile.mkdir
+      if (! outputDirPath.exists()) {
+        val created = outputDirPath.mkdirs()
+        if (! created) {
+          throw new Exception("Error creating " + outputDir)
+        }
       }
     }
     catch {
@@ -252,7 +313,11 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       dotGraph.draw().plot(acdfg_dot)
 
       // CFG
-      SootHelper.dumpToDot(cfg, cfg.getBody(), filePrefix + ".cfg.dot")
+      slicedCfgOption match {
+        case None => ()
+        case Some(cfg) => SootHelper.dumpToDot(cfg, cfg.getBody(),
+          filePrefix + ".cfg.dot")
+      }
 
       // CDFG
       SootHelper.dumpToDot(cdfg, cdfg.getBody(), filePrefix + ".cdfg.dot")
@@ -262,11 +327,16 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       writeJimple(body, jimpleFileName)
 
       // SLICED JIMPLE
-      val slicedJimpleName : String = filePrefix + ".sliced.jimple";
-      writeJimple(slicedBody, slicedJimpleName)
+      slicedBodyOption match {
+        case None => ()
+        case Some(slicedBody) => {
+          val slicedJimpleName : String = filePrefix + ".sliced.jimple";
+          writeJimple(slicedBody, slicedJimpleName)
+        }
+      }
 
-      val provenance : Provenance = new Provenance(null, body, slicedBody,
-          outFileNamePrefix, cfg, cdfg, acdfg)
+      val provenance : Provenance = new Provenance(null, body,
+        slicedBodyOption, outFileNamePrefix, slicedCfgOption, cdfg, acdfg)
 
       try {
         val provFileName : String = filePrefix + ".html"
