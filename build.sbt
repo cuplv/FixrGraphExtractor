@@ -5,17 +5,9 @@ import sbtprotobuf.{ProtobufPlugin=>PB}
 
 enablePlugins(ProtobufPlugin)
 
-lazy val commonSettings =
-  Seq(
-    organization := "edu.colorado.plv.fixr",
-    version := "0.1.0",
-    scalaVersion := "2.12.1",
-    name := "FixrGraphExtractor",
-    javaOptions += "-Xmx2G",
-    exportJars := true
-  )
+version := "0.1.0"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.1"
 
 organization := "edu.colorado.plv.fixr"
 
@@ -40,13 +32,10 @@ concurrentRestrictions in Global += Tags.limit(Tags.Test, 1)
 
 
 libraryDependencies ++= Seq(
-  "org.scalatest" %% "scalatest" % "2.2.2" % Test,
   "junit" % "junit" % "4.11" % Test,
   "commons-lang" % "commons-lang" % "2.6",
   "org.slf4j" % "slf4j-api" % "1.7.5",
   "org.slf4j" % "slf4j-simple" % "1.7.5",
-  "com.github.scopt" %% "scopt" % "3.4.0",
-  "com.lihaoyi" %% "scalatags" % "0.5.5",
   "com.google.googlejavaformat" % "google-java-format" % "1.0",
   "com.google.guava" %  "guava" % "19.0",
   "args4j" % "args4j" % "2.0.23",
@@ -56,6 +45,9 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-lang3" % "3.1",
   "org.apache.commons" % "commons-collections4" % "4.1",
   "com.google.code.findbugs" % "annotations" % "2.0.1",
+  "com.github.scopt" %% "scopt" % "3.7.0",
+  "com.lihaoyi" %% "scalatags" % "0.6.7",
+  "org.scalatest" %% "scalatest" % "3.0.5" % Test,
   "org.ow2.asm" % "asm-debug-all" % "5.1"
 )
 
