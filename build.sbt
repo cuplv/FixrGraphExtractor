@@ -1,16 +1,14 @@
-// import com.trueaccord.scalapb.{ScalaPbPlugin => PB}
 import com.github.retronym.SbtOneJar._
 
 import sbtprotobuf.{ProtobufPlugin=>PB}
 
 enablePlugins(ProtobufPlugin)
 
+oneJarSettings
+
 version := "0.1.0"
-
 scalaVersion := "2.12.1"
-
 organization := "edu.colorado.plv.fixr"
-
 name := "fixrgraphextractor"
 
 resolvers += Resolver.sonatypeRepo("public")
@@ -51,4 +49,3 @@ libraryDependencies ++= Seq(
   "org.ow2.asm" % "asm-debug-all" % "5.1"
 )
 
-oneJarSettings
