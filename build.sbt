@@ -3,15 +3,13 @@ import com.github.retronym.SbtOneJar._
 
 import sbtprotobuf.{ProtobufPlugin=>PB}
 
-seq(PB.protobufSettings: _*)
-
-javaSource in PB.protobufConfig <<= (sourceManaged in Compile)
+enablePlugins(ProtobufPlugin)
 
 lazy val commonSettings =
   Seq(
     organization := "edu.colorado.plv.fixr",
     version := "0.1.0",
-    scalaVersion := "2.11.8",
+    scalaVersion := "2.12.1",
     name := "FixrGraphExtractor",
     javaOptions += "-Xmx2G",
     exportJars := true
@@ -36,12 +34,6 @@ resolvers += "Maven Central Repository" at "https://repo1.maven.org/maven2/"
 javacOptions ++= Seq("-source", "1.7", "-target", "1.7")
 
 scalacOptions += "-target:jvm-1.7"
-
-// Exclude the java file in the test/resources folder from the compilation
-// //target/scala-2.11/src_managed/main/edu/colorado/plv/fixr/protobuf/ javaSource in PB.protobufConfig
-EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.ManagedClasses
-EclipseKeys.classpathTransformerFactories := Seq(ClasspathentryTransformer)
-EclipseKeys.withJavadoc := true
 
 // Remove the parallel execution of tests - soot is not happy with that
 concurrentRestrictions in Global += Tags.limit(Tags.Test, 1)
