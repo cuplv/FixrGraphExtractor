@@ -8,6 +8,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.HashSet
 import scala.collection.mutable.DoubleLinkedList
+import edu.colorado.plv.fixr.SootHelper
 
 import org.slf4j.LoggerFactory
 import org.slf4j.Logger
@@ -503,10 +504,14 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
 
     /* creates all the control edges */
     cdfg.unitIterator.foreach { n =>
-      if (! sootObjToId.contains(n)) lookupOrCreateNode(n)      
+      if (! sootObjToId.contains(n)) lookupOrCreateNode(n)
 
-      addControlEdges(n, sootObjToId(n)) 
+      addControlEdges(n, sootObjToId(n))
     }
+
+    for ((key,value) <- sootObjToId)
+      if (key.isInstanceOf[Unit])
+        acdfg.addLine(value, SootHelper.getLineNumber(key.asInstanceOf[soot.tagkit.Host]))
 
     /* computes transitive clouse */
     logger.debug("### Computing transitive closure down to DFS of command edges...")

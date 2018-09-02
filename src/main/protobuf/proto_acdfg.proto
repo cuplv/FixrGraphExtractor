@@ -92,28 +92,36 @@ message Acdfg {
   /* Graph representation */
 
   /* Nodes */
-  repeated DataNode    data_node    = 1;
-  repeated MiscNode    misc_node    = 2;
-  repeated MethodNode  method_node  = 3;
+  repeated DataNode data_node = 1;
+  repeated MiscNode misc_node = 2;
+  repeated MethodNode method_node  = 3;
 
   /* Edges */
   repeated ControlEdge control_edge = 4;
-  repeated DefEdge     def_edge     = 5;
-  repeated UseEdge     use_edge     = 6;
-  repeated TransEdge   trans_edge   = 7;
+  repeated DefEdge def_edge = 5;
+  repeated UseEdge use_edge = 6;
+  repeated TransEdge trans_edge = 7;
   repeated ExceptionalControlEdge exceptional_edge = 12;  
 
   /* labels on edges */
   repeated LabelMap edge_labels = 11;
 
   /* Provenance information */
-  optional RepoTag     repo_tag     = 8;
-  optional SourceInfo  source_info  = 10;
+  optional RepoTag repo_tag = 8;
+  optional SourceInfo source_info  = 10;
   optional string provenance_path = 13;
 
   /* Used for faster lookup
      [SM] It seems an hack introduced to compute the pair of isomorphisms.
      To be removed.
    */
-  optional MethodBag   method_bag   = 9;
+  optional MethodBag method_bag = 9;
+
+  message LineNum {
+    required uint64 id = 1;
+    required uint32 line = 2;
+  }
+
+  repeated LineNum node_lines = 14;
+
 }
