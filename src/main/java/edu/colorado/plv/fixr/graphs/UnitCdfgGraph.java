@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 import edu.colorado.plv.fixr.slicing.ReachingDefinitions;
+
 import soot.Body;
 import soot.Local;
 import soot.Unit;
@@ -39,9 +40,9 @@ public class UnitCdfgGraph extends ExceptionalUnitGraph {
   protected DataDependencyGraph ddg = null;
 
   public UnitCdfgGraph(Body body) {
-    super(body);   
+    super(body);
     this.ddg = new DataDependencyGraph(this);
-    
+
     addDataDependentNodes();
     pruneDataDependent();
 
@@ -91,6 +92,7 @@ public class UnitCdfgGraph extends ExceptionalUnitGraph {
     unitsList = new ArrayList<Unit>();
     for (Unit u : this.getBody().getUnits()) {
       unitsList.add(u);
+
       assert ! defEdges.containsKey(u);
       defEdges.put(u, new ArrayList<Local>());
     }
@@ -196,6 +198,6 @@ public class UnitCdfgGraph extends ExceptionalUnitGraph {
     /* just keep the locals that are used in an edge */
     localsList.retainAll(usedLocals);
   }
-  
+
 
 }

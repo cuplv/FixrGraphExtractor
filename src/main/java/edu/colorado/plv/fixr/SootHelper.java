@@ -20,6 +20,7 @@ import soot.Type;
 import soot.jimple.Jimple;
 import soot.options.Options;
 import soot.tagkit.AbstractHost;
+import soot.tagkit.Host;
 import soot.tagkit.LineNumberTag;
 import soot.tagkit.SourceFileTag;
 import soot.tagkit.SourceLnNamePosTag;
@@ -300,7 +301,7 @@ public class SootHelper {
    * @param host code element
    * @return the line number of host if it exsits, 0 otherwise
    */
-  public static int getLineNumber(AbstractHost code)
+  public static int getLineNumber(Host code)
   {
     int lineNumber = 0;
 
