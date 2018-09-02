@@ -232,6 +232,7 @@ class Acdfg(adjacencyList: AdjacencyList,
    */
   var edges = scala.collection.mutable.HashMap[Long, Edge]()
   var nodes = scala.collection.mutable.HashMap[Long, Node]()
+  var nodesToLineNumber = scala.collection.mutable.HashMap[Long, Int]()
 
   /**
     *  Map from the edge id to a set of labels
@@ -377,6 +378,14 @@ class Acdfg(adjacencyList: AdjacencyList,
       builder.setSourceInfo(protoSrcTag)
     }
 
+    // Add nodes to lines mapping
+    for ((nodeId, nodeLine) <- nodesToLineNumber) {
+      val protoLine : ProtoAcdfg.Acdfg.LineNum.Builder =
+        ProtoAcdfg.Acdfg.LineNum.newBuilder()
+      protoLine.setId(nodeId)
+      protoLine.setLine(nodeLine)
+    }
+
     // add bag of methods
     val protoMethodBag = ProtoAcdfg.Acdfg.MethodBag.newBuilder()
     methodBag.sorted.foreach(protoMethodBag.addMethod)
@@ -416,6 +425,11 @@ class Acdfg(adjacencyList: AdjacencyList,
     (node.id, node)
   }
 
+  def addLine(id : Long, lineNumber : Int) = {
+    nodesToLineNumber.+=((id,lineNumber))
+  }
+
+
   def removeEdge(to : Long, from : Long) = {
     val id = edges.find {pair => (pair._2.from == from) && (pair._2.to == to) }.get._1
     edges.remove(id)
@@ -447,18 +461,6 @@ class Acdfg(adjacencyList: AdjacencyList,
   }
 
   /**
-    * Creates a ACDFG from the adjacencylist
-    */
-  def this(adjacencyList: AdjacencyList, gitHubRecord: GitHubRecord,
-    sourceInfo : SourceInfo, prov_path : String) = {
-    this(adjacencyList, null, null, gitHubRecord, sourceInfo, prov_path)
-    assert(this.gitHubRecord == gitHubRecord)
-    adjacencyList.nodes.foreach {node => nodes += ((node.id, node))}
-    adjacencyList.edges.foreach {edge => addEdge(edge)}
-    prepareMethodBag()
-  }
-
-  /**
     * Creates a ACDFG from a CDFG
     */
   def this(cdfg : UnitCdfgGraph, gitHubRecord: GitHubRecord,
@@ -472,8 +474,6 @@ class Acdfg(adjacencyList: AdjacencyList,
     converter.fillAcdfg()
 
     prepareMethodBag()
-
-    logger.debug("### Done")
   }
 
   /**
@@ -573,6 +573,11 @@ class Acdfg(adjacencyList: AdjacencyList,
       val labelSet = scala.collection.immutable.HashSet[EdgeLabel.Value]() ++ labelsList
       this.edgesLabel += ((labelMap.getEdgeId, labelSet))
     }}
+
+    // Add nodes to lines mapping
+    protobuf.getNodeLinesList.foreach { protoLine =>
+      this.addLine(protoLine.getId, protoLine.getLine)
+    }
 
     if ((!protobuf.getMethodBag.isInitialized) ||
       (protobuf.getMethodBag.getMethodCount == 0)) {

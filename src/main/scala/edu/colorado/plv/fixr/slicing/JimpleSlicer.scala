@@ -4,6 +4,7 @@ import soot.Body
 import soot.PatchingChain
 import soot.{Unit => SootUnit}
 import edu.colorado.plv.fixr.slicing.SlicingCriterion
+import edu.colorado.plv.fixr.SootHelper
 import org.slf4j.LoggerFactory
 import soot.PatchingChain
 import soot.ValueBox

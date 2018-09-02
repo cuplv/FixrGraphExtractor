@@ -178,8 +178,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     if (null == bodyToUse) {
       logger.warn("Empty slice for - class {} - method: {}\nFilter: {}\n\n",
         sootClass.getName(), sootMethod.getName(), sc.getCriterionDescription())
-    }
-    else {
+    } else {
       logger.debug("CDFG construction...")
       val simp : BodySimplifier =
         if (null != options.sliceFilter) {
@@ -196,7 +195,8 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
         SootHelper.getLineNumber(sootClass),
         SootHelper.getLineNumber(sootMethod),
         SootHelper.getFileName(sootClass),
-        SootHelper.getAbsFileName(sootClass))
+        SootHelper.getAbsFileName(sootClass)
+      )
       val gitHubRecord : GitHubRecord = GitHubRecord(options.userName,
         options.repoName, options.url, options.commitHash)
 
