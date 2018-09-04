@@ -509,9 +509,11 @@ class CdfgToAcdfg(val cdfg : UnitCdfgGraph, val acdfg : Acdfg) {
       addControlEdges(n, sootObjToId(n))
     }
 
-    for ((key,value) <- sootObjToId)
-      if (key.isInstanceOf[Unit])
+    for ((key,value) <- sootObjToId) {
+      if (key.isInstanceOf[soot.tagkit.Host]) {
         acdfg.addLine(value, SootHelper.getLineNumber(key.asInstanceOf[soot.tagkit.Host]))
+      }
+    }
 
     /* computes transitive clouse */
     logger.debug("### Computing transitive closure down to DFS of command edges...")
