@@ -384,6 +384,8 @@ class Acdfg(adjacencyList: AdjacencyList,
         ProtoAcdfg.Acdfg.LineNum.newBuilder()
       protoLine.setId(nodeId)
       protoLine.setLine(nodeLine)
+
+      builder.addNodeLines(protoLine);
     }
 
     // add bag of methods
