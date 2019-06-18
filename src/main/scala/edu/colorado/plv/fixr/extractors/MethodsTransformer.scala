@@ -71,9 +71,11 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       (! className.startsWith("com.google.protobuf.")) &&
       (! className.startsWith("com.android.")) &&
       (! className.startsWith("com.googlecode.")) &&
+      (! (className.contains(".R$"))) &&
       ((method.getName() == options.methodName && sootClass.getName() == options.className) ||
         (null == options.methodName && null == options.className && (null != options.processDir))
       )) {
+
       try {
         if (options.to > 0) {
           val executor : ExecutorService = Executors.newSingleThreadExecutor()

@@ -284,6 +284,7 @@ object Main {
         val extractor : Extractor =
           if (options.processDir == null) new MethodExtractor(options)
           else new MultipleExtractor(options)
+        logger.info("Starting the extractor...")
         extractor.extract()
       }
       case None => System.exit(1)
