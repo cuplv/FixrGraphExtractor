@@ -66,6 +66,7 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
 
     if (method.isConcrete() &&
       (! className.startsWith("android.")) &&
+      (! className.startsWith("androidx.")) &&
       (! className.startsWith("com.google.android.")) &&
       (! className.startsWith("com.google.protobuf.")) &&
       (! className.startsWith("com.android.")) &&
@@ -160,8 +161,13 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
 
     logger.info("Jimple slicing...")
     val jimpleSlicer = new JimpleSlicer(body, sc)
-    jimpleSlicer.sliceJimple()
+    val isEmpty = jimpleSlicer.sliceJimple()
     logger.info("Jimple slicing end...")
+
+    if (isEmpty) {
+      logger.warn("(Jimple) Empty slice for - class {} - method: {}\nFilter: {}\n\n",
+        sootClass.getName(), sootMethod.getName(), sc.getCriterionDescription())
+    }
 
     logger.info("Creating the enhanced unit graph...")
     val jimpleUnitGraph: EnhancedUnitGraph = new EnhancedUnitGraph(body)
@@ -368,6 +374,11 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
       catch {
         case e : StackOverflowError => {
           logger.error("StackOverflowError processing class {}, method {}{}",
+            sootClass.getName(), sootMethod.getName(), "")
+          logger.error("Exception {}:", e)
+        }
+        case e : Exception => {
+          logger.error("Exception thrown while processing class {}, method {}{}",
             sootClass.getName(), sootMethod.getName(), "")
           logger.error("Exception {}:", e)
         }

@@ -384,6 +384,8 @@ class Acdfg(adjacencyList: AdjacencyList,
         ProtoAcdfg.Acdfg.LineNum.newBuilder()
       protoLine.setId(nodeId)
       protoLine.setLine(nodeLine)
+
+      builder.addNodeLines(protoLine);
     }
 
     // add bag of methods
@@ -427,6 +429,10 @@ class Acdfg(adjacencyList: AdjacencyList,
 
   def addLine(id : Long, lineNumber : Int) = {
     nodesToLineNumber.+=((id,lineNumber))
+  }
+
+  def getLine(id : Long) : Option[Int] = {
+    nodesToLineNumber.get(id)
   }
 
 
