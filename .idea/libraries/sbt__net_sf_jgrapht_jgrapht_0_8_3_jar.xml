@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="sbt: net.sf.jgrapht:jgrapht:0.8.3:jar">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/net.sf.jgrapht/jgrapht/jars/jgrapht-0.8.3.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ivy2/cache/net.sf.jgrapht/jgrapht/srcs/jgrapht-0.8.3-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

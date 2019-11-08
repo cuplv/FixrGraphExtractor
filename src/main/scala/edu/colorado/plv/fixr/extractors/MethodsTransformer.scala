@@ -57,11 +57,14 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
 
     /* filter methods to extract by package */
     val skipMethod = null != options.extractFromPackages &&
-      ! (options.extractFromPackages.foldLeft (false) ( (r,e) => className.startsWith(e) || r))
+      ! (options.extractFromPackages.foldLeft (false) ( (r,e) =>
+        className.startsWith(e) || r))
 
     if (skipMethod) {
       logger.info("Skipping " + className)
       return
+    }else{
+      println()
     }
 
     if (method.isConcrete() &&
