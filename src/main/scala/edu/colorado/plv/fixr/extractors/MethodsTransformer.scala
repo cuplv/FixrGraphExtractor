@@ -63,8 +63,6 @@ class MethodsTransformer(options : ExtractorOptions) extends BodyTransformer {
     if (skipMethod) {
       logger.info("Skipping " + className)
       return
-    }else{
-      println()
     }
 
     if (method.isConcrete() &&
