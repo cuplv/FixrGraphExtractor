@@ -1,6 +1,14 @@
+dist: trusty
+
 language: scala
+
 scala:
   - 2.11.4
+
+addons:
+  apt:
+    packages:
+      - openjdk-7-jdk
 
 jdk:
   - openjdk7
