@@ -1,6 +1,9 @@
 language: scala
 scala:
-   - 2.11.4
+  - 2.11.4
+
+jdk:
+  - oraclejdk7
 
 install:
   - wget https://github.com/google/protobuf/releases/download/v2.6.1/protobuf-2.6.1.tar.gz
@@ -8,7 +11,5 @@ install:
   - pushd protobuf-2.6.1 && ./configure --prefix=/usr && make && sudo make install && popd
 
 script:
-  - jdk_switcher use oraclejdk8
   - sbt "testOnly -- -l edu.colorado.plv.fixr.tests.TestParseSources"
-  - jdk_switcher use openjdk7
   - sbt -java-home $JAVA_HOME test
