@@ -1,12 +1,10 @@
 package edu.colorado.plv.fixr
 
-import java.io.{BufferedReader, File, FileReader, InputStream}
+import java.io.{BufferedReader, FileReader}
 import collection.JavaConverters._
 
 import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.CompilationUnit
-
-import scala.collection.mutable
 
 object AppCodeDetector {
   def packageListFromFileList(fileList : String): String = {

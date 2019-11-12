@@ -49,6 +49,3 @@ libraryDependencies ++= Seq(
   "org.ow2.asm" % "asm-debug-all" % "5.1",
   "com.github.javaparser" % "javaparser-core" % "3.14.16"
 )
-
-//traceLevel in run := 0
-fork in (IntegrationTest, run) := true
