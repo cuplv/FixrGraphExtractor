@@ -46,6 +46,6 @@ libraryDependencies ++= Seq(
   "com.github.scopt" %% "scopt" % "3.7.0",
   "com.lihaoyi" %% "scalatags" % "0.6.7",
   "org.scalatest" %% "scalatest" % "3.0.5" % Test,
-  "org.ow2.asm" % "asm-debug-all" % "5.1"
+  "org.ow2.asm" % "asm-debug-all" % "5.1",
+  "com.github.javaparser" % "javaparser-core" % "3.14.16"
 )
-

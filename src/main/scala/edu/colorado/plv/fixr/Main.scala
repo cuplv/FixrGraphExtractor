@@ -98,6 +98,8 @@ object Main {
       //
       opt[String]('k', "extract-from-packages").action { (x, c) =>
       c.copy(extractFromPackages = x) } text("Extract graphs only from this packages (: separated list)")
+      opt[String]('q', "java-file-filter").action { (x,c) =>
+        c.copy(extractFromPackages = AppCodeDetector.packageListFromFileList(x)) }
       //
       opt[String]('p', "process-dir") action { (x, c) =>
       c.copy(processDir = x) } text("Comma (:) separated list of input directories to process")
