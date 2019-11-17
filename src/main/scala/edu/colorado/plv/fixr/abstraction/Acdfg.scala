@@ -431,6 +431,10 @@ class Acdfg(adjacencyList: AdjacencyList,
     nodesToLineNumber.+=((id,lineNumber))
   }
 
+  def getLine(id : Long) : Option[Int] = {
+    nodesToLineNumber.get(id)
+  }
+
 
   def removeEdge(to : Long, from : Long) = {
     val id = edges.find {pair => (pair._2.from == from) && (pair._2.to == to) }.get._1

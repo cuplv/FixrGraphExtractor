@@ -30,88 +30,20 @@ class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
     invokeeName
   }
 
-
-  def draw2() : DotGraph = {
-    var canvas     : DotGraph       = initDotGraph(null)
-    canvas.setGraphLabel("ACDFG")
-    for (n <- acdfg.nodes) {
-      var dotNode : DotGraphNode = canvas.drawNode(n._1.toString)
-      n match {
-        case n@(id : Long, node : DataNode) =>
-          // "#" + id.toString + ": " + node.datatype.toString + " " + node.name
-          val label = s"${node.name} : ${node.datatype} (# ${id})"
-          dotNode.setLabel(label)
-          dotNode.setStyle(DotGraphConstants.NODE_STYLE_DASHED)
-          dotNode.setAttribute("shape", "ellipse")
-        case n@(id : Long, node : MethodNode) =>
-          val (invokeeId, invokeeName) =
-            if (node.invokee.isDefined) {
-              val invokeeName = getDataNodeName(acdfg.nodes.get(node.invokee.get))
-              (s"(#${node.invokee.get}).", s"${invokeeName}.")
-            } else ("","")
-
-          val initVal = (List[String](),List[String]())
-          val (argsId, argsName) = node.argumentIds.foldLeft(initVal)(
-              (pair, id : Long) => {
-                val varName = getDataNodeName(acdfg.nodes.get(id))
-                val lres = s"(#${id.toString()})" :: pair._1
-                val rres = varName ::  pair._2
-                (lres, rres)
-              }
-          )
-
-          val argsNameList = argsName.mkString(",")
-          val argsIdList = argsId.mkString(",")
-          val label = s"${invokeeName}${node.name}(${argsNameList})"
-          val labelId = s"${invokeeId}(#${node.id})(${argsIdList})"
-
-          dotNode.setLabel(s"${label}\\n${labelId}")
-        case n@(id : Long, node : MiscNode) =>
-          dotNode.setLabel("#" + id.toString)
-        case n => Nil
-      }
-    }
-
-    /* Print 1. Control edges */
-    acdfg.edges.foldLeft(List[Edge]())((res : List[Edge], values : (Long, Edge)) => {
-      val edge = values._2
-      if (edge.isInstanceOf[ControlEdge] && ! edge.isInstanceOf[TransControlEdge])
-        edge :: res
-      else res
-    })
-
-    for (e <- acdfg.edges) {
-      e match {
-        case e@(id : Long, edge : DefEdge) => {
-          var dotEdge : DotGraphEdge = canvas.drawEdge(e._2.from.toString, e._2.to.toString)
-          dotEdge.setAttribute("color", "blue")
-        }
-        case e@(id : Long, edge : UseEdge) => {
-          var dotEdge : DotGraphEdge = canvas.drawEdge(e._2.from.toString, e._2.to.toString)
-          dotEdge.setAttribute("color", "red")
-          dotEdge.setAttribute("Damping", "0.7")
-        }
-        case e@(id : Long, edge : TransControlEdge) => ()
-        case e@(id : Long, edge : ControlEdge) => {
-          var dotEdge : DotGraphEdge = canvas.drawEdge(e._2.from.toString, e._2.to.toString)
-          dotEdge.setAttribute("color", "black")
-          dotEdge.setAttribute("Damping", "0.7")
-        }
-        case _ => null
-      }
-    }
-
-    canvas
-  }
-
-
   def drawNode(canvas: DotGraph, id : Long) : scala.Unit = {
+    def getNodeLine(id : Long) : String = {
+      acdfg.getLine(id) match {
+        case Some(lineNum) => s"${lineNum}"
+        case _ => "na"
+      }
+    }
     val n : Node = acdfg.nodes(id)
+    val nodeLine : String = getNodeLine(id)
     var dotNode : DotGraphNode = canvas.drawNode(id.toString)
     n match {
       case (node : DataNode) =>
         // "#" + id.toString + ": " + node.datatype.toString + " " + node.name
-        val label = s"${node.name} : ${node.datatype} (# ${id})"
+        val label = s"${node.name} : ${node.datatype} (# ${id})\\n${nodeLine}"
         dotNode.setLabel(label)
         dotNode.setStyle(DotGraphConstants.NODE_STYLE_DASHED)
         dotNode.setAttribute("shape", "ellipse")
@@ -136,11 +68,11 @@ class AcdfgToDotGraph(acdfg : Acdfg) extends CFGToDotGraph {
         val label = s"${invokeeName}${node.name}(${argsNameList})"
         val labelId = s"${invokeeId}(#${node.id})(${argsIdList})"
 
-        dotNode.setLabel(s"${label}\\n${labelId}")
+        dotNode.setLabel(s"${label}\\n${labelId}\\n${nodeLine}")
         dotNode.setAttribute("group", "0")
         ()
       case (node : MiscNode) =>
-        dotNode.setLabel(s"(#${id.toString})")
+        dotNode.setLabel(s"(#${id.toString})\\n${nodeLine}")
         dotNode.setAttribute("group", "0")
         ()
       case n => ()
