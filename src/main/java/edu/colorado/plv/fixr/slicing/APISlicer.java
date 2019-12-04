@@ -221,7 +221,7 @@ public class APISlicer {
   private Set<Unit> getSeeds(SlicingCriterion sc)
   {
     Set<Unit> seeds = new HashSet<Unit>();
-    for (Object node : pdg.getNodes()) {
+    for (Object node : pdg){// TODO: test change, used to be: pdg.getNodes()) {
       if (node instanceof PDGNode) {
         Object innerNode = ((PDGNode) node).getNode();
         if (innerNode instanceof Block) {
