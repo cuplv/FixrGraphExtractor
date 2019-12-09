@@ -43,12 +43,19 @@ abstract class TestSlicing(classPath : String, testClassName : String,
 
     val bodyToSlice : Body = testClass.getMethodByName(methodName).retrieveActiveBody();
     val expectedRes : Body = resClass.getMethodByName(APISlicer.getSlicedMethodName(methodName)).retrieveActiveBody();
-
+    println("----body to slice----")
+    println(bodyToSlice)
     val slicer : APISlicer = new APISlicer(bodyToSlice);
     val slicedBody : Body = slicer.slice(new MethodPackageSeed(getPackages()));
-
+    println("----body to slice after slice----")
+    println(bodyToSlice)
     assert(null != slicedBody) /* at least one seed in the test*/
     /* obtained and expected results must be the same */
+
+    println("----expected-----")
+    println(expectedRes)
+    println("\n----actual----")
+    println(slicedBody)
     assert(SootHelper.compareBodies(expectedRes, slicedBody));
   }
 }
