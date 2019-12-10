@@ -20,10 +20,7 @@ class TestBug058 extends FunSuite with BeforeAndAfter {
     options.methodName = "bug_058"
     options.configCode = SootHelper.READ_FROM_BYTECODE    
     options.sliceFilter = List("android")
-    val androidJarPath = getClass.getResource("/libs/android-17.jar").getPath
-    val javasources = getClass.getResource("/javasources").getPath
-//    options.sootClassPath = "./src/test/resources/libs/android-17.jar:./src/test/resources/javasources"
-    options.sootClassPath = s"${androidJarPath}:${javasources}"
+    options.sootClassPath = "./src/test/resources/libs/android-17.jar:./src/test/resources/javasources"
     options.outputDir = null
     options.provenanceDir = null
     options.processDir = null
@@ -32,9 +29,7 @@ class TestBug058 extends FunSuite with BeforeAndAfter {
     options.storeAcdfg = true
 
     var extractor : Extractor = new MethodExtractor(options);
-//    Thread.sleep(10000)
     extractor.extract()
-    Thread.sleep(10000)
 
     val transformer = extractor.getTransformer
     transformer.acdfgListBuffer.foreach( (x : edu.colorado.plv.fixr.abstraction.Acdfg)  => {

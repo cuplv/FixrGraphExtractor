@@ -145,6 +145,7 @@ public class SootHelper {
       Options.v().set_allow_phantom_refs(true);
       Options.v().set_src_prec(Options.src_prec_apk);
       Options.v().set_android_jars(androidJars);
+      Options.v().set_process_multiple_dex(true);
 
       setBytecodeOptions();
     }
