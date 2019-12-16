@@ -1,10 +1,15 @@
 package edu.colorado.plv.fixr
 
-import java.io.{BufferedReader, FileReader}
-import collection.JavaConverters._
+import java.io.{BufferedReader, File, FileReader}
+import java.nio.file.Files
 
+import collection.JavaConverters._
 import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.CompilationUnit
+
+import scala.io.Source
+import sys.process._
+
 
 object AppCodeDetector {
   def packageListFromFileList(fileList : String): String = {
@@ -36,6 +41,17 @@ object AppCodeDetector {
         List()}
     }finally{
       reader.close()
+    }
+  }
+  def mainPackageFromApk(apkFile:String):String = {
+    val jarfile = getClass.getResource("/apkinfo.jar").getPath
+    val tmpfile = new File(Files.createTempDirectory("info_apk").toUri).getAbsolutePath + "/out"
+    val res = s"java -jar ${jarfile} -f ${apkFile} -o ${tmpfile}" !;
+    if (res != 0) {
+      println(s"Failed to extract main packaage for ${apkFile}")
+      "" //no package filtering if failure
+    } else {
+      Source.fromFile(tmpfile).getLines().mkString(":")
     }
   }
 

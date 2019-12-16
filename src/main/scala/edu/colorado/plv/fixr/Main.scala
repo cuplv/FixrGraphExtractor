@@ -49,6 +49,7 @@ object Main {
     graph1 : String = null,
     graph2 : String = null,
     iso : String = null,
+    packageAutoDetect : Boolean = true,
     var userName : String = null,
     var repoName : String = null,
     var url : String = null,
@@ -127,6 +128,8 @@ object Main {
         c.copy(url = x) } text("URL of the git repo; should be of the form `https://github.com/user_name/repo_name`.")
       opt[String]('h', "commit-hash") action { (x, c) =>
         c.copy(commitHash = x) } text("SHA-1 hash of the commit being ingested.")
+      opt[Boolean]("package-autodetect") action {(x,c) =>
+        c.copy(packageAutoDetect = x)} text "Automatically extract package filter from apk file."
 
     }
     parser.parse(args, MainOptions()) match {
@@ -281,6 +284,10 @@ object Main {
         if (null != mainopt.processDir) {
           val myArray : Array[String] = mainopt.processDir.split(":")
           options.processDir = myArray.toList
+        }
+        if (mainopt.packageAutoDetect){
+          val packageFromApk = AppCodeDetector.mainPackageFromApk(mainopt.processDir)
+          options.extractFromPackages = List(packageFromApk) //options.extractFromPackages
         }
 
         val extractor : Extractor =
