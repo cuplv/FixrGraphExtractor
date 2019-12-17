@@ -65,7 +65,6 @@ object AppCodeDetector {
 
 
     val res = s"java -jar ${jarfile} -f ${apkFile} -o ${tmpfile}" !;
-//    val res = Boot.main(Array("-f",apkFile,"-o",tmpfile))
     if (res != 0) {
       println(s"Failed to extract main package for ${apkFile}")
       "" //no package filtering if failure
