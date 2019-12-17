@@ -9,6 +9,7 @@ import com.github.javaparser.ast.CompilationUnit
 
 import scala.io.Source
 import sys.process._
+import com.simontuffs.onejar.Boot
 
 
 object AppCodeDetector {
@@ -43,10 +44,29 @@ object AppCodeDetector {
       reader.close()
     }
   }
+
+  /***
+    * Note: this is a silly hack to avoid dexlib conflicts
+    * @param apkFile
+    * @return
+    */
   def mainPackageFromApk(apkFile:String):String = {
-    val jarfile = getClass.getResource("/apkinfo.jar").getPath
+    val resjarfile: String = getClass.getResource("/lib/apkinfo.jar").getPath
+
+    val jarfileFile = new File(resjarfile)
+
+    val jarfile = if (jarfileFile.exists()){
+      resjarfile
+    }else {
+      "/home/biggroum/ApkInfo/target/scala-2.12/apkinfo_2.12-0.11-one-jar.jar"
+    }
+
     val tmpfile = new File(Files.createTempDirectory("info_apk").toUri).getAbsolutePath + "/out"
+
+
+
     val res = s"java -jar ${jarfile} -f ${apkFile} -o ${tmpfile}" !;
+//    val res = Boot.main(Array("-f",apkFile,"-o",tmpfile))
     if (res != 0) {
       println(s"Failed to extract main packaage for ${apkFile}")
       "" //no package filtering if failure
