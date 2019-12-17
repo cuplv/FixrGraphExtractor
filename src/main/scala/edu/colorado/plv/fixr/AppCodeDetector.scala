@@ -68,10 +68,12 @@ object AppCodeDetector {
     val res = s"java -jar ${jarfile} -f ${apkFile} -o ${tmpfile}" !;
 //    val res = Boot.main(Array("-f",apkFile,"-o",tmpfile))
     if (res != 0) {
-      println(s"Failed to extract main packaage for ${apkFile}")
+      println(s"Failed to extract main package for ${apkFile}")
       "" //no package filtering if failure
     } else {
-      Source.fromFile(tmpfile).getLines().mkString(":")
+      val pkg = Source.fromFile(tmpfile).getLines().mkString(":")
+      println(s"Using package:  ${pkg} -- for apk file ${apkFile}")
+      pkg
     }
   }
 
