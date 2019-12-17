@@ -9,7 +9,6 @@ import com.github.javaparser.ast.CompilationUnit
 
 import scala.io.Source
 import sys.process._
-import com.simontuffs.onejar.Boot
 
 
 object AppCodeDetector {
