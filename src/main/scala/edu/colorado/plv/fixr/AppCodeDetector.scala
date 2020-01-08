@@ -50,7 +50,7 @@ object AppCodeDetector {
     * @return
     */
   def mainPackageFromApk(apkFile:String):String = {
-    val resource = getClass.getResource("/lib/apkinfo.jar")
+    val resource = getClass.getResource("/apkinfo.jar")
     val resjarfile: String = if (resource != null) resource.getPath else ""
 
     val jarfileFile = new File(resjarfile)

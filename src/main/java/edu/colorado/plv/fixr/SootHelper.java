@@ -63,7 +63,7 @@ public class SootHelper {
 
       /* Jimple body creation - neeed when processing classes */
       PhaseOptions.v().setPhaseOption("jb", "enabled:true");
-      PhaseOptions.v().setPhaseOption("jb", "use-original-names:true");
+//      PhaseOptions.v().setPhaseOption("jb", "use-original-names:true");
       PhaseOptions.v().setPhaseOption("jb", "preserve-source-annotations:true");
       // jb.ls is enabled, otherwise soot raises
       // the exception java.lang.Exception: null typing passed to useChecker
