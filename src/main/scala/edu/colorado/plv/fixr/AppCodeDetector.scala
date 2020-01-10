@@ -1,6 +1,7 @@
 package edu.colorado.plv.fixr
 
-import java.io.{BufferedReader, File, FileReader}
+import java.io.{BufferedReader, File, FileReader, FileWriter}
+import java.net.{HttpURLConnection, URL}
 import java.nio.file.Files
 
 import collection.JavaConverters._
@@ -46,26 +47,27 @@ object AppCodeDetector {
 
   /***
     * Note: this is a silly hack to avoid dexlib conflicts
+    * apkinfo.jar is not included in resources file if using oneJar
+    * TODO: find a better way to handle this than a list of hardcoded paths
+    * TODO: find a way to not need extra jar
     * @param apkFile
     * @return
     */
   def mainPackageFromApk(apkFile:String):String = {
     val resource = getClass.getResource("/apkinfo.jar")
-    val resjarfile: String = if (resource != null) resource.getPath else ""
-
-    val jarfileFile = new File(resjarfile)
-
-    val jarfile = if (jarfileFile.exists()){
-      resjarfile
-    }else {
-      "/home/biggroum/ApkInfo/target/scala-2.12/apkinfo_2.12-0.11-one-jar.jar"
+    val homedir = System.getProperty("user.home")
+    val searchLocations = List("apkinfo_2.12-0.11-one-jar.jar",
+      "Documents/source/ApkInfo/target/scala-2.12/apkinfo_2.12-0.11-one-jar.jar",
+      "ApkInfo/target/scala-2.12/apkinfo_2.12-0.11-one-jar.jar",
+      "biggroumsetup/apkinfo_2.12-0.11-one-jar.jar"
+    ).map(a =>new File( s"${homedir}/${a}"))
+    val jarfileFile : File = if (resource != null) new File(resource.getPath) else {
+      searchLocations.find(_.exists()).getOrElse(???)
     }
 
     val tmpfile = new File(Files.createTempDirectory("info_apk").toUri).getAbsolutePath + "/out"
 
-
-
-    val res = s"java -jar ${jarfile} -f ${apkFile} -o ${tmpfile}" !;
+    val res = s"java -jar ${jarfileFile.getCanonicalPath} -f ${apkFile} -o ${tmpfile}" !;
     if (res != 0) {
       println(s"Failed to extract main package for ${apkFile}")
       "" //no package filtering if failure
