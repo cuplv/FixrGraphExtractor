@@ -4,6 +4,8 @@ import java.io.{BufferedReader, File, FileReader, FileWriter}
 import java.net.{HttpURLConnection, URL}
 import java.nio.file.Files
 
+import org.apache.commons.io.FileUtils
+
 import collection.JavaConverters._
 import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.CompilationUnit
@@ -15,6 +17,7 @@ import sys.process._
 object AppCodeDetector {
   def packageListFromFileList(fileList : String): String = {
     val files = fileList.split(":").map(new FileReader(_))
+    println(files)
     val out: Array[String] = files.map(packageListFromFile(_).mkString(":"))
     out.mkString(":")
   }
@@ -54,17 +57,14 @@ object AppCodeDetector {
     * @return
     */
   def mainPackageFromApk(apkFile:String):String = {
-    val resource = getClass.getResource("/apkinfo.jar")
-    val homedir = System.getProperty("user.home")
-    val searchLocations = List("apkinfo_2.12-0.11-one-jar.jar",
-      "Documents/source/ApkInfo/target/scala-2.12/apkinfo_2.12-0.11-one-jar.jar",
-      "ApkInfo/target/scala-2.12/apkinfo_2.12-0.11-one-jar.jar",
-      "biggroumsetup/apkinfo_2.12-0.11-one-jar.jar"
-    ).map(a =>new File( s"${homedir}/${a}"))
-    val jarfileFile : File = if (resource != null) new File(resource.getPath) else {
-      searchLocations.find(_.exists()).getOrElse(???)
+    val resource = getClass.getResource("/apkinfo.fake")
+
+    if (resource == null) {
+      throw new Exception("Cannot find resource file apkinfo.jar")
     }
 
+    val jarfileFile = new File(new File(Files.createTempDirectory("info_apk2").toUri).getAbsolutePath + "/apkinfo.jar")
+    FileUtils.copyURLToFile(resource, jarfileFile)
     val tmpfile = new File(Files.createTempDirectory("info_apk").toUri).getAbsolutePath + "/out"
 
     val res = s"java -jar ${jarfileFile.getCanonicalPath} -f ${apkFile} -o ${tmpfile}" !;
