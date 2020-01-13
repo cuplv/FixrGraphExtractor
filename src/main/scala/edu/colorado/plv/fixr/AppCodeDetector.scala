@@ -57,7 +57,7 @@ object AppCodeDetector {
     * @return
     */
   def mainPackageFromApk(apkFile:String):String = {
-    val resource = getClass.getResource("/apkinfo.fake")
+    val resource = getClass.getResource("/apkinfo.jar")
 
     if (resource == null) {
       throw new Exception("Cannot find resource file apkinfo.jar")
