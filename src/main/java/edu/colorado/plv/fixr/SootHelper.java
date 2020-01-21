@@ -315,6 +315,8 @@ public class SootHelper {
       lineNumberTag = code.getTag("LineNumberTag");
       if (null != lineNumberTag && lineNumberTag instanceof LineNumberTag) {
         lineNumber = ((LineNumberTag) lineNumberTag).getLineNumber();
+      }else{
+        lineNumber = code.getJavaSourceStartLineNumber();
       }
     }
 

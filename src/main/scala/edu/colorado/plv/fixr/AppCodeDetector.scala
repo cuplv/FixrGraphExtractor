@@ -4,6 +4,7 @@ import java.io.{BufferedReader, File, FileReader, FileWriter}
 import java.net.{HttpURLConnection, URL}
 import java.nio.file.Files
 
+
 import collection.JavaConverters._
 import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.CompilationUnit
@@ -15,6 +16,7 @@ import sys.process._
 object AppCodeDetector {
   def packageListFromFileList(fileList : String): String = {
     val files = fileList.split(":").map(new FileReader(_))
+    println(files)
     val out: Array[String] = files.map(packageListFromFile(_).mkString(":"))
     out.mkString(":")
   }
