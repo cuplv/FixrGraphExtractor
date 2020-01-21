@@ -54,16 +54,21 @@ object AppCodeDetector {
     * @return
     */
   def mainPackageFromApk(apkFile:String):String = {
-    val resource = getClass.getResource("/apkinfo.jar")
+    val resource: URL = getClass.getResource("/apkinfo.jar")
     val homedir = System.getProperty("user.home")
+    println(s"Homedir: ${homedir}")
     val searchLocations = List("apkinfo_2.12-0.11-one-jar.jar",
       "Documents/source/ApkInfo/target/scala-2.12/apkinfo_2.12-0.11-one-jar.jar",
       "ApkInfo/target/scala-2.12/apkinfo_2.12-0.11-one-jar.jar",
       "biggroumsetup/apkinfo_2.12-0.11-one-jar.jar"
-    ).map(a =>new File( s"${homedir}/${a}"))
-    val jarfileFile : File = if (resource != null) new File(resource.getPath) else {
+    ).map(a => new File(s"${homedir}/${a}"))
+    // ! in path means that it resolved a file inside the jar.  Jar resource resolution is currently broken.
+    val jarfileFile: File = if (resource != null && (!resource.getPath.contains("!"))) {
+      new File(resource.getPath)
+    }else {
       searchLocations.find(_.exists()).getOrElse(???)
     }
+    println(s"Using apk info jar: ${jarfileFile.getCanonicalPath} .")
 
     val tmpfile = new File(Files.createTempDirectory("info_apk").toUri).getAbsolutePath + "/out"
 
