@@ -16,7 +16,6 @@ import sys.process._
 object AppCodeDetector {
   def packageListFromFileList(fileList : String): String = {
     val files = fileList.split(":").map(new FileReader(_))
-    println(files)
     val out: Array[String] = files.map(packageListFromFile(_).mkString(":"))
     out.mkString(":")
   }
