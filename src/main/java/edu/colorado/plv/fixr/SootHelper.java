@@ -317,6 +317,13 @@ public class SootHelper {
         lineNumber = ((LineNumberTag) lineNumberTag).getLineNumber();
       }else{
         lineNumber = code.getJavaSourceStartLineNumber();
+
+        if (lineNumber < 0) {
+          // Soot can return -1 if the getJavaSourceStartLineNumber
+          // method fails. However we assume 0 as line number
+          // This assumption is used elsewere in the mining pipeline.
+          lineNumber = 0;
+        }
       }
     }
 
