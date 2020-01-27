@@ -49,7 +49,7 @@ object Main {
     graph1 : String = null,
     graph2 : String = null,
     iso : String = null,
-    packageAutoDetect : Boolean = true,
+    packageAutoDetect : Boolean = false,
     var userName : String = null,
     var repoName : String = null,
     var url : String = null,
