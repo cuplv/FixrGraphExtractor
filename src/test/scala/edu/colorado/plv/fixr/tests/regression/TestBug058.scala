@@ -14,11 +14,12 @@ class TestBug058 extends FunSuite with BeforeAndAfter {
     SootHelper.reset();
   }
 
-  test("bug_058", TestParseSources) {
+  // Ignored --- parser used by soot is not updated for recent jvms
+  ignore("bug_058", TestParseSources) {
     val options : ExtractorOptions = new ExtractorOptions();
     options.className = "bugs.Bug_058"
     options.methodName = "bug_058"
-    options.configCode = SootHelper.READ_FROM_BYTECODE    
+    options.configCode = SootHelper.READ_FROM_SOURCES
     options.sliceFilter = List("android")
     options.sootClassPath = "./src/test/resources/libs/android-17.jar:./src/test/resources/javasources"
     options.outputDir = null
