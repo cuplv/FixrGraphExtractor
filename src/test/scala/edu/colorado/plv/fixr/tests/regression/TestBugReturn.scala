@@ -17,9 +17,9 @@ class TestBugReturn extends FunSuite with BeforeAndAfter {
     val options : ExtractorOptions = new ExtractorOptions();
     options.className = "bugs.BugReturn"
     options.methodName = "bug_return"
-    options.configCode = SootHelper.READ_FROM_SOURCES
+    options.configCode = SootHelper.READ_FROM_BYTECODE
     options.sliceFilter = List("java")
-    options.sootClassPath = ":./src/test/resources/javasources"
+    options.sootClassPath = ":./src/test/resources/classes"
     options.outputDir = "/tmp/"
     options.provenanceDir = "/tmp/provenance"
     options.processDir = null

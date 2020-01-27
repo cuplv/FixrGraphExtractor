@@ -13,7 +13,8 @@ class TestBug051 extends FunSuite with BeforeAndAfter {
     SootHelper.reset();
   }
 
-  test("bug_051", TestParseSources) {
+  // Ignored --- parser used by soot is not updated for recent jvms
+  ignore("bug_051", TestParseSources) {
     val options : ExtractorOptions = new ExtractorOptions();
     options.className = "bugs.Bug_051$1Anonymous0"
     options.methodName = "run"
