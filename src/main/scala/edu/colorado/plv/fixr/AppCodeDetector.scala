@@ -9,6 +9,8 @@ import collection.JavaConverters._
 import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.CompilationUnit
 
+import org.apache.commons.io.FileUtils
+
 import scala.io.Source
 import sys.process._
 
@@ -55,22 +57,19 @@ object AppCodeDetector {
     * @return
     */
   def mainPackageFromApk(apkFile:String):String = {
-    val resource: URL = getClass.getResource("/apkinfo.jar")
-    val homedir = System.getProperty("user.home")
-    println(s"Homedir: ${homedir}")
-    val searchLocations = List("apkinfo_2.12-0.11-one-jar.jar",
-      "Documents/source/ApkInfo/target/scala-2.12/apkinfo_2.12-0.11-one-jar.jar",
-      "ApkInfo/target/scala-2.12/apkinfo_2.12-0.11-one-jar.jar",
-      "biggroumsetup/apkinfo_2.12-0.11-one-jar.jar"
-    ).map(a => new File(s"${homedir}/${a}"))
-    // ! in path means that it resolved a file inside the jar.  Jar resource resolution is currently broken.
-    val jarfileFile: File = if (resource != null && (!resource.getPath.contains("!"))) {
-      new File(resource.getPath)
-    }else {
-      searchLocations.find(_.exists()).getOrElse(???)
-    }
-    println(s"Using apk info jar: ${jarfileFile.getCanonicalPath} .")
+    val resource = getClass.getResource("/apkinfo.jar")
 
+    if (resource == null) {
+      throw new Exception("Cannot find resource file apkinfo.jar")
+    }
+
+    // [Sergio2Shawn] We have to copy the apkinfo.jar somewhere on disk because
+    // when we package the extractor with oneJar we cannot access the resources
+    // as a file.
+    // This solution works both when we use sbt directly and when we package
+    // everything in a oneJar file
+    val jarfileFile = new File(new File(Files.createTempDirectory("info_apk2").toUri).getAbsolutePath + "/apkinfo.jar")
+    FileUtils.copyURLToFile(resource, jarfileFile)
     val tmpfile = new File(Files.createTempDirectory("info_apk").toUri).getAbsolutePath + "/out"
 
     val res = s"java -jar ${jarfileFile.getCanonicalPath} -f ${apkFile} -o ${tmpfile}" !;
