@@ -17,10 +17,10 @@ class TestOverride extends FunSuite with BeforeAndAfter {
   test("testoverride",TestParseSources) {
     val options : ExtractorOptions = new ExtractorOptions();
     options.className = "slice.TestOverride2"
-    options.methodName = "callerMethod"    
-    options.configCode = SootHelper.READ_FROM_SOURCES
+    options.methodName = "callerMethod"
+    options.configCode = SootHelper.READ_FROM_BYTECODE
     options.sliceFilter = List("java.util")
-    options.sootClassPath = "./src/test/resources/javasources"
+    options.sootClassPath = "./src/test/resources/classes"
     options.outputDir = null
     options.provenanceDir = null
     options.processDir = null
@@ -33,7 +33,7 @@ class TestOverride extends FunSuite with BeforeAndAfter {
 
   val transformer = extractor.getTransformer
     transformer.acdfgListBuffer.foreach( (x : edu.colorado.plv.fixr.abstraction.Acdfg)  => {
-      /* count the method nodes */    
+      /* count the method nodes */
       val count = x.nodes.foldLeft(0)( (count : Int, l : (Long, edu.colorado.plv.fixr.abstraction.Node) ) => {
         if (l._2.isInstanceOf[edu.colorado.plv.fixr.abstraction.MethodNode]) count + 1
         else count

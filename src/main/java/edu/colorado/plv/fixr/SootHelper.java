@@ -63,7 +63,7 @@ public class SootHelper {
 
       /* Jimple body creation - neeed when processing classes */
       PhaseOptions.v().setPhaseOption("jb", "enabled:true");
-      PhaseOptions.v().setPhaseOption("jb", "use-original-names:true");
+//      PhaseOptions.v().setPhaseOption("jb", "use-original-names:true");
       PhaseOptions.v().setPhaseOption("jb", "preserve-source-annotations:true");
       // jb.ls is enabled, otherwise soot raises
       // the exception java.lang.Exception: null typing passed to useChecker
@@ -145,6 +145,7 @@ public class SootHelper {
       Options.v().set_allow_phantom_refs(true);
       Options.v().set_src_prec(Options.src_prec_apk);
       Options.v().set_android_jars(androidJars);
+      Options.v().set_process_multiple_dex(true);
 
       setBytecodeOptions();
     }
@@ -314,6 +315,15 @@ public class SootHelper {
       lineNumberTag = code.getTag("LineNumberTag");
       if (null != lineNumberTag && lineNumberTag instanceof LineNumberTag) {
         lineNumber = ((LineNumberTag) lineNumberTag).getLineNumber();
+      }else{
+        lineNumber = code.getJavaSourceStartLineNumber();
+
+        if (lineNumber < 0) {
+          // Soot can return -1 if the getJavaSourceStartLineNumber
+          // method fails. However we assume 0 as line number
+          // This assumption is used elsewere in the mining pipeline.
+          lineNumber = 0;
+        }
       }
     }
 
